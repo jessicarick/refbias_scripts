@@ -58,6 +58,8 @@ module load jdk
 #######################################
 
 mkdir astral/
+touch astral/mutations.txt
+echo "gene;num_SNPs;num_nonInv" >> mutations.txt
 
 for i in `seq 100 110`;
 
@@ -229,6 +231,11 @@ for QUAL in $qual_list
 		done # closes maf
 	done # closes QUAL
 cd ../../
+
+mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
+nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.REF.phy | cut -f 2 -d' ')
+echo "height${tree_height}_sim${sim}_gene${i};$mutations;$nonInv" >> astral/mutations.txt
+
 done # closes genes
 
 # now, have to re-open miss, maf, qual
@@ -277,7 +284,7 @@ for QUAL in $qual_list
 #### close all of the for loops #######
 #######################################
 
-        		done # closes $miss
+       		done # closes $miss
          done # closes $maf
     done # closes $QUAL
 
