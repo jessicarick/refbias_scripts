@@ -1,0 +1,29 @@
+REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
+num_sims='1 2'
+reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
+error=$REF_PATH/latesGBS.txt
+starttree=newlates
+
+reference_prefix=lmariae_500000
+ref_length=5000000
+gene_length=1000
+genes=$(expr $ref_length / $gene_length)
+#max=`grep -v '^>' $reference | wc -m`
+
+var_sites=7
+
+echo "1,1,1,1,1,1" > rat.matrix
+
+###Added variable for number of species and individuals for simulation - Values can be changed
+num_sp=100
+num_ind=1
+
+tree_height_list='500000'
+	
+##############################################
+### Filtering parameters for sims ############
+##############################################
+
+qual_list='0 20 40 60'
+maf_list='0 0.01 0.05 0.10 0.15'
+miss_list='0 0.25 0.50 0.75 1.0'
