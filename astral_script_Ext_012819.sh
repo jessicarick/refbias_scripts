@@ -173,7 +173,7 @@ for QUAL in $qual_list
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
 #######################################
 ## move gene trees to common folder ###
@@ -207,7 +207,7 @@ for QUAL in $qual_list
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
+        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
 
 #######################################
 ## move gene trees to common folder ###
