@@ -47,11 +47,6 @@ module load jdk
 # FOR ACTUAL RUN
 #sim_fastq=`ls $REF_PATH/gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
 
-### Filtering parameters for sims ############
-#qual_list='0 20 40'
-#maf_list='0 0.01 0.05'
-#miss_list='0 0.50 0.75 1.0'
-
 #######################################
 ######## Taking fastq files from ######
 #### simulation, aligning to genomes ##
