@@ -1,4 +1,4 @@
-#!/bin/sh
+i#!/bin/sh
 
 module load gcc
 module load miniconda2
@@ -49,11 +49,13 @@ for tree_height in $tree_height_list
 ### For each gene, simulate MSC genealogy#####
 ##############################################
 	rand_num=`echo $RANDOM`
-	echo 'random number seed: ${rand_num}'
+	echo "random number seed: ${rand_num}"
 	source activate new_env
 	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:2 -cs $rand_num -o species_tree${sim}
 		
 	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
+	cat species_tree${sim}/1/s_tree.trees >> ${output_dir}/${day}-${tree_height}-s_tree.tree
+	echo "height${tree_height}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-${tree_height}-s_tree.names
 	source deactivate
 	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $tree_height
 	

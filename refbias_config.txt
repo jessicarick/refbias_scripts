@@ -21,7 +21,7 @@ echo "1,1,1,1,1,1" > rat.matrix
 num_sp=100
 num_ind=1
 
-tree_height_list='500000'
+tree_height_list='500000 2000000 10000000'
 	
 ##############################################
 ### Filtering parameters for sims ############
