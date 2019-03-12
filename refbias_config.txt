@@ -8,7 +8,7 @@ error=$REF_PATH/latesGBS.txt
 starttree=newlates
 
 reference_prefix=lmariae_500000
-ref_length=5000000
+ref_length=500000
 gene_length=1000
 genes=$(expr $ref_length / $gene_length)
 #max=`grep -v '^>' $reference | wc -m`

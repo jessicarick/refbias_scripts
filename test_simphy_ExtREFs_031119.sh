@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# this script has been modified to include the script running astral
-
 source activate new_env
 PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
@@ -19,7 +17,7 @@ taxa_ref=0_0_0
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
 
-	for i in `seq -w $genes`;
+	for i in `seq $genes`;
 	 do python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v $var_sites -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
 		python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
 		
