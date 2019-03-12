@@ -46,14 +46,14 @@ args <- parse.args()
 
 
 ####Read in concatenated tree file and ML tree file (make sure the latter is ultrametric us PL)
-raxml.trees<-read.tree(args$raxml.trees)
-astral.trees<-read.tree(args$astral.trees)
-ml.tree<-read.tree(args$ml.trees)
+raxml.trees<-read.tree(paste("output/",args$raxml.trees,sep=""))
+astral.trees<-read.tree(paste("output/",args$astral.trees,sep=""))
+ml.tree<-read.tree(paste("output/",args$ml.trees,sep=""))
 
 ###Read in file of tree names
-raxml.tree.names<-read.table(args$raxml.tree.names,stringsAsFactors=FALSE)
-astral.tree.names<-read.table(args$astral.tree.names,stringsAsFactors = FALSE)
-ml.tree.names <- read.table(args$ml.tree.names,stringsAsFactors = FALSE)
+raxml.tree.names<-read.table(paste("output/",args$raxml.tree.names,sep=""),stringsAsFactors=FALSE)
+astral.tree.names<-read.table(paste("output/",args$astral.tree.names,sep=""),stringsAsFactors = FALSE)
+ml.tree.names <- read.table(paste("output/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
 
 ###Pull info about ml species trees
 ml.tree.info <- data.frame(simulation = numeric(60),height=numeric(60))
@@ -292,7 +292,7 @@ summary(results)
 
 ####################BEGIN ANALYSIS ################################
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
-pdf(paste(args$output,".pdf",sep=""))
+pdf(paste("output/",args$output,".pdf",sep=""))
 for (h in unique(as.numeric(results$height))){
   for (i in unique(as.numeric(results$simulation))){
     
@@ -348,4 +348,4 @@ for (h in unique(as.numeric(results$height))){
 }
 dev.off()
 
-write.csv(results,file=paste(args$output,".csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
+write.csv(results,file=paste("output/",args$output,".csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
