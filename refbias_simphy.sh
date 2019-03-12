@@ -48,12 +48,12 @@ for tree_height in $tree_height_list
 ##############################################
 ### For each gene, simulate MSC genealogy#####
 ##############################################
-	#num=`echo $RANDOM`
+	rand_num=`echo $RANDOM`
 	echo 'random number seed: ${rand_num}'
 	source activate new_env
-	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:2 -cs $RANDOM -o species_tree${sim}
+	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:2 -cs $rand_num -o species_tree${sim}
 		
-	rename 'g_trees0' g_trees species_tree${sim}/1/g_trees0*
+	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
 	source deactivate
 	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $tree_height
 	
