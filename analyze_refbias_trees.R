@@ -3,6 +3,7 @@
 ## Written by J. Rick, 11 March 2019
 ## Made to be run on the command line
 ############################################
+
 suppressMessages(
   c(library(ape),
   library(phytools),
@@ -40,7 +41,7 @@ parse.args <- function() {
   parser$add_argument('--raxml.tree.names', help='file with raxml tree names')
   parser$add_argument('--astral.trees', help='file with astral trees')
   parser$add_argument('--astral.tree.names', help='file with astral tree names')
-  parser$add_argument('-o', '--output', help='output pdf file')
+  parser$add_argument('-o', '--output', help='output file prefix')
   return(parser$parse_args())
 }
 args <- parse.args()

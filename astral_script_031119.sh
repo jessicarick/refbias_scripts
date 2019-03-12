@@ -4,7 +4,7 @@
 ## This script is intended to be added into the refbias_Fullsim.sh script ##
 #############################################################################
 
-PATH=$PATH:/project/phylogenref/programs/ASTRAL/Astral
+astral_path=/project/phylogenref/programs/ASTRAL/Astral
 source /project/phylogenref/scripts/refbias_config.txt
 sim=$1
 tree_height=$2
@@ -251,7 +251,7 @@ for QUAL in $qual_list
 				do cat $tree >> s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree
 			done
 		
-			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.species_tree_out.log 
+			java -jar ${astral_path}/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.species_tree_out.log 
 
 ## if we wanted to use bootstrap trees!
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
@@ -267,7 +267,7 @@ for QUAL in $qual_list
 				do cat $tree >> s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree
 			done
 		
-			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.species_tree_out.log
+			java -jar ${astral_path}/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.species_tree_out.log
 
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
 
