@@ -20,7 +20,7 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-my $runtime = '03-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+my $runtime = '07-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
 #my $runtime = '1:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater
@@ -46,11 +46,8 @@ my $tree_height = $ARGV[1];
 #	exit;
 #}
 
-push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_012819.sh $sim $tree_height \n";
-#push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_102318.sh $sim $tree_height \n";
-
-
-#push @jobarray, "/project/WagnerLab/gbs_resources/scripts/parse_barcodes768.pl /project/WagnerLab/emandevi/YSCxRBT_march2017/YSC_RBT7_barcode_key.csv /project/WagnerLab/genomic_data/YSCxRBT_2017/YSC_RBT7.clean.fastq K00179 \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_031119.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_031119.sh $sim $tree_height \n";
 
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
@@ -61,8 +58,8 @@ my $jobname = 'slurm.refbias.'.$ENV{USER};
 
 ### modules to load:
 my @modules =();
-push  @modules, 'module load gcc';
-push  @modules, 'module load miniconda2';
+push @modules, 'module load gcc';
+push @modules, 'module load miniconda2';
 push @modules, 'module load perl';
 push @modules, 'module load vcftools';
 push @modules, 'module load bwa';
@@ -109,8 +106,8 @@ push @slurmdirectives, "#SBATCH --account=$arccproject";
 push @slurmdirectives, "#SBATCH --job-name=$jobname";
 push @slurmdirectives, "#SBATCH --time=$runtime"; 
 push @slurmdirectives, "#SBATCH --nodes=1";
-push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # one core per node
-#push @slurmdirectives, "#SBATCH --mem=0"; 
+push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 16 cores per node
+#push @slurmdirectives, "#SBATCH --mem=124G"; 
 push @slurmdirectives, "#SBATCH --workdir=$logdir";
 #          SLURM can send informative email messages to you about the
 #          status of your job.  
