@@ -220,7 +220,7 @@ mv *.fa sim${sim}/ref.fasta_files
 				
 ###Create a batch file with all trees in order by file type, and create a name file
 cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.trees
-ls s${sim}**q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
+ls s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
 
 /project/phylogenref/scripts/astral_script_012819.sh $sim $tree_height $taxa_ref EXT
 
