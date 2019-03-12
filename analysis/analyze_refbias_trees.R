@@ -9,7 +9,7 @@ suppressMessages(
   library(phytools),
   library(apTreeshape),
   library(phangorn),
-  library(readtext),
+  #library(readtext),
   library(ggpubr),
   # library(CCA)
   # library(GGally)
@@ -19,8 +19,7 @@ suppressMessages(
   # library(MuMIn)
   # library(car)
   library(ggrepel),
-  library(ggsci))
-)
+  library(ggsci)))
 
 ############################################
 ## Reading in command line arguments #######
