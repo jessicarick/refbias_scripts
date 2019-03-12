@@ -3,22 +3,23 @@
 ## Written by J. Rick, 11 March 2019
 ## Made to be run on the command line
 ############################################
-
-library(ape)
-library(phytools)
-library(apTreeshape)
-library(phangorn)
-library(readtext)
-library(ggpubr)
-library(CCA)
-library(GGally)
-library(vegan)
-library(LMERConvenienceFunctions)
-library(lme4)
-library(MuMIn)
-library(car)
-library(ggrepel)
-library(ggsci)
+suppressMessages(
+  c(library(ape),
+  library(phytools),
+  library(apTreeshape),
+  library(phangorn),
+  library(readtext),
+  library(ggpubr),
+  # library(CCA)
+  # library(GGally)
+  # library(vegan)
+  # library(LMERConvenienceFunctions)
+  # library(lme4)
+  # library(MuMIn)
+  # library(car)
+  library(ggrepel),
+  library(ggsci))
+)
 
 ############################################
 ## Reading in command line arguments #######

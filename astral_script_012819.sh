@@ -9,6 +9,7 @@ source /project/phylogenref/scripts/refbias_config.txt
 sim=$1
 tree_height=$2
 taxa_ref=$3
+int=$4
 
 #######################################
 ##### Setting parameter values ########
@@ -53,8 +54,7 @@ module load jdk
 #######################################
 
 mkdir astral/
-touch astral/mutations.txt
-echo "gene;num_SNPs;num_nonInv" >> mutations.txt
+echo "gene;num_SNPs;num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
 for i in `seq 100 110`;
 
@@ -165,57 +165,57 @@ for QUAL in $qual_list
 
 			echo "running RAxML to create gene trees"
 		
-#			sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n 1 | cut -f 2 -d' ')
-			if [[ -s RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.filtered.out ]]
+			sites_ref=$(cat OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n 1 | cut -f 2 -d' ')
+			if [[ -s RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.filtered.out ]]
  		  		then
-  					rm -f RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.filtered.out
+  					rm -f RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.filtered.out
           			else
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
 #######################################
 ## move gene trees to common folder ###
 #######################################
 
-			mkdir ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/
-        		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/
-        		cp RAxML* ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/
+			mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
+        		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
+        		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
 
 #######################################
 #### Running RaxML w/o Ref ############
 ##### First delete ref from .phy ######
 #######################################
 
-			numtaxa=$(cat ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n1 | awk '{print $1;}')
+			numtaxa=$(cat ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n1 | awk '{print $1;}')
 			newtaxa=$(($numtaxa - 1))
 			
-			cat ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | sed '/^'sim_$taxa_ref'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
+			cat ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | sed '/^'sim_$taxa_ref'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
         		
 			echo "removing invariant sites"
                 	printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')" > Rscript_astral.R
 
                 	R --vanilla --no-save < Rscript_astral.R
 
-#			sites_noref=$(head -n 1 OUTFILE_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy | cut -f 2 -d' ')
+			sites_noref=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy | cut -f 2 -d' ')
 
-        		if [[ -s RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.filtered.out ]]
- 		  		then
-  					rm -f RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.filtered.out
+        		if [[ -s RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.filtered.out ]]
+ 		  		    then
+  					rm -f RAxML_info.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.filtered.out
           			else
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
+        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
 
 #######################################
 ## move gene trees to common folder ###
 #######################################
 
-			mkdir ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.gene_tree_files
-        		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*noInv*.phy ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.gene_tree_files/
-        		cp RAxML* ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.gene_tree_files/
+			mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+        		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*noInv*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+        		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
 
 #######################################
 #### run ASTRAL on the gene trees #####
@@ -229,7 +229,7 @@ cd ../../
 
 mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
 nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.REF.phy | cut -f 2 -d' ')
-echo "height${tree_height}_sim${sim}_gene${i};$mutations;$nonInv" >> astral/mutations.txt
+echo "height${tree_height}_sim${sim}_gene${i};$mutations;$nonInv" >> ${output_dir}/${day}-mutations.txt
 
 done # closes genes
 
@@ -244,14 +244,14 @@ for QUAL in $qual_list
 		do for miss in $miss_list
 			do echo "running ASTRAL on gene trees for sim${sim} q${QUAL} maf${maf} miss${miss}"
 
-			cd sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.gene_tree_files/
+			cd ${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
 			echo "running ASTRAL on gene trees with reference"
 		
 			for tree in `ls RAxML*bestTree*.out`
 				do cat $tree >> s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree
 			done
 		
-			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.EXT.species_tree_out.log 
+			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.species_tree_out.log 
 
 ## if we wanted to use bootstrap trees!
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
@@ -259,7 +259,7 @@ for QUAL in $qual_list
 			mv *species_tree_out.tre ../species_trees/
 			mv *species_tree_out.log ../astral_logs/
 		
-			cd ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.gene_tree_files
+			cd ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
 	
 			echo "running ASTRAL on gene trees without reference"
 		
@@ -267,7 +267,7 @@ for QUAL in $qual_list
 				do cat $tree >> s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree
 			done
 		
-			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.EXT.species_tree_out.log
+			java -jar /project/phylogenref/programs/ASTRAL/Astral/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.ref-sim${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.species_tree_out.log
 
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
 
@@ -283,6 +283,5 @@ for QUAL in $qual_list
          done # closes $maf
     done # closes $QUAL
 
-day=`date +%m%d%y`
-cat species_trees/*.tre > /project/phylogenref/scripts/sim_results/${day}-${tree_height}-astral.trees
-ls species_trees/*.tre > /project/phylogenref/scripts/sim_results/${day}-${tree_height}-astral.names
+cat species_trees/*.tre > ${output_dir}/${day}-${tree_height}-astral.trees
+ls species_trees/*.tre > ${output_dir}/${day}-${tree_height}-astral.names
