@@ -223,5 +223,5 @@ mv *.fa sim${sim}/ref.fasta_files
 cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}**q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
 
-/project/phylogenref/scripts/astral_script_012819.sh $sim $tree_height $taxa_ref INT
+/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
 
