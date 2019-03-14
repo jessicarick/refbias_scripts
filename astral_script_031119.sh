@@ -191,7 +191,7 @@ for QUAL in $qual_list
 			numtaxa=$(cat ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n1 | awk '{print $1;}')
 			newtaxa=$(($numtaxa - 1))
 			
-			cat ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | sed '/^'sim_$taxa_ref'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
+			cat ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | sed '/^'sim_$taxa_ref'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
         		
 			echo "removing invariant sites"
                 	printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')" > Rscript_astral.R
@@ -228,7 +228,7 @@ for QUAL in $qual_list
 cd ../../
 
 mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
-nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.REF.phy | cut -f 2 -d' ')
+nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0*.noInv.REF.*phy | cut -f 2 -d' ')
 echo "height${tree_height}_sim${sim}_gene${i};$mutations;$nonInv" >> ${output_dir}/${day}-mutations.txt
 
 done # closes genes
@@ -259,7 +259,7 @@ for QUAL in $qual_list
 			mv *species_tree_out.tre ../species_trees/
 			mv *species_tree_out.log ../astral_logs/
 		
-			cd ../sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+			cd ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
 	
 			echo "running ASTRAL on gene trees without reference"
 		
