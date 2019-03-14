@@ -53,15 +53,24 @@ module load jdk
 #### simulation, aligning to genomes ##
 #######################################
 
-mkdir astral/
-echo "gene;num_SNPs;num_nonInv" >> ${output_dir}/${day}-mutations.txt
+if [ ! -d astral/ ]; then
+	mkdir astral/
+fi
+
+if [ ! -f ${output_dir}/${day}-mutations ]; then
+	echo "gene;num_SNPs;num_nonInv" >> ${output_dir}/${day}-mutations.txt
+fi
 
 for i in `seq 100 110`;
 
 	do sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
 
-mkdir astral/gene${i}_sim${sim}
-cd astral/gene${i}_sim${sim}/
+	if [ ! -d astral/gene${i}_sim${sim} ]; then
+		mkdir astral/gene${i}_sim${sim}
+		cd astral/gene${i}_sim${sim}/
+	else
+		cd astral/gene${i}_sim${sim}/
+	fi
 
 for fastq in $sim_fastq
 	do echo "Fastq: $fastq \n"
@@ -71,19 +80,17 @@ for fastq in $sim_fastq
     	sorted=aln_${fastq}.sorted.bam
 
     	echo "Mapping reads for $fastq \n"
-#    	bwa index $REF_PATH/fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
-#    	bwa index $REF_PATH/fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz
     	bwa index ../../sim${sim}/ref.fasta_files/${reference_prefix}_sim${sim}.fa
 	bwa mem -t 16 ../../sim${sim}/ref.fasta_files/${reference_prefix}_sim${sim}.fa \
     		../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz \
     		../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz > $sam
 
-    echo "Converting sam to bam for $fastq \n"
-    samtools view -b -S -o $bam $sam
+    	echo "Converting sam to bam for $fastq \n"
+    	samtools view -b -S -o $bam $sam
        
-    echo "Sorting and indexing bam files for $fastq \n"
-    samtools sort $bam -o $sorted
-    samtools index -c $sorted
+    	echo "Sorting and indexing bam files for $fastq \n"
+    	samtools sort $bam -o $sorted
+    	samtools index -c $sorted
 done	
 
 
@@ -149,7 +156,7 @@ for QUAL in $qual_list
 			python /project/phylogenref/scripts/vcf2phylip.py -i OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
                         	-o OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy \
                         
-               		## rm OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
+               		#rm OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
      
 #######################################
 #### Removing invariant sites  ########
@@ -179,8 +186,10 @@ for QUAL in $qual_list
 ## move gene trees to common folder ###
 #######################################
 
-			mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
-        		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
+			if [ ! -d  ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/ ]; then
+				mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
+        		fi
+			cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
         		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
 
 #######################################
@@ -213,7 +222,9 @@ for QUAL in $qual_list
 ## move gene trees to common folder ###
 #######################################
 
-			mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+			if [ ! -d  ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/ ]; then
+				mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+			fi
         		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*noInv*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
         		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
 

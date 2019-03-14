@@ -11,11 +11,11 @@ file=$1
 #for file in `ls /project/phylogenref/scripts/slurm_results/SLURM_2468*.tgz`;
 	base=`basename --suffix='_results.tgz' $file`;
 	tar -xzf $file;
-	mv $file phylogenref_tarred/;
+#	mv $file phylogenref_tarred/;
 	cd $base;
 	sim=`ls -d sim* | sed 's/sim//g'`;
-	tree_height=`cat gene1_sim1/analysis_configuration.cfg | grep 'treefile' | grep -o -E '[0-9][0-9]+'`;
-	taxa_ref=`cat gene1_sim1/analysis_configuration.cfg | grep 'base_genome_name' | grep -o -E '[0-9]+_0_0'`
+	tree_height=`cat gene1_sim*/analysis_configuration.cfg | grep 'treefile' | grep -o -E '[0-9][0-9]+'`;
+	taxa_ref=`cat gene1_sim*/analysis_configuration.cfg | grep 'base_genome_name' | grep -o -E '[0-9]+_0_0'`
 	int=`ls -d s*phylip_tree_files | head -n 1 | grep -o -E '[A-Z][A-Z][A-Z]'`
 	echo "starting astral script for sim: $sim height: $tree_height taxa_ref: $taxa_ref int=$int";
 	

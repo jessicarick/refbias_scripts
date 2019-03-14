@@ -1,1 +1,1 @@
-gene;num_SNPs;num_nonInv
+height500000_sim2_gene100;7;
