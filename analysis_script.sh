@@ -14,22 +14,22 @@ for height in 500000 2000000 10000000;
 done
 
 # concatenating astral trees
-#echo "concatenating astral trees..."
-#for height in 500000 2000000 10000000;
-#	do trees=output/${day}-${height}-astral.trees;
-#	names=output/${day}-${height}-astral.names;
-#	cat $trees >> output/${day}-all-astral.trees;
-#	cat $names >> output/${day}-all-astral.names;
-#done 
+echo "concatenating astral trees..."
+for height in 500000 2000000 10000000;
+	do trees=output/${day}-${height}-astral.trees;
+	names=output/${day}-${height}-astral.names;
+	cat $trees >> output/${day}-all-astral.trees;
+	cat $names >> output/${day}-all-astral.names;
+done 
 
-#echo "beginning R analysis of astral and raxml trees!"
+echo "beginning R analysis of astral and raxml trees!"
 
-#Rscript analysis/analyze_refbias_trees.R \
-#	--ml.trees ${day}-s_tree.trees \
-#	--ml.tree.names ${day}-s_tree.names \
-#	--raxml.trees ${day}-all-raxml.trees \
-#	--raxml.tree.names ${day}-all-raxml.names \
-#	--astral.trees ${day}-all-astral.trees \
-#	--astral.tree.names ${day}-all-astral.names \
-#	--output ${day}-output \
+Rscript analysis/analyze_refbias_trees.R \
+	--ml.trees ${day}-s_tree.trees \
+	--ml.tree.names ${day}-s_tree.names \
+	--raxml.trees ${day}-all-raxml.trees \
+	--raxml.tree.names ${day}-all-raxml.names \
+	--astral.trees ${day}-all-astral.trees \
+	--astral.tree.names ${day}-all-astral.names \
+	--output ${day}-output \
 
