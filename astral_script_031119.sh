@@ -58,7 +58,7 @@ if [ ! -d astral/ ]; then
 fi
 
 if [ ! -f ${output_dir}/${day}-mutations ]; then
-	echo "gene;num_SNPs;num_nonInv" >> ${output_dir}/${day}-mutations.txt
+	echo "gene,num_SNPs,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 fi
 
 for i in `seq 100 110`;
@@ -180,7 +180,7 @@ for QUAL in $qual_list
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        		raxmlHPC-PTHREADS-AVX -T 1 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
 #######################################
 ## move gene trees to common folder ###
@@ -216,7 +216,7 @@ for QUAL in $qual_list
            				echo "everything is good"
         		fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
+        		raxmlHPC-PTHREADS-AVX -T 1 -s OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 323 -N 100 -p 476 		
 
 #######################################
 ## move gene trees to common folder ###
@@ -239,8 +239,8 @@ for QUAL in $qual_list
 cd ../../
 
 mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
-nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0*.noInv.REF.*phy | cut -f 2 -d' ')
-echo "height${tree_height}_sim${sim}_gene${i};$mutations;$nonInv" >> ${output_dir}/${day}-mutations.txt
+nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.phy | cut -f 2 -d' ')
+echo "height${tree_height}_sim${sim}_gene${i},$mutations,$nonInv" >> ${output_dir}/${day}-mutations.txt
 
 done # closes genes
 
@@ -264,11 +264,11 @@ for QUAL in $qual_list
 		
 			java -jar ${astral_path}/astral.5.6.1.jar -i s${sim}_q${QUAL}_miss${miss}_maf${maf}.gene_tree_in.tree -o ${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.ref-${taxa_ref}.astral.tre 2>s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.species_tree_out.log 
 
-## if we wanted to use bootstrap trees!
+			## if we wanted to use bootstrap trees!
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
 
-			mv *species_tree_out.tre ../species_trees/
-			mv *species_tree_out.log ../astral_logs/
+			mv *astral.tre ../species_trees/
+			mv *_out.log ../astral_logs/
 		
 			cd ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
 	
@@ -282,8 +282,8 @@ for QUAL in $qual_list
 
 			#java -jar astral.5.6.1.jar -i in.tree.best -b bs_paths -r 100 -o out.tre 2>out.log ## if you have bootstrap gene trees
 
-			mv *species_tree_out.tre ../species_trees/
-			mv *species_tree_out.log ../astral_logs/
+			mv *astral.tre ../species_trees/
+			mv *out.log ../astral_logs/
 		cd ../
 
 #######################################

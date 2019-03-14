@@ -2,7 +2,7 @@
 
 #SBATCH --account=phylogenref
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=16
+#SBATCH --ntasks-per-node=1
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=slurm.astral
 
