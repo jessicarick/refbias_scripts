@@ -39,5 +39,5 @@ Rscript analysis/analyze_refbias_trees.R \
 	--raxml.tree.names ${day}-all-raxml.names \
 	--astral.trees ${day}-all-astral.trees \
 	--astral.tree.names ${day}-all-astral.names \
-	--output ${day}-output \
+	--output ${day}-output 
 
