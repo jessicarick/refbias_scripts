@@ -296,3 +296,5 @@ for QUAL in $qual_list
 
 cat species_trees/*.tre > ${output_dir}/${day}-${tree_height}-astral.trees
 ls species_trees/*.tre > ${output_dir}/${day}-${tree_height}-astral.names
+
+echo "all done with astral analyses! go analyze your data!"

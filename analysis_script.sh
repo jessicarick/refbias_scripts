@@ -3,24 +3,32 @@
 day=$1
 
 # concatenating raxml trees
-echo "concatenating raxml trees..."
-for height in 500000 2000000 10000000;
-	do trees=output/${day}-${height}-batch.trees;
-	names=output/${day}-${height}-tree.names;
-	cat $trees >> output/${day}-all-raxml.trees;
-	for name in `cat $names`;
-		do echo "${height}-${name}" >> output/${day}-all-raxml.names;
-	done;
-done
+if [ ! -f output/${day}-all-raxml.trees ]; then
+	echo "concatenating raxml trees..."
+	for height in 500000 2000000 10000000;
+		do trees=output/${day}-${height}-batch.trees;
+		names=output/${day}-${height}-tree.names;
+		cat $trees >> output/${day}-all-raxml.trees;
+		for name in `cat $names`;
+			do echo "${height}-${name}" >> output/${day}-all-raxml.names;
+		done;
+	done
+else
+	echo "raxml trees already concatenated; moving on"
+fi
 
 # concatenating astral trees
-echo "concatenating astral trees..."
-for height in 500000 2000000 10000000;
-	do trees=output/${day}-${height}-astral.trees;
-	names=output/${day}-${height}-astral.names;
-	cat $trees >> output/${day}-all-astral.trees;
-	cat $names >> output/${day}-all-astral.names;
-done 
+if [ ! -f output/${day}-all-astral.trees ]; then
+	echo "concatenating astral trees..."
+	for height in 500000 2000000 10000000;
+		do trees=output/${day}-${height}-astral.trees;
+		names=output/${day}-${height}-astral.names;
+		cat $trees >> output/${day}-all-astral.trees;
+		cat $names >> output/${day}-all-astral.names;
+	done 
+else
+	echo "astral trees already concatenated; moving on"
+fi
 
 echo "beginning R analysis of astral and raxml trees!"
 
