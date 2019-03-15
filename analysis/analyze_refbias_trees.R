@@ -116,7 +116,7 @@ for (i in 1:length(raxml.trees)) {
   ####Use regex and sub to extract number for filtering and sim parameters and add them to data frame
   results[i,1]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('/s([0-9]+)\\_q', raxml.tree.names[i,1]))[[1]][2])
   results$height[i] <-as.integer(regmatches(raxml.tree.names[i,1], regexec('([0-9]+)\\_s[0-9]', raxml.tree.names[i,1]))[[1]][2])
-  results$method[i]<- "raxml"
+  results$method[i]<- as.character("raxml")
   results$quality[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('q(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
   results$missing[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('miss(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
   results$maf[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
@@ -131,26 +131,26 @@ for (i in nrow(results):(nrow(results)+length(astral.trees))) {
 ####Use regex and sub to extract number for filtering and sim parameters and add them to data frame
   results[i,1]<-as.integer(regmatches(astral.tree.names[i,1], regexec('s([0-9]+)\\_q', astral.tree.names[i,1]))[[1]][2])
   results$height[i] <-as.integer(regmatches(astral.tree.names[i,1], regexec('([0-9]+)\\_s[0-9]', astral.tree.names[i,1]))[[1]][2])
-  results$method[i]<- "astral"
+  results$method[i]<- as.character("astral")
   results$quality[i]<-as.integer(regmatches(astral.tree.names[i,1], regexec('q(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
   results$missing[i]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('miss(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
   results$maf[i]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', astral.tree.names[i,1]))[[1]][2])
   results$sites[i]<-as.integer(regmatches(astral.tree.names[i,1], regexec('sites([0-9]*?)\\.', astral.tree.names[i,1]))[[1]][2])
   results$int[i]<-(regmatches(astral.tree.names[i,1], regexec('.([A-Z]+).ref', astral.tree.names[i,1]))[[1]][2])
   results$noref[i]<-(regmatches(astral.tree.names[i,1], regexec('[0-9].([A-Z]+)', astral.tree.names[i,1]))[[1]][2])
-  results$taxa_ref[i]<-regmatches(astral.tree.names[i,1],regexec('ref-([sim[0-9]+_0_0)\\.tre', astral.tree.names[i,1]))[[1]][[2]]
+  results$taxa_ref[i]<-regmatches(astral.tree.names[i,1], regexec('ref-([0-9]+_0_0)\\.astral', astral.tree.names[i,1]))[[1]][2]
 }
 
 combined.trees <- as.multiPhylo(c(raxml.trees,astral.trees))
 combined.names <- c(raxml.tree.names,astral.tree.names)
-rownames(results) <- as.character(combined.names[,1])
+#rownames(results) <- as.character(combined.names)
 
 for (i in 1:length(combined.trees)){
   ###Root on outgroup?
   #rooted <- root(combined.trees[[i]],results$taxa_ref[i])
   
   ###Replace NA branch lengths
-  trees[[i]]$edge.length[is.na(trees[[i]]$edge.length)] <- 0
+  combined.trees[[i]]$edge.length[is.na(combined.trees[[i]]$edge.length)] <- 0
   
   ###Gamma stat
   results$gamma[i]<-gammaStat(combined.trees[[i]])[1]
