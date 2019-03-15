@@ -8,6 +8,28 @@
 ## (JAR on my own)
 ## added some of chad's script
 ##############################
+results <- read.table()
+
+#check for the argparse package installed
+if (!('argparse' %in% installed.packages()[, 'Package'])) {
+  install.packages('argparse', repos='http://cran.rstudio.com/')
+}
+
+suppressPackageStartupMessages(library('argparse'))
+
+parse.args <- function() {
+  parser <- ArgumentParser()
+  parser$add_argument('--ml.trees', help='file with ML (true) trees')
+  parser$add_argument('--ml.tree.names', help='file with names of ML trees')
+  parser$add_argument('--raxml.trees', help='file with raxml trees')
+  parser$add_argument('--raxml.tree.names', help='file with raxml tree names')
+  parser$add_argument('--astral.trees', help='file with astral trees')
+  parser$add_argument('--astral.tree.names', help='file with astral tree names')
+  parser$add_argument('-o', '--output', help='output file prefix')
+  return(parser$parse_args())
+}
+args <- parse.args()
+
 library(CCA)
 library(CCP)
 library(yacca)

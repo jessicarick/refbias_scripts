@@ -9,7 +9,7 @@ suppressMessages(
   library(phytools),
   library(apTreeshape),
   library(phangorn),
-  #library(readtext),
+  library(readtext),
   library(ggpubr),
   # library(CCA)
   # library(GGally)
@@ -20,6 +20,19 @@ suppressMessages(
   # library(car)
   library(ggrepel),
   library(ggsci)))
+
+############################################
+## For debugging-- specifying files ########
+############################################
+
+raxml.trees <- "031419-all-raxml.trees"
+raxml.tree.names <- "031419-all-raxml.names"
+astral.trees <- "031419-all-astral.trees"
+astral.tree.names <- "031419-all-astral.names"
+ml.trees <- "031419-s_tree.trees"
+ml.tree.names <- "031419-s_tree.names"
+output <- "031419-output"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -57,10 +70,10 @@ astral.tree.names<-read.table(paste("output/",args$astral.tree.names,sep=""),str
 ml.tree.names <- read.table(paste("output/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
 
 ###Pull info about ml species trees
-ml.tree.info <- data.frame(simulation = numeric(60),height=numeric(60))
+ml.tree.info <- data.frame(simulation = numeric(nrow(ml.tree.names)),height=numeric(nrow(ml.tree.names)))
 for (i in 1:nrow(ml.tree.names)){
   ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sim([0-9]+)', ml.tree.names[i,1]))[[1]][2])
-  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sims_([0-9]+)', ml.tree.names[i,1]))[[1]][2])
+  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('height([0-9]+)', ml.tree.names[i,1]))[[1]][2])
 }
 
 ###################
@@ -110,40 +123,44 @@ results<-data.frame(simulation=integer(),
 results$int <- as.character(results$int)
 results$noref <- as.character(results$noref)
 results$taxa_ref <- as.character(results$taxa_ref)
+results$method <- as.character(results$method)
 
 for (i in 1:length(raxml.trees)) {
   
   ####Use regex and sub to extract number for filtering and sim parameters and add them to data frame
-  results[i,1]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('/s([0-9]+)\\_q', raxml.tree.names[i,1]))[[1]][2])
-  results$height[i] <-as.integer(regmatches(raxml.tree.names[i,1], regexec('([0-9]+)\\_s[0-9]', raxml.tree.names[i,1]))[[1]][2])
+  results[i,1]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('-s([0-9]+)\\_q', raxml.tree.names[i,1]))[[1]][2])
+  results$height[i] <-as.integer(regmatches(raxml.tree.names[i,1], regexec('([0-9]+)-s[0-9]', raxml.tree.names[i,1]))[[1]][2])
   results$method[i]<- as.character("raxml")
   results$quality[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('q(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
   results$missing[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('miss(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
   results$maf[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
   results$sites[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('sites([0-9]*?)\\.', raxml.tree.names[i,1]))[[1]][2])
-  results$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+).species', raxml.tree.names[i,1]))[[1]][2])
-  results$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)', raxml.tree.names[i,1]))[[1]][2])
+  results$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+).filtered', raxml.tree.names[i,1]))[[1]][2])
+  results$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
   results$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('ref-([sim[0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
 }
 
-for (i in nrow(results):(nrow(results)+length(astral.trees))) {
-  
+for (i in 1:length(astral.trees)) {
 ####Use regex and sub to extract number for filtering and sim parameters and add them to data frame
-  results[i,1]<-as.integer(regmatches(astral.tree.names[i,1], regexec('s([0-9]+)\\_q', astral.tree.names[i,1]))[[1]][2])
-  results$height[i] <-as.integer(regmatches(astral.tree.names[i,1], regexec('([0-9]+)\\_s[0-9]', astral.tree.names[i,1]))[[1]][2])
-  results$method[i]<- as.character("astral")
-  results$quality[i]<-as.integer(regmatches(astral.tree.names[i,1], regexec('q(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
-  results$missing[i]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('miss(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
-  results$maf[i]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', astral.tree.names[i,1]))[[1]][2])
-  results$sites[i]<-as.integer(regmatches(astral.tree.names[i,1], regexec('sites([0-9]*?)\\.', astral.tree.names[i,1]))[[1]][2])
-  results$int[i]<-(regmatches(astral.tree.names[i,1], regexec('.([A-Z]+).ref', astral.tree.names[i,1]))[[1]][2])
-  results$noref[i]<-(regmatches(astral.tree.names[i,1], regexec('[0-9].([A-Z]+)', astral.tree.names[i,1]))[[1]][2])
-  results$taxa_ref[i]<-regmatches(astral.tree.names[i,1], regexec('ref-([0-9]+_0_0)\\.astral', astral.tree.names[i,1]))[[1]][2]
+  j <- i + length(raxml.trees)
+  results[j,1]<-as.integer(regmatches(astral.tree.names[i,1], regexec('s([0-9]+)\\_q', astral.tree.names[i,1]))[[1]][2])
+  results$height[j] <-as.integer(regmatches(astral.tree.names[i,1], regexec('([0-9]+)\\_s[0-9]', astral.tree.names[i,1]))[[1]][2])
+  results$method[j]<- as.character("astral")
+  results$quality[j]<-as.integer(regmatches(astral.tree.names[i,1], regexec('q(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
+  results$missing[j]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('miss(.*?)\\_m', astral.tree.names[i,1]))[[1]][2])
+  results$maf[j]<-as.numeric(regmatches(astral.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', astral.tree.names[i,1]))[[1]][2])
+  results$sites[j]<-as.integer(regmatches(astral.tree.names[i,1], regexec('sites([0-9]*?)\\.', astral.tree.names[i,1]))[[1]][2])
+  results$int[j]<-(regmatches(astral.tree.names[i,1], regexec('.([A-Z]+).ref', astral.tree.names[i,1]))[[1]][2])
+  results$noref[j]<-(regmatches(astral.tree.names[i,1], regexec('[0-9].([A-Z]+)', astral.tree.names[i,1]))[[1]][2])
+  results$taxa_ref[j]<-regmatches(astral.tree.names[i,1], regexec('ref-([0-9]+_0_0)\\.astral', astral.tree.names[i,1]))[[1]][2]
 }
 
 combined.trees <- as.multiPhylo(c(raxml.trees,astral.trees))
-combined.names <- c(raxml.tree.names,astral.tree.names)
-#rownames(results) <- as.character(combined.names)
+combined.names <- rbind(raxml.tree.names,astral.tree.names)
+#row.names(results) <- as.character(combined.names)
+
+rm(raxml.trees)
+rm(astral.trees)
 
 for (i in 1:length(combined.trees)){
   ###Root on outgroup?
@@ -282,12 +299,14 @@ summary(results)
 #########################
 ####Clean up dataframe
 # #########################
-# results$int <- as.factor(results$int)
-# results$noref <- as.factor(results$noref)
-# results$simulation <- as.factor(results$simulation)
-# results$missing <- as.factor(results$missing)
+results$int <- as.factor(results$int)
+results$noref <- as.factor(results$noref)
+results$simulation <- as.factor(results$simulation)
+results$missing <- as.factor(results$missing)
+results$method <- as.factor(results$method)
 # 
-# ####As a start, visualize correlations between all variables
+
+####As a start, visualize correlations between all variables
 #psych::pairs.panels(results[results$maf %in% c(0,0.01,0.05),c("quality","missing","maf","int","noref","gamma","colless","sackin","tree.height","Avg.BLs","SD.BLs")],cex.cor=2)
 
 
@@ -309,7 +328,7 @@ for (h in unique(as.numeric(results$height))){
     rf_df <- data.frame(axis1=rf_pcoa$vectors[,1],axis2=rf_pcoa$vectors[,2])
     biplot <- ggplot(rf_df,aes(axis1,axis2))
     plot <- biplot +
-      geom_jitter(aes(color=c(results$int[subset]),shape=results$method[subset]),alpha=0.5,size=5,height=2,width=2)+
+      geom_jitter(aes(color=as.factor(c(results$int[subset],3)),shape=as.factor(c(results$method[subset],3))),alpha=0.5,size=5,height=2,width=2)+
       theme_bw()+
       theme(legend.text = element_text(size=rel(1.5)),
             legend.title = element_blank(),
@@ -323,11 +342,12 @@ for (h in unique(as.numeric(results$height))){
       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       geom_label_repel(label=c(paste("MAF",results$maf[subset],"MISS",results$missing[subset],sep=" "),"truth"),size=rel(1))+
-      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))
+      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
+      scale_shape_manual(labels = c("raxml","astral","ml"),values=c(3,16,17))
     print(plot)
     
     plot2 <- biplot +
-      geom_jitter(aes(color=c(results$int[subset]),3),alpha=0.5,size=5,pch=20,height=2,width=2)+
+      geom_jitter(aes(color=as.factor(c(results$int[subset],3)),shape=as.factor(c(results$method[subset],3))),alpha=0.5,size=5,pch=20,height=2,width=2)+
       theme_bw()+
       theme(legend.text = element_text(size=rel(1.5)),
             legend.title = element_blank(),
@@ -341,7 +361,8 @@ for (h in unique(as.numeric(results$height))){
       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results[subset,3],"Q",results[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))
+      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
+      scale_shape_manual(labels = c("raxml","astral","ml"))
     print(plot2)
     
     heatmap(rf_matrix,labCol=FALSE,labRow=paste(results[subset,]$maf,results[subset,]$int,sep=","))
