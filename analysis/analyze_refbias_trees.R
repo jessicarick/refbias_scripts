@@ -343,11 +343,11 @@ for (h in unique(as.numeric(results$height))){
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       geom_label_repel(label=c(paste("MAF",results$maf[subset],"MISS",results$missing[subset],sep=" "),"truth"),size=rel(1))+
       scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("raxml","astral","ml"),values=c(3,16,17))
+      scale_shape_manual(labels = c("astral","raxml","ml"),values=c(1,16,17))
     print(plot)
     
     plot2 <- biplot +
-      geom_jitter(aes(color=as.factor(c(results$int[subset],3)),shape=as.factor(c(results$method[subset],3))),alpha=0.5,size=5,pch=20,height=2,width=2)+
+      geom_jitter(aes(color=as.factor(c(results$int[subset],3)),shape=as.factor(c(results$method[subset],3))),alpha=0.5,size=5,height=2,width=2)+
       theme_bw()+
       theme(legend.text = element_text(size=rel(1.5)),
             legend.title = element_blank(),
@@ -362,7 +362,7 @@ for (h in unique(as.numeric(results$height))){
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results[subset,3],"Q",results[subset,2],sep=","),"truth"),size=rel(1))+
       scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("raxml","astral","ml"))
+      scale_shape_manual(labels = c("astral","raxml","ml"),values=c(1,16,17))
     print(plot2)
     
     heatmap(rf_matrix,labCol=FALSE,labRow=paste(results[subset,]$maf,results[subset,]$int,sep=","))
