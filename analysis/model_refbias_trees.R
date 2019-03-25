@@ -34,15 +34,20 @@ library(CCA)
 library(CCP)
 library(yacca)
 library(sem)
+library(dplyr)
+library(MuMIn)
+library(car)
 
 results.num <- results
 results.num$int <- as.numeric(results.num$int)
 results.num$noref <- as.numeric(results.num$noref)
+results.num$method <- as.numeric(results.num$method)
+results.num$missing <- as.numeric(results.num$missing)
 
-preds <- results.num[,c(2:7,9:10)]
-resp <- results.num[,c(11:22)]
+preds <- as.matrix(results.num[,c(2:8,10)])
+resp <- as.matrix(results.num[,c(12:21,23:27)])
 
-cca.out <- cca(preds,  resp[,-c(10:11)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
+cca.out <- cca(preds,  resp[,-c(12)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
 cca.out
 p.perm(preds, resp[,-c(10:11)])
 
@@ -87,38 +92,42 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 # JMA Modeling ###########################################
 # RF Distance ############################################
-dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, sites, std.sites, simulation,height))
+dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, sites, simulation, height, method))
 dat_rf$missing <- as.factor(dat_rf$missing)
+
+dat_astral <- dat_rf[dat_rf$method == "astral",]
+dat_raxml <- dat_rf[dat_rf$method == "raxml",]
+
 mod <- lm(RF.Dist.ML ~ .*., data=dat_rf)
 formula(mod)
 
-m.rf <- lm(RF.Dist.ML ~ quality + missing + maf + int + missing + noref , data = dat_rf)
+m.rf <- lm(RF.Dist.ML ~ quality + missing + maf + int + missing + noref, data = dat_raxml)
 summary(m.rf)
 r.squaredGLMM(m.rf)
 car::vif(m.rf)
 
 m.rf1 <- lmer(RF.Dist.ML ~ (quality + missing + maf + int + noref)#*(quality + missing + maf + int + noref + std.sites + height) 
-              + (1 | simulation), data = dat_rf, REML=FALSE)
+              + (1 | simulation), data = dat_astral, REML=FALSE)
 
 summary(m.rf1)
 vif(m.rf1)
 r.squaredGLMM(m.rf1)
 
-m.rf2 <- lm(RF.Dist.ML ~ (quality + missing + maf + int + noref + std.sites + height)*(quality + missing + maf + int + noref + std.sites + height), 
-            data = dat_rf)
+m.rf2 <- lm(RF.Dist.ML ~ (quality + missing + maf + int + noref + height)*(quality + missing + maf + int + noref + height), 
+            data = dat_raxml)
 summary(m.rf2)
 r.squaredGLMM(m.rf2)
 
 options(na.action="na.fail")
-m_list <- dredge(m.rf1, rank="AIC",trace=1)
+m_list <- dredge(m.rf2, rank="AIC",trace=1)
 head(m_list, 10)
 
-m.rf_list <- get.models(m_list, subset = delta < 10)
+m.rf_list <- get.models(m_list, subset = delta < 5)
 
 m.rf_avg <- model.avg(m.rf_list, revised.var = TRUE)
 sum.rf <- summary(m.rf_avg)
 
-confint.rf<-data.frame(confint(m.rf_avg))
+confint.rf<-data.frame(confint(m.rf_avg,method="full"))
 colnames(confint.rf) <- c("minCI","maxCI")
 confint.rf$var <- rownames(confint.rf)
 confint.rf$est <- sum.rf$coefficients[1,]
