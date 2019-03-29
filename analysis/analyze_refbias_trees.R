@@ -59,7 +59,7 @@ parse.args <- function() {
 args <- parse.args()
 
 
-####Read in concatenated tree file and ML tree file (make sure the latter is ultrametric us PL)
+####Read in concatenated tree file and ML tree file (make sure the latter is ultrametric)
 raxml.trees<-read.tree(paste("output/",args$raxml.trees,sep=""))
 astral.trees<-read.tree(paste("output/",args$astral.trees,sep=""))
 ml.tree<-read.tree(paste("output/",args$ml.trees,sep=""))
@@ -157,7 +157,7 @@ for (i in 1:length(astral.trees)) {
 
 combined.trees <- as.multiPhylo(c(raxml.trees,astral.trees))
 combined.names <- rbind(raxml.tree.names,astral.tree.names)
-#row.names(results) <- as.character(combined.names)
+row.names(results) <- as.character(combined.names)
 
 rm(raxml.trees)
 rm(astral.trees)
@@ -295,6 +295,7 @@ for (i in 1:length(combined.trees)){
 }
 
 summary(results)
+write.csv(results,file=paste("output/",args$output,".csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
 
 #########################
 ####Clean up dataframe
@@ -370,4 +371,4 @@ for (h in unique(as.numeric(results$height))){
 }
 dev.off()
 
-write.csv(results,file=paste("output/",args$output,".csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
+#write.csv(results,file=paste("output/",args$output,".csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
