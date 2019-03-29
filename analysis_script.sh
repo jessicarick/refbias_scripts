@@ -5,7 +5,7 @@ day=$1
 # concatenating raxml trees
 if [ ! -f output/${day}-all-raxml.trees ]; then
 	echo "concatenating raxml trees..."
-	for height in 500000 2000000 10000000;
+	for height in `cat refbias_config.txt | grep 'tree_height_list' | sed 's/tree_height_list=\'//' | sed 's/\'//'`;
 		do trees=output/${day}-${height}-batch.trees;
 		names=output/${day}-${height}-tree.names;
 		cat $trees >> output/${day}-all-raxml.trees;
