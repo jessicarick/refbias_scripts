@@ -53,8 +53,8 @@ for tree_height in $tree_height_list
 	source activate new_env
 	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:2 -cs $rand_num -o species_tree${sim}
 		
-	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
-#	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
+#	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
+	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
 	cat species_tree${sim}/1/s_tree.trees >> ${output_dir}/${day}-s_tree.tree
 	echo "height${tree_height}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-s_tree.names
 
