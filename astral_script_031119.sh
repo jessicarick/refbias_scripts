@@ -58,10 +58,10 @@ if [ ! -d astral/ ]; then
 fi
 
 if [ ! -f ${output_dir}/${day}-mutations ]; then
-	echo "gene,num_SNPs,num_nonInv" >> ${output_dir}/${day}-mutations.txt
+	echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 fi
 
-for i in `seq 100 110`;
+for i in `seq $genes`;
 
 	do sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
 
@@ -232,15 +232,19 @@ for QUAL in $qual_list
 #### run ASTRAL on the gene trees #####
 #######################################
 ## need to now close all of the for loops!
-
+    mutations_filter=$(grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l)
+    mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
+    mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
+    echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
 			done # closes miss
 		done # closes maf
 	done # closes QUAL
 cd ../../
 
 mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
+noRef=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.NOREF.phy | cut -f 2 -d' ')
 nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.phy | cut -f 2 -d' ')
-echo "height${tree_height}_sim${sim}_gene${i},$mutations,$nonInv" >> ${output_dir}/${day}-mutations.txt
+echo "height${tree_height}_sim${sim}_gene${i},$mutations,$noRef,$nonInv" >> ${output_dir}/${day}-mutations.txt
 
 done # closes genes
 
