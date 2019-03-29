@@ -157,7 +157,7 @@ for (i in 1:length(astral.trees)) {
 
 combined.trees <- as.multiPhylo(c(raxml.trees,astral.trees))
 combined.names <- rbind(raxml.tree.names,astral.tree.names)
-row.names(results) <- as.character(combined.names)
+#row.names(results) <- as.character(combined.names)
 
 rm(raxml.trees)
 rm(astral.trees)
