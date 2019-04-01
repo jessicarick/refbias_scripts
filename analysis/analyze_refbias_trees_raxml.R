@@ -9,7 +9,7 @@ suppressMessages(
   library(phytools),
   library(apTreeshape),
   library(phangorn),
-  library(readtext),
+  # library(readtext),
   library(ggpubr),
   # library(CCA)
   # library(GGally)
