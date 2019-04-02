@@ -54,6 +54,7 @@ module load jdk
 #######################################
 
 if [ ! -d astral/ ]; then
+	echo "creating astral directory"
 	mkdir astral/
 fi
 
@@ -61,7 +62,7 @@ if [ ! -f ${output_dir}/${day}-mutations ]; then
 	echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 fi
 
-for i in `seq $genes`;
+for i in `seq -w $genes`;
 
 	do sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
 
@@ -80,8 +81,8 @@ for fastq in $sim_fastq
     	sorted=aln_${fastq}.sorted.bam
 
     	echo "Mapping reads for $fastq \n"
-    	bwa index ../../sim${sim}/ref.fasta_files/${reference_prefix}_sim${sim}.fa
-	bwa mem -t 16 ../../sim${sim}/ref.fasta_files/${reference_prefix}_sim${sim}.fa \
+    	bwa index ../../${reference_prefix}_sim${sim}.fa
+	bwa mem -t 16 ../../${reference_prefix}_sim${sim}.fa \
     		../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz \
     		../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz > $sam
 
@@ -105,7 +106,7 @@ echo "Calling variants on gene${i}_sim${sim} \n"
 samtools mpileup -g -t DP,AD \
     	--skip-indels \
     	-P ILLUMINA \
-    	-f ../../sim${sim}/ref.fasta_files/${reference_prefix}_sim${sim}.fa \
+    	-f ../../${reference_prefix}_sim${sim}.fa \
    	aln_*.sorted.bam \
      	-o OUTFILE.bcf 
      

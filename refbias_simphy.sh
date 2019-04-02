@@ -36,7 +36,7 @@ for tree_height in $tree_height_list
 		header=`grep '^>' $reference | sed 's/>//g'`
 		echo "header is $header"
 
-		for i in `seq $genes`;
+		for i in `seq -w $genes`;
 			do range=`sed -n "${i}p" ${reference_prefix}.random.txt`;
 			samtools faidx $reference $header:$range >> ${reference_prefix}.random_${i}.tmp;
 			echo ">${header}_${length}" > ${reference_prefix}.random_${i}.fa

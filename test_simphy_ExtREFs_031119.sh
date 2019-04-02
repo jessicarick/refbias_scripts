@@ -17,7 +17,7 @@ taxa_ref=0_0_0
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
 
-	for i in `seq $genes`;
+	for i in `seq -w $genes`;
 	 do python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v $var_sites -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
 		python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
 		
@@ -219,7 +219,7 @@ mkdir -p sim${sim}/config_files
 mkdir -p sim${sim}/ref.fasta_files
 		
 mv *_config sim${sim}/config_files
-mv *.fa sim${sim}/ref.fasta_files
+cp *.fa sim${sim}/ref.fasta_files
 				
 ###Create a batch file with all trees in order by file type, and create a name file
 cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.trees
