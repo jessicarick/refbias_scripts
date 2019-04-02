@@ -109,6 +109,11 @@ samtools mpileup -g -t DP,AD \
     	-f ../../${reference_prefix}_sim${sim}.fa \
    	aln_*.sorted.bam \
      	-o OUTFILE.bcf 
+
+if [ ! -f OUTFILE.bcf ]; then
+	echo "ERROR: bcf file not created; exiting now"
+	exit 1
+fi
      
 	rm -f *.sam
 #	rm *.bam
@@ -137,6 +142,10 @@ for QUAL in $qual_list
 #################################
 #### FILTERING WITH VCFTOOLS ####
 #################################
+	if [ ! -f OUTFILE.s${sim}_q${QUAL}.vcf ]; then
+		echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf not found; exiting now"
+		exit 1
+	fi
 
         for maf in $maf_list
         	do for miss in $miss_list
