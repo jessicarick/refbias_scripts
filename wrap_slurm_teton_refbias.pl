@@ -107,7 +107,7 @@ push @slurmdirectives, "#SBATCH --job-name=$jobname";
 push @slurmdirectives, "#SBATCH --time=$runtime"; 
 push @slurmdirectives, "#SBATCH --nodes=1";
 push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 16 cores per node
-#push @slurmdirectives, "#SBATCH --mem=124G"; 
+push @slurmdirectives, "#SBATCH --mem=124G"; 
 push @slurmdirectives, "#SBATCH --workdir=$logdir";
 #          SLURM can send informative email messages to you about the
 #          status of your job.  
