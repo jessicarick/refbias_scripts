@@ -28,6 +28,9 @@ taxa_ref=0_0_0
 		cat ${reference_prefix}_gene*.fa | sed '1 i\>lmariae_genome_Feb2018' > ${reference_prefix}_sim${sim}.fa
 		
 
+## starting astral script
+/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+
 ##############################################
 ### Concatenate reads into single file########
 ########### for each species #################
@@ -222,5 +225,5 @@ mv *.fa sim${sim}/ref.fasta_files
 cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
 
-/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
 

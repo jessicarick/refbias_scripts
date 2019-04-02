@@ -11,7 +11,6 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 source /project/phylogenref/scripts/refbias_config.txt
 sim=$1
 tree_height=$2
-
 taxa_ref=$(($(($RANDOM%$num_sp))+1))_0_$(($RANDOM%$num_ind))
     
 ##############################################
@@ -28,6 +27,10 @@ taxa_ref=$(($(($RANDOM%$num_sp))+1))_0_$(($RANDOM%$num_ind))
 
 		cat ${reference_prefix}_gene*.fa | sed '1 i\>lmariae_genome_Feb2018' > ${reference_prefix}_sim${sim}.fa
 		
+
+## starting astral run
+/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
+
 
 ##############################################
 ### Concatenate reads into single file########
@@ -223,5 +226,5 @@ mv *.fa sim${sim}/ref.fasta_files
 cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}**q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
 
-/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
+#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
 
