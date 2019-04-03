@@ -29,12 +29,15 @@ taxa_ref=0_0_0
 		
 
 ## starting astral script
+echo "deploying ASTRAL script"
+date
 /project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
 
 ##############################################
 ### Concatenate reads into single file########
 ########### for each species #################
 ##############################################
+echo "beginning RAxML analyses"
 fastq_list=0
 
 while [ $(echo "$(expr length "$fastq_list")") -lt 2 ]
@@ -226,4 +229,10 @@ cat s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-batch.tree
 ls s${sim}*q*miss*/*bestTree* >> ${output_dir}/${day}-${tree_height}-tree.names
 
 #/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+date
+echo "all done with RAxML analyses; now just waiting for ASTRAL"
 
+wait
+
+echo "done with all processes for $tree_height sim${sim} EXT; exiting now"
+date
