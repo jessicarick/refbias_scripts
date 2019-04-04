@@ -65,15 +65,15 @@ fi
 for i in `seq -w $genes`;
 
 	do sim_fastq=0
-	while [ $(echo "$(expr length "$fastq_list")") -lt 2 ]
+	while [ $(echo "$(expr length "$sim_fastq")") -lt 2 ]
 		do
-			i =$(shuf -i 1-$gene_length -n 1)
-			if [ ! -f gene${i}_sim${sim}/fastq/sim*/*1.fq.gz ]
+			i=$(shuf -i 1-$gene_length -n 1)
+			if [ ! -f gene${i}_sim${sim}/fastq/sim_0_0_0/sim_0_0_0*1.fq.gz ]
 				then
 					echo "file empty. try again"
 				else
 					echo "file present. moving forward"
-					declare sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
+					declare sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
 			fi
 	done
 
