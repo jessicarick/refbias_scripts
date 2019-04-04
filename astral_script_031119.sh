@@ -64,7 +64,18 @@ fi
 
 for i in `seq -w $genes`;
 
-	do sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
+	do sim_fastq=0
+	while [ $(echo "$(expr length "$fastq_list")") -lt 2 ]
+		do
+			i =$(shuf -i 1-$gene_length -n 1)
+			if [ ! -f gene${i}_sim${sim}/fastq/sim*/*1.fq.gz ]
+				then
+					echo "file empty. try again"
+				else
+					echo "file present. moving forward"
+					declare sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
+			fi
+	done
 
 	if [ ! -d astral/gene${i}_sim${sim} ]; then
 		mkdir astral/gene${i}_sim${sim}
@@ -148,7 +159,7 @@ for QUAL in $qual_list
 	fi
 
         for maf in $maf_list
-        	do for miss in $miss_list
+        	do ( for miss in $miss_list
         		do echo "maf $maf; miss $miss"
 	                vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
         	                --out OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf} \
@@ -200,7 +211,7 @@ for QUAL in $qual_list
 				mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
         		fi
 			cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
-        		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
+        		cp RAxML*.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/
 
 #######################################
 #### Running RaxML w/o Ref ############
@@ -236,17 +247,17 @@ for QUAL in $qual_list
 				mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
 			fi
         		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*noInv*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
-        		cp RAxML* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+        		cp RAxML*.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
 
 #######################################
 #### run ASTRAL on the gene trees #####
 #######################################
-## need to now close all of the for loops!
+
     mutations_filter=$(grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l)
     mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
     mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
     echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
-			done # closes miss
+			done ) & #closes miss
 		done # closes maf
 	done # closes QUAL
 cd ../../
