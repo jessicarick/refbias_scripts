@@ -172,6 +172,9 @@ for QUAL in $qual_list
 #######################################
 #### CONVERTING VCF TO PHYLIP FILE ####
 #######################################
+			if [ ! -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf ]; then
+				echo "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}"
+			else
 			echo "converting vcf to phy"
                 
 			python /project/phylogenref/scripts/vcf2phylip.py -i OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
@@ -257,8 +260,10 @@ for QUAL in $qual_list
     mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
     mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
     echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
+			fi 
 			done ) & #closes miss
-		done # closes maf
+		done 
+		wait # closes maf
 	done # closes QUAL
 cd ../../
 
