@@ -17,6 +17,8 @@ taxa_ref=$(($(($RANDOM%$num_sp))+1))_0_$(($RANDOM%$num_ind))
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
   var_sites=(`Rscript ${REF_PATH}/var_sites.R $genes`)
+  echo $var_sites >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-INT
+  
 	for i in `seq -w $genes`;
 	 do python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v $var_sites -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
 		python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
