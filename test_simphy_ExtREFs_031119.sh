@@ -16,7 +16,7 @@ taxa_ref=0_0_0
 ##############################################
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
-  var_sites=(`Rscript var_sites.R $genes`)
+  var_sites=(`Rscript ${REF_PATH}/var_sites.R $genes`)
 	for i in `seq -w $genes`;
 	 do python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v `echo ${var_sites[$i]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
 		python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
