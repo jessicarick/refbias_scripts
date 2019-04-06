@@ -62,21 +62,21 @@ if [ ! -f ${output_dir}/${day}-mutations ]; then
 	echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 fi
 
-for i in `seq -w $genes`;
+echo "creating list of individuals"
+sim_fastq=0
+while [ $(echo "$(expr length "$sim_fastq")") -lt 2 ]
+	do k=$(shuf -i 1-$genes -n 1)
+		if [ ! -f gene${k}_sim${sim}/fastq/sim_0_0_0/sim_0_0_0*1.fq.gz ]; then
+				echo "file empty. try again"
+			else
+				echo "file present. moving forward"
+				declare sim_fastq=`ls gene${k}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
+		fi
+done
 
-	do sim_fastq=0
-	while [ $(echo "$(expr length "$sim_fastq")") -lt 2 ]
-		do
-			i=$(shuf -i 1-$gene_length -n 1)
-			if [ ! -f gene${i}_sim${sim}/fastq/sim_0_0_0/sim_0_0_0*1.fq.gz ]
-				then
-					echo "file empty. try again"
-				else
-					echo "file present. moving forward"
-					declare sim_fastq=`ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
-			fi
-	done
 
+for i in `seq -w $genes`;   
+	do echo "starting work with gene $i"
 	if [ ! -d astral/gene${i}_sim${sim} ]; then
 		mkdir astral/gene${i}_sim${sim}
 		cd astral/gene${i}_sim${sim}/
@@ -159,7 +159,7 @@ for QUAL in $qual_list
 	fi
 
         for maf in $maf_list
-        	do ( for miss in $miss_list
+        	do for miss in $miss_list
         		do echo "maf $maf; miss $miss"
 	                vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
         	                --out OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf} \
@@ -173,7 +173,7 @@ for QUAL in $qual_list
 #### CONVERTING VCF TO PHYLIP FILE ####
 #######################################
 			if [ ! -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf ]; then
-				echo "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}"
+				echo "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}; moving on"
 			else
 			echo "converting vcf to phy"
                 
@@ -256,21 +256,15 @@ for QUAL in $qual_list
 #### run ASTRAL on the gene trees #####
 #######################################
 
-    mutations_filter=$(grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l)
-    mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
-    mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
-    echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
+    			mutations_filter=$(grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l)
+    			mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
+    			mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
+    			echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
 			fi 
-			done ) & #closes miss
-		done 
-		wait # closes maf
+			done #closes miss
+		done  # closes maf
 	done # closes QUAL
 cd ../../
-
-mutations=$(grep -v '^#' astral/gene${i}_sim${sim}/OUTFILE_s${sim}_q0_miss0_maf0.recode.vcf | wc -l)
-noRef=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.NOREF.phy | cut -f 2 -d' ')
-nonInv=$(head -n 1 astral/gene${i}_sim${sim}/OUTFILE_gene${i}_s${sim}_q0_miss0_maf0.noInv.phy | cut -f 2 -d' ')
-echo "height${tree_height}_sim${sim}_gene${i},$mutations,$noRef,$nonInv" >> ${output_dir}/${day}-mutations.txt
 
 done # closes genes
 
