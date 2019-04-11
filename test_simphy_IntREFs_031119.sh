@@ -137,6 +137,12 @@ done
                                 --apply-filter "PASS" \
                                 --output-type v \
                                 --output-file OUTFILE.s${sim}_q${QUAL}.vcf
+                
+                if [ "$QUAL" -eq "0" ]; then
+                    echo "QUAL=0; Calculating Dxy from calc_dxy script."
+                    ${REF_PATH}/calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref
+                    echo "done calculating Dxy"
+                fi
 
 #################################
 #### FILTERING WITH VCFTOOLS ####
