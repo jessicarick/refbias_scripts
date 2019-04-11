@@ -11,6 +11,8 @@ tree_height=$2
 taxa_ref=$3
 int=$4
 
+reference_prefix=lmariae_${tree_height}_${sim}_
+
 #######################################
 ##### Setting parameter values ########
 #######################################

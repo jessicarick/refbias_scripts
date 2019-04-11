@@ -6,8 +6,8 @@ num_sims='1 2'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
+reference_prefix=lmariae_1000000
 
-reference_prefix=lmariae_500000
 ref_length=1000000
 gene_length=1000
 genes=$(expr $ref_length / $gene_length)
