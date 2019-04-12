@@ -89,6 +89,13 @@ for i in `seq -w $genes`;
 for fastq in $sim_fastq
 	do echo "Fastq: $fastq \n"
         
+	if [ !-f ../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz ]; then
+		echo "fastq does not exist for $fastq; moving on"
+		continue
+	else
+		echo "fastq exists for $fastq; continuing with alignment"
+		
+
     	sam=aln_${fastq}.sam
     	bam=aln_${fastq}.bam
     	sorted=aln_${fastq}.sorted.bam
@@ -105,8 +112,9 @@ for fastq in $sim_fastq
     	echo "Sorting and indexing bam files for $fastq \n"
     	samtools sort $bam -o $sorted
     	samtools index -c $sorted
-done	
 
+	fi
+done	
 
 ##############################################
 #### CREATING RAW VARIANTS FILE FROM BAMs ####
@@ -124,8 +132,8 @@ samtools mpileup -g -t DP,AD \
      	-o OUTFILE.bcf 
 
 if [ ! -f OUTFILE.bcf ]; then
-	echo "ERROR: bcf file not created; exiting now"
-	exit 1
+	echo "ERROR: bcf file not created; moving to next gene"
+	continue
 fi
      
 	rm -f *.sam
@@ -157,7 +165,7 @@ for QUAL in $qual_list
 #################################
 	if [ ! -f OUTFILE.s${sim}_q${QUAL}.vcf ]; then
 		echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf not found; exiting now"
-		exit 1
+		continue
 	fi
 
         for maf in $maf_list
