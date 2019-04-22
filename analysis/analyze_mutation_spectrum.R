@@ -1,7 +1,38 @@
 library(tidyverse)
 library(ggpubr)
 
-mut <- read.csv("output/040319-mutations.txt", header=T, stringsAsFactors=F)
+## Pulling info on simulated number of sites
+mut.files <- list.files(path="output/",pattern="040519-varSites*")
+
+mut.all <- data.frame(gene=integer(),
+                      variants=integer(),
+                      sim_num=integer(),
+                      tree_height=integer(),
+                      int_ext=character(),
+                      stringsAsFactors = FALSE)
+
+for (i in 1:length(mut.files)){
+  varsites <- scan(paste("output/",mut.files[i],sep=""))
+  sim <- as.integer(regmatches(mut.files[i], regexec('sim([0-9]+)', mut.files[i]))[[1]][2])
+  height <- as.integer(regmatches(mut.files[i], regexec('-([0-9]+)\\-sim', mut.files[i]))[[1]][2])
+  int <- as.character(regmatches(mut.files[i], regexec('-([A-Z]+)', mut.files[i]))[[1]][2])
+  mut.df <- data.frame(gene=seq(1,1000),
+                       variants=mut[-1],
+                       sim_num=sim,
+                       tree_height=height,
+                       int_ext=int)
+  mut.all <- rbind(mut.all,mut.df)
+}
+mut.all$tree_height <- as.factor(mut.all$tree_height)
+ggpubr::gghistogram(data=mut.all,x="variants",
+                    color="tree_height",
+                    fill="tree_height",
+                    xlab="Variant Sites",
+                    ylab="Frequency",
+                    bins=30,
+                    add="mean")
+
+## Pulling information from 
 
 for (i in 1:nrow(mut)){
   mut$height[i] <- as.integer(regmatches(mut$gene[i], regexec('height([0-9]+)\\_s', mut$gene[i]))[[1]][2])
@@ -63,7 +94,7 @@ ggdensity(diff, x = "mean_orig",
 ######
 
 mut.mean <- mut[!is.na(mut$maf),] %>% 
-  group_by(.dots=c("height","miss","qual","maf")) %>% 
+  group_by(.dots=c("locus","height","miss","qual","maf")) %>% 
   summarize(mean=mean(num_SNPs))
 orig.mean <- mut[is.na(mut$maf),] %>% 
   group_by(height) %>% 
@@ -74,16 +105,14 @@ mut.mean$orig_mean <- case_when(mut.mean$height == 500000 ~ orig.mean$mean[1],
                                   mut.mean$height == 10000000 ~ orig.mean$mean[3])
 mut.mean$diff <- mut.mean$orig_mean - mut.mean$mean
 
-mod1 <- lm(diff ~ height + miss + maf + qual, data=mut.mean)
-summary(mod1)
-
 mut.mean$maf <- as.factor(mut.mean$maf)
 mut.mean$miss <- as.factor(mut.mean$miss)
 ggdensity(diff, x = c("mean_orig","mean_filtered"),
           add = "mean", rug = TRUE,
           color = "height", fill = "height",
           palette = "npg",combine=TRUE)
-ggdensity(mut.mean, x = "diff",
+
+ggdensity(mut.mean[mut.mean$height == 10000000,], x = "diff",
           add = "mean", rug = TRUE,
-          color = "miss", fill = "miss",
+          color = "maf", fill = "maf",
           palette = "npg")
