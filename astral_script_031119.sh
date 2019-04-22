@@ -89,7 +89,7 @@ for i in `seq -w $genes`;
 for fastq in $sim_fastq
 	do echo "Fastq: $fastq \n"
         
-	if [ !-f ../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz ]; then
+	if [ ! -f ../../gene${i}_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz ]; then
 		echo "fastq does not exist for $fastq; moving on"
 		continue
 	else
@@ -164,8 +164,14 @@ for QUAL in $qual_list
 #### FILTERING WITH VCFTOOLS ####
 #################################
 	if [ ! -f OUTFILE.s${sim}_q${QUAL}.vcf ]; then
-		echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf not found; exiting now"
+		echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf does not exist; exiting now"
 		continue
+	else
+		num_var=`grep -v '^#' OUTFILE.s${sim}_q${QUAL}.vcf | wc -l`
+		if [ "$num_var" -eq "0" ]; then
+			echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf does not have any variants; skipping to next"
+			continue
+		fi
 	fi
 
         for maf in $maf_list
@@ -185,6 +191,11 @@ for QUAL in $qual_list
 			if [ ! -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf ]; then
 				echo "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}; moving on"
 			else
+				num_var=`grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l`
+				if [ "$num_var" -eq "0" ]; then
+					echo  "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}; moving on"
+					continue
+				fi
 			echo "converting vcf to phy"
                 
 			python /project/phylogenref/scripts/vcf2phylip.py -i OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
@@ -269,7 +280,7 @@ for QUAL in $qual_list
     			mutations_filter=$(grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l)
     			mutations_filter_nonInv=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | cut -f 2 -d' ')
     			mutations_filter_noRef=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
-    			echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
+    			echo "height${tree_height}_sim${sim}_gene${i}_q${QUAL}_miss${miss}_maf${maf}_${int},$mutations_filter,$mutations_filter_noRef,$mutations_filter_nonInv" >> ${output_dir}/${day}-mutations.txt
 			fi 
 			done #closes miss
 		done  # closes maf
