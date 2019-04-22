@@ -96,9 +96,9 @@ for fastq in $sim_fastq
 		echo "fastq exists for $fastq; continuing with alignment"
 		
 
-    	sam=aln_${fastq}.sam
-    	bam=aln_${fastq}.bam
-    	sorted=aln_${fastq}.sorted.bam
+    	sam=aln_${fastq}_gene${i}.sam
+    	bam=aln_${fastq}_gene${i}.bam
+    	sorted=aln_${fastq}_gene${i}.sorted.bam
 
     	echo "Mapping reads for $fastq \n"
     	bwa index ../../${reference_prefix}_sim${sim}.fa
@@ -128,19 +128,19 @@ samtools mpileup -g -t DP,AD \
     	--skip-indels \
     	-P ILLUMINA \
     	-f ../../${reference_prefix}_sim${sim}.fa \
-   	aln_*.sorted.bam \
-     	-o OUTFILE.bcf 
+   	aln_*gene${i}.sorted.bam \
+     	-o OUTFILE_gene${i}.bcf 
 
-if [ ! -f OUTFILE.bcf ]; then
+if [ ! -f OUTFILE_gene${i}.bcf ]; then
 	echo "ERROR: bcf file not created; moving to next gene"
 	continue
 fi
      
-	rm -f *.sam
-#	rm *.bam
+	rm -f *gene${i}.sam
+	rm -f *gene${i}.bam
 	rm -f *.bam.csi
 
-	ls aln_*.sorted.bam | xargs -n 1 basename | sed 's/\.sorted\.bam//' | sed 's/aln_//' > names     
+	ls aln_*gene${i}.sorted.bam | xargs -n 1 basename | sed 's/\.sorted\.bam//' | sed 's/aln_//' > names     
 
 #	bcftools reheader -s OUTFILE.bcf > OUTFILE_RN.bcf
 
@@ -150,7 +150,7 @@ for QUAL in $qual_list
                 --variants-only \
                 --format-fields GQ \
                 --skip-variants indels \
-                OUTFILE.bcf | bcftools filter \
+                OUTFILE_gene${i}.bcf | bcftools filter \
                         --set-GTs . \
                         --include $(printf "QUAL>$QUAL")$(printf "&&")$(printf "FMT/GQ>10") | bcftools view \
                                 --min-alleles 2 \
@@ -158,18 +158,18 @@ for QUAL in $qual_list
                                 --types snps \
                                 --apply-filter "PASS" \
                                 --output-type v \
-                                --output-file OUTFILE.s${sim}_q${QUAL}.vcf
+                                --output-file OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf
 
 #################################
 #### FILTERING WITH VCFTOOLS ####
 #################################
-	if [ ! -f OUTFILE.s${sim}_q${QUAL}.vcf ]; then
-		echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf does not exist; exiting now"
+	if [ ! -f OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf ]; then
+		echo "ERROR: file OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf does not exist; exiting now"
 		continue
 	else
-		num_var=`grep -v '^#' OUTFILE.s${sim}_q${QUAL}.vcf | wc -l`
+		num_var=`grep -v '^#' OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf | wc -l`
 		if [ "$num_var" -eq "0" ]; then
-			echo "ERROR: file OUTFILE.s${sim}_q${QUAL}.vcf does not have any variants; skipping to next"
+			echo "ERROR: file OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf does not have any variants; skipping to next"
 			continue
 		fi
 	fi
@@ -177,8 +177,8 @@ for QUAL in $qual_list
         for maf in $maf_list
         	do for miss in $miss_list
         		do echo "maf $maf; miss $miss"
-	                vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
-        	                --out OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf} \
+	                vcftools --vcf OUTFILE.gene${i}_s${sim}_q${QUAL}.vcf \
+        	                --out OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf} \
                 	        --remove-filtered-all \
                         	--maf $(printf "$maf") \
                         	--max-missing $(printf "$miss") \
@@ -188,17 +188,17 @@ for QUAL in $qual_list
 #######################################
 #### CONVERTING VCF TO PHYLIP FILE ####
 #######################################
-			if [ ! -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf ]; then
+			if [ ! -f OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf ]; then
 				echo "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}; moving on"
 			else
-				num_var=`grep -v '^#' OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l`
+				num_var=`grep -v '^#' OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf | wc -l`
 				if [ "$num_var" -eq "0" ]; then
 					echo  "no sites left in VCF for gene${gene}_s${sim}_q${QUAL}_miss${miss}_maf${maf}; moving on"
 					continue
 				fi
 			echo "converting vcf to phy"
                 
-			python /project/phylogenref/scripts/vcf2phylip.py -i OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
+			python /project/phylogenref/scripts/vcf2phylip.py -i OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
                         	-o OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy \
                         
                		#rm OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
@@ -207,9 +207,9 @@ for QUAL in $qual_list
 #### Removing invariant sites  ########
 #######################################           
 			echo "removing invariant sites"
-			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')" > Rscript_astral.R
+			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')" > Rscript_astral_maf${maf}.R
                 
-                	R --vanilla --no-save < Rscript_astral.R
+                	R --vanilla --no-save < Rscript_astral_maf${maf}.R
                 
 #######################################
 #### Running RaxML w/ Ref #############
@@ -248,9 +248,9 @@ for QUAL in $qual_list
 			cat ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | sed '/^'sim_$taxa_ref'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
         		
 			echo "removing invariant sites"
-                	printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')" > Rscript_astral.R
+                	printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')" > Rscript_astral_maf${maf}.R
 
-                	R --vanilla --no-save < Rscript_astral.R
+                	R --vanilla --no-save < Rscript_astral_maf${maf}.R
 
 			sites_noref=$(head -n 1 OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy | cut -f 2 -d' ')
 

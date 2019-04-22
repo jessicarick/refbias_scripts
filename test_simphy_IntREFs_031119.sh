@@ -130,7 +130,7 @@ done
                 --skip-variants indels \
                 OUTFILE_q${QUAL}_RN.bcf | bcftools filter \
                         --set-GTs . \
-                        --include $(printf "QUAL>40")$(printf "&&")$(printf "FMT/GQ>10") | bcftools view \
+                        --include $(printf "QUAL>$QUAL")$(printf "&&")$(printf "FMT/GQ>10") | bcftools view \
                                 --min-alleles 2 \
                                 --max-alleles 2 \
                                 --types snps \
@@ -138,11 +138,13 @@ done
                                 --output-type v \
                                 --output-file OUTFILE.s${sim}_q${QUAL}.vcf
                 
-                if [ "$QUAL" -eq "0" ]; then
+                if [[ "$QUAL" -eq 0 ]]; then
                     echo "QUAL=0; Calculating Dxy from calc_dxy script."
                     ${REF_PATH}/calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref
                     echo "done calculating Dxy"
-                fi
+                else
+		    echo "QUAL is $QUAL; not calculating Dxy this time."
+		fi
 
 #################################
 #### FILTERING WITH VCFTOOLS ####
@@ -189,7 +191,7 @@ done
            				  echo "everything is good"
         	     fi
         		
-              raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.INT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+              raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.INT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
         
 #######################################
 #### Running RaxML w/o Ref ############
@@ -215,7 +217,7 @@ done
            				echo "everything is good"
         	fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.INT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
+        		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.INT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
         
         
 				mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.INT.ref-${taxa_ref}.phylip_tree_files
