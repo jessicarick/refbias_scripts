@@ -34,9 +34,9 @@ taxa_ref=0_0_0
 		
 
 ## starting astral script
-echo "deploying ASTRAL script"
-date
-/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+#echo "deploying ASTRAL script"
+#date
+#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
 
 ##############################################
 ### Concatenate reads into single file########

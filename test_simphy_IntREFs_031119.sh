@@ -34,9 +34,9 @@ taxa_ref=$(($(($RANDOM%$num_sp))+1))_0_$(($RANDOM%$num_ind))
 		
 
 ## starting astral run
-echo "deploying ASTRAL script"
-date
-/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
+#echo "deploying ASTRAL script"
+#date
+#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref INT
 
 
 ##############################################
