@@ -2,7 +2,7 @@ REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.
 output_dir=/project/phylogenref/scripts/output
 day=`date +%m%d%y`
 
-num_sims='1 2'
+num_sims='2'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
@@ -28,5 +28,5 @@ tree_height_list='500000 2000000 10000000'
 ##############################################
 
 qual_list='0 20 40 60'
-maf_list='0 0.01 0.02 0.03 0.04 0.05 0.10 0.15'
+maf_list='0 0.01 0.03 0.05 0.10 0.15'
 miss_list='0 0.25 0.50 0.75 1.0'

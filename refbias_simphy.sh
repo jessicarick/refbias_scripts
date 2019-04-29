@@ -25,7 +25,7 @@ echo "max length: $max"
 for tree_height in $tree_height_list
 	do mkdir sims_$tree_height
 	cd sims_$tree_height
-	for sim in `seq $num_sims`
+	for sim in $num_sims
 		do mkdir sim${sim}
 		cd sim${sim}
 		
@@ -55,7 +55,7 @@ for tree_height in $tree_height_list
 	rand_num=`echo $RANDOM`
 	echo "random number seed: ${rand_num}"
 	
-	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:2 -cs $rand_num -o species_tree${sim}
+	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:3 -cs $rand_num -o species_tree${sim}
 		
 #	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
 #	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
