@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-raxml.trees <- "031419-all-raxml.trees"
-raxml.tree.names <- "031419-all-raxml.names"
-astral.trees <- "031419-all-astral.trees"
-astral.tree.names <- "031419-all-astral.names"
-ml.trees <- "031419-s_tree.trees"
-ml.tree.names <- "031419-s_tree.names"
-output <- "031419-output"
-args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+#raxml.trees <- "031419-all-raxml.trees"
+#raxml.tree.names <- "031419-all-raxml.names"
+#astral.trees <- "031419-all-astral.trees"
+#astral.tree.names <- "031419-all-astral.names"
+#ml.trees <- "031419-s_tree.trees"
+#ml.tree.names <- "031419-s_tree.names"
+#output <- "031419-output"
+#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -167,7 +167,7 @@ for (i in 1:length(raxml.trees)){
   #rooted <- root(raxml.trees[[i]],results.raxml$taxa_ref[i])
   
   ###Replace NA branch lengths
-  raxml.trees[[i]]$edge.length[is.na(raxml.trees[[i]]$edge.length)] <- 0
+  #raxml.trees[[i]]$edge.length[is.na(raxml.trees[[i]]$edge.length)] <- 0
   
   ###Gamma stat
   results.raxml$gamma[i]<-gammaStat(raxml.trees[[i]])[1]
