@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-#raxml.trees <- "031419-all-raxml.trees"
-#raxml.tree.names <- "031419-all-raxml.names"
-#astral.trees <- "031419-all-astral.trees"
-#astral.tree.names <- "031419-all-astral.names"
-#ml.trees <- "031419-s_tree.trees"
-#ml.tree.names <- "031419-s_tree.names"
-#output <- "031419-output"
-#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+raxml.trees <- "042419-all-raxml.trees"
+raxml.tree.names <- "042419-all-raxml.names"
+astral.trees <- "042419-all-astral.trees"
+astral.tree.names <- "042419-all-astral.names"
+ml.trees <- "042419-s_tree.tree"
+ml.tree.names <- "042419-s_tree.names"
+output <- "042419-output"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -171,31 +171,35 @@ for (i in 1:length(raxml.trees)){
   
   ###Gamma stat
   results.raxml$gamma[i]<-gammaStat(raxml.trees[[i]])[1]
-  
+
   ###Gamma on ingroup only
-  ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
+  if(results.raxml$noref[i] == "NOREF" & results.raxml$taxa_ref[1] == "0_0_0"){
+    ingroup <- raxml.trees[[i]] } else {
+      ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
+    }
+
   results.raxml$ingroup.gamma[i] <- gammaStat(ingroup)[1]
-  
+
   ###Colless or Ic stat
   results.raxml$colless[i]<-colless(as.treeshape(raxml.trees[[i]], model="pda"))
   results.raxml$ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda"))
-  
+
   ###Sackin stat
   results.raxml$sackin[i]<-sackin(as.treeshape(raxml.trees[[i]], model="pda"))
   results.raxml$ingroup.sackin[i]<-sackin(as.treeshape(ingroup, model="pda"))
-  
+
   ###Total tree height
   results.raxml$tree.height[i]<-max(branching.times(raxml.trees[[i]]),na.rm=T)
-  
+
   ###Mean BLs
   results.raxml$Avg.BLs[i]<-mean(raxml.trees[[i]]$edge.length,na.rm=T)
-  
+
   ###SD BLs
   results.raxml$SD.BLs[i]<-sd(raxml.trees[[i]]$edge.length,na.rm=T)
   
-  ####Add mean and SD of BS support values?
-  results.raxml$mean.support<-mean(raxml.trees[[i]]$node.label,na.rm=T)
-  results.raxml$sd.support<-sd(raxml.trees[[i]]$node.label,na.rm=T)
+  ####Add mean and SD of BS support values
+  results.raxml$mean.support[i]<-mean(as.numeric(raxml.trees[[i]]$node.label),na.rm=T)
+  results.raxml$sd.support[i]<-sd(as.numeric(raxml.trees[[i]]$node.label),na.rm=T)
   
 }
 
@@ -308,7 +312,7 @@ results.raxml$method <- as.factor(results.raxml$method)
 # 
 
 ####As a start, visualize correlations between all variables
-#psych::pairs.panels(results.raxml[results.raxml$maf %in% c(0,0.01,0.05),c("quality","missing","maf","int","noref","gamma","colless","sackin","tree.height","Avg.BLs","SD.BLs")],cex.cor=2)
+psych::pairs.panels(results.raxml[,c("quality","missing","maf","int","noref","gamma","colless","sackin","tree.height","Avg.BLs","SD.BLs","ingroup.gamma","ingroup.colless","ingroup.sackin","mean.support","sd.support")],cex.cor=2)
 
 
 ####################BEGIN ANALYSIS ################################
