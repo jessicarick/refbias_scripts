@@ -38,16 +38,16 @@ library(dplyr)
 library(MuMIn)
 library(car)
 
-results.num <- results
+results.num <- results.raxml
 results.num$int <- as.numeric(results.num$int)
 results.num$noref <- as.numeric(results.num$noref)
 results.num$method <- as.numeric(results.num$method)
 results.num$missing <- as.numeric(results.num$missing)
 
 preds <- as.matrix(results.num[,c(2:8,10)])
-resp <- as.matrix(results.num[,c(12:21,23:27)])
+resp <- as.matrix(results.num[,c(11:26)])
 
-cca.out <- cca(preds,  resp[,-c(12)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
+cca.out <- cca(preds[,-2],  resp[,-c(15:16)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
 cca.out
 p.perm(preds, resp[,-c(10:11)])
 
