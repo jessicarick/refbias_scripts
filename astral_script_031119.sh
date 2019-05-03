@@ -95,7 +95,6 @@ for fastq in $sim_fastq
 	else
 		echo "fastq exists for $fastq; continuing with alignment"
 		
-
     	sam=aln_${fastq}_gene${i}.sam
     	bam=aln_${fastq}_gene${i}.bam
     	sorted=aln_${fastq}_gene${i}.sorted.bam

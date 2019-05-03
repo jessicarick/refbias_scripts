@@ -70,10 +70,10 @@ raxml.tree.names<-read.table(paste("output/",args$raxml.tree.names,sep=""),strin
 ml.tree.names <- read.table(paste("output/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
 
 ###Pull info about ml species trees
-ml.tree.info <- data.frame(simulation = numeric(nrow(ml.tree.names)),height=numeric(nrow(ml.tree.names)))
-for (i in 1:nrow(ml.tree.names)){
-  ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sim([0-9]+)', ml.tree.names[i,1]))[[1]][2])
-  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('height([0-9]+)', ml.tree.names[i,1]))[[1]][2])
+ml.tree.info <- data.frame(simulation = numeric(length(ml.tree.names)),height=numeric(length(ml.tree.names)))
+for (i in 1:length(ml.tree.names)){
+  ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i], regexec('sim([0-9]+)', ml.tree.names[i]))[[1]][2])
+  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i], regexec('height([0-9]+)', ml.tree.names[i]))[[1]][2])
 }
 
 ###################
