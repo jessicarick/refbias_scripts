@@ -1,2 +1,1 @@
 sim tree_height int taxa_ref avg_dist
-sim tree_height int taxa_ref avg_dist
