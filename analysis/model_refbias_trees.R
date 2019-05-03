@@ -39,17 +39,17 @@ library(MuMIn)
 library(car)
 
 results.num <- results.raxml
-results.num$int <- as.numeric(results.num$int)
-results.num$noref <- as.numeric(results.num$noref)
-results.num$method <- as.numeric(results.num$method)
+results.num$int <- as.numeric(as.factor(results.num$int))
+results.num$noref <- as.numeric(as.factor(results.num$noref))
+results.num$method <- as.numeric(as.factor(results.num$method))
 results.num$missing <- as.numeric(results.num$missing)
 
-preds <- as.matrix(results.num[,c(2:8,10)])
-resp <- as.matrix(results.num[,c(11:26)])
+preds <- as.matrix(results.num[,c(2:8,11)])
+resp <- as.matrix(results.num[,c(12:26)])
 
-cca.out <- cca(preds[,-2],  resp[,-c(15:16)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
+cca.out <- cca(preds[,-2],  resp[,-c(11:15)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
 cca.out
-p.perm(preds, resp[,-c(10:11)])
+p.perm(preds[,-2], resp[,-c(11:16)])
 
 par(mar = c(2,2,2,2), mfrow = c(1,2))
 yacca::helio.plot(cca.out, cv = 1, x.name = "Predictors", y.name = "Response")
@@ -67,11 +67,11 @@ yacca::helio.plot(cca.out, cv = 4, x.name = "Predictors", y.name = "Response")
 #################################
 
 # ## rf dist
-results.mod <- results
+results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
-results.mod$maf <- as.factor(results.mod$maf)
+results.mod$maf <- as.numeric(results.mod$maf)
 # 
 # m.rf <- lmer(RF.Dist.ML ~ quality * missing * maf * int * noref * std.sites * height + (1 | simulation), data = results.mod)
 # 
@@ -92,7 +92,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 # JMA Modeling ###########################################
 # RF Distance ############################################
-dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, sites, simulation, height, method))
+dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, std.sites, simulation, height, method))
 dat_rf$missing <- as.factor(dat_rf$missing)
 
 dat_astral <- dat_rf[dat_rf$method == "astral",]
@@ -106,14 +106,14 @@ summary(m.rf)
 r.squaredGLMM(m.rf)
 car::vif(m.rf)
 
-m.rf1 <- lmer(RF.Dist.ML ~ (quality + missing + maf + int + noref)#*(quality + missing + maf + int + noref + std.sites + height) 
-              + (1 | simulation), data = dat_astral, REML=FALSE)
+m.rf1 <- lmer(RF.Dist.ML ~ (quality + missing + maf + int + noref + std.sites)#*(quality + missing + maf + int + noref + std.sites + height) 
+              + (1 | simulation), data = dat_raxml, REML=FALSE)
 
 summary(m.rf1)
 vif(m.rf1)
 r.squaredGLMM(m.rf1)
 
-m.rf2 <- lm(RF.Dist.ML ~ (quality + missing + maf + int + noref + height)*(quality + missing + maf + int + noref + height), 
+m.rf2 <- lm(RF.Dist.ML ~ (quality + missing + maf + int + noref + height + std.sites)*(quality + missing + maf + int + noref + height + std.sites), 
             data = dat_raxml)
 summary(m.rf2)
 r.squaredGLMM(m.rf2)
