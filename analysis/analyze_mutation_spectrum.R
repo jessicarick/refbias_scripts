@@ -2,7 +2,7 @@ library(tidyverse)
 library(ggpubr)
 
 ## Pulling info on simulated number of sites
-mut.files <- list.files(path="output/",pattern="042419-varSites*")
+mut.files <- list.files(path="output/",pattern="042919-varSites*")
 
 mut.all <- data.frame(gene=integer(),
                       variants=integer(),
@@ -24,7 +24,7 @@ for (i in 1:length(mut.files)){
   mut.all <- rbind(mut.all,mut.df)
 }
 mut.all$tree_height <- as.factor(mut.all$tree_height)
-ggpubr::gghistogram(data=mut.all,x="variants",
+ggpubr::ggdensity(data=mut.all,x="variants",
                     color="tree_height",
                     fill="tree_height",
                     xlab="Variant Sites",
