@@ -25,7 +25,7 @@ echo "max length: $max"
 for tree_height in $tree_height_list
 	do mkdir sims_$tree_height
 	cd sims_$tree_height
-	for sim in $num_sims
+	for sim in `seq $num_sims`
 		do mkdir sim${sim}
 		cd sim${sim}
 		
@@ -74,3 +74,12 @@ done
 echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
 echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
+####################################
+## Write partition file for RAxML ##
+####################################
+for i in `seq $genes`
+	do name=`echo gene${i}`
+	min=$((1000*$((i-1))+1))
+	max=$((1000*i))
+	echo "DNA, ${name}=${min}-${max}" >> partitions.txt
+done

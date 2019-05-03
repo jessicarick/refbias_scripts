@@ -1,2 +1,1 @@
 gene,num_SNPs,num_noRef,num_nonInv
-gene,num_SNPs,num_noRef,num_nonInv
