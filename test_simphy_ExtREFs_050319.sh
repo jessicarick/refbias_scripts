@@ -166,7 +166,28 @@ for QUAL in $qual_list
 #######################################
 
                 	python ${REF_PATH}/vcf2phylip.py -i OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
-                        	-o OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy \
+                        	-o OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy 
+
+##################################    
+#### CREATING PARTITIONS FILE ####
+##################################
+                  
+                  VCF=OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
+                  for locus in `seq $genes`
+                      do name=`echo gene${locus}`
+                      min=$((1000*$((locus-1))+1))
+                      max=$((1000*locus))
+                      sites=`vcftools --vcf $VCF --chr  ${reference_prefix}_ --from-bp $min --to-bp $max --recode --stdout | grep -v  '^#' | wc -l`
+                      echo "${name},${sites}" >> sites.txt
+                  done
+                  
+                  for line in `cat sites.txt`;
+                      do gene=`echo "$line" | cut -f 1 -d','`
+                      sites=`echo $line | cut -f 2 -d','`
+                      prev=`tail -n 1 partitions.txt | cut  -f 2 -d'-'`
+                      start=$((prev+1)); end=$((start + sites))
+                      echo "DNA,  ${gene}=${start}-${end}" >> partitions.txt
+                  done
                         
                 	rm -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
      
@@ -174,7 +195,7 @@ for QUAL in $qual_list
 #### Removing invariant sites  ########
 #######################################           
 
-		        printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy',format='phylip')" > Rscript.R
+		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy',format='phylip')" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
@@ -185,19 +206,22 @@ for QUAL in $qual_list
               		sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | head -n 1 | cut -f 2 -d' ')
 			        
                		if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out ]]
-				then
-  					rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out
-          			else
-           				echo "everything is good"
-        	     	fi
-        		
+				              then
+                          rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out
+          			      else
+           				        echo "everything is good; running raxml"
+        	     	  fi
+        	     	  
+        		      echo "running raxml to create gene tree alignments"
+        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.partitions.out
+        		      
+        		      echo "running raxml on concatenated SNPs"
               		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
         
 #######################################
 #### Running RaxML w/o Ref ############
 ##### First delete ref from .phy ######
 #######################################
-###Here is an issue...awk ###
 
 			numtaxa=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | head -n1 | awk '{print $1;}')
 			newtaxa=$(($numtaxa - 1))
