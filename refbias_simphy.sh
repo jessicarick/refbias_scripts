@@ -74,12 +74,3 @@ done
 echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
 echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
-####################################
-## Write partition file for RAxML ##
-####################################
-for i in `seq $genes`
-	do name=`echo gene${i}`
-	min=$((1000*$((i-1))+1))
-	max=$((1000*i))
-	echo "DNA, ${name}=${min}-${max}" >> partitions.txt
-done
