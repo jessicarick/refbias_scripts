@@ -2,13 +2,13 @@ REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.
 output_dir=/project/phylogenref/scripts/output
 day=`date +%m%d%y`
 
-num_sims='3'
+num_sims='1'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
-reference_prefix=lmariae_5000000
+reference_prefix=lmariae_100000
 
-ref_length=5000000
+ref_length=100000
 gene_length=1000
 genes=$(expr $ref_length / $gene_length)
 #max=`grep -v '^>' $reference | wc -m`
@@ -27,6 +27,6 @@ tree_height_list='500000 2000000 10000000'
 ### Filtering parameters for sims ############
 ##############################################
 
-qual_list='0 20 40 60'
-maf_list='0 0.01 0.03 0.05 0.10 0.15'
-miss_list='0 0.25 0.50 0.75 1.0'
+qual_list='0 20'
+maf_list='0 0.01'
+miss_list='0 0.25'
