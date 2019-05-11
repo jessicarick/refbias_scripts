@@ -43,7 +43,7 @@ for tree_height in $tree_height_list
 		for i in `seq -w $genes`;
 			do range=`sed -n "${i}p" ${reference_prefix}.random.txt`;
 			samtools faidx $reference $header:$range >> ${reference_prefix}.random_${i}.tmp;
-			echo ">${header}_${length}" > ${reference_prefix}.random_${i}.fa
+			echo ">${header}_${ref_length}" > ${reference_prefix}.random_${i}.fa
 			grep -v '^>' ${reference_prefix}.random_${i}.tmp | tr -d '\n' >> ${reference_prefix}.random_${i}.fa
 			rm -f ${reference_prefix}.random_${i}.tmp
 			grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
@@ -74,12 +74,3 @@ done
 echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
 echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
-####################################
-## Write partition file for RAxML ##
-####################################
-for i in `seq $genes`
-	do name=`echo gene${i}`
-	min=$((1000*$((i-1))+1))
-	max=$((1000*i))
-	echo "DNA, ${name}=${min}-${max}" >> partitions.txt
-done
