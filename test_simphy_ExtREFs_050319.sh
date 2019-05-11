@@ -27,7 +27,7 @@ for i in `seq -w $genes`;
 	  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
 	  python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
 		
-		cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa | sed "s/^\(>lmariae_genome_Feb2018_${ref_length}\)*//"" > ${reference_prefix}_gene${i}.fa
+		cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa | sed "s/^\(>lmariae_genome_Feb2018_${ref_length}\)*//" > ${reference_prefix}_gene${i}.fa
 		
 done
 
