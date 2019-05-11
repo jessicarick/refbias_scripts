@@ -12,31 +12,30 @@ source /project/phylogenref/scripts/refbias_config.txt
 sim=$1
 tree_height=$2
 taxa_ref=0_0_0
+int=EXT
 #reference_prefix=lmariae_${tree_height}_${sim}_
     
 ##############################################
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
-  nloci=$(($genes + 1))
-  var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci`)
-  echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-EXT
+nloci=$(($genes + 1))
+var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci`)
+echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-${int}
   
-	for i in `seq -w $genes`;
-	 do index=$(echo $i | sed 's/^0*//')
-	 python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
-		python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
+for i in `seq -w $genes`;
+	  do index=$(echo $i | sed 's/^0*//')
+	  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${i}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa -o gene${i}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 13 -pre sim_ -errorfile $error > gene${i}_sim${sim}_config
+	  python /project/phylogenref/programs/TreeToReads/treetoreads.py gene${i}_sim${sim}_config
 		
 		cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${i}.fa | sed 's/^\(>lmariae_genome_Feb2018\)*//' > ${reference_prefix}_gene${i}.fa
 		
-	done
+done
 
-		cat ${reference_prefix}_gene*.fa | sed '1 i\>lmariae_genome_Feb2018' > ${reference_prefix}_sim${sim}.fa
+cat ${reference_prefix}_gene*.fa | sed '1 i\>lmariae_genome_Feb2018' > ${reference_prefix}_sim${sim}.fa
 		
-
-## starting astral script
-#echo "deploying ASTRAL script"
-#date
-#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+if [ ! -d astral/ ]; then
+    mkdir astral/
+fi
 
 ##############################################
 ### Concatenate reads into single file########
@@ -143,8 +142,8 @@ for QUAL in $qual_list
                     ${REF_PATH}/calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref
                     echo "done calculating Dxy"
                 else
-		    echo "QUAL is $QUAL; not calculating Dxy this time"
-		fi
+		                echo "QUAL is $QUAL; not calculating Dxy this time"
+		            fi
                 
 #################################
 #### FILTERING WITH VCFTOOLS ####
@@ -172,30 +171,38 @@ for QUAL in $qual_list
 #### CREATING PARTITIONS FILE ####
 ##################################
                   
-                  VCF=OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
+                  echo ' ' > sites.txt
                   for locus in `seq $genes`
                       do name=`echo gene${locus}`
-                      min=$((1000*$((locus-1))+1))
-                      max=$((1000*locus))
-                      sites=`vcftools --vcf $VCF --chr  ${reference_prefix}_ --from-bp $min --to-bp $max --recode --stdout | grep -v  '^#' | wc -l`
+                      sites=`vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr  ${reference_prefix} --from-bp $((1000*$((i-1))+1)) --to-bp $((1000*i)) --recode --stdout | grep -v  '^#' | wc -l`
                       echo "${name},${sites}" >> sites.txt
                   done
                   
+                  echo ' ' phy.tmp
+                  echo ' ' partitions.txt
                   for line in `cat sites.txt`;
                       do gene=`echo "$line" | cut -f 1 -d','`
-                      sites=`echo $line | cut -f 2 -d','`
-                      prev=`tail -n 1 partitions.txt | cut  -f 2 -d'-'`
-                      start=$((prev+1)); end=$((start + sites))
-                      echo "DNA,  ${gene}=${start}-${end}" >> partitions.txt
+                      nsnp=`echo $line | cut -f 2 -d','`
+                      if (( $nsnp > 0 )); then
+                        prev=`tail -n 1 partitions.txt | cut  -f 2 -d'-'`
+                        start=$((prev+1)); end=$((start + sites))
+                        end=$((start + nsnp))
+                        echo "DNA,  ${gene}=${start}-${end}" >> partitions.txt
+                        echo $gene >> phynames
+        
+                        seq=`cat $phy | tail -n +2 | cut -f 2 -d' ' | cut -c${start}-${end}`
+                        paste phy.tmp <(printf %s "$seq") > phy2.tmp
+                        mv phy2.tmp phy.tmp
+                      fi
                   done
-                        
-                	rm -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
+                  
+                  rm -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
      
 #######################################
 #### Removing invariant sites  ########
 #######################################           
 
-		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy',format='phylip')" > Rscript.R
+		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file="nsnps_per_loc_ref", sep=" ", ncolumns=length(nsnps))\nwrite(names(nsnps), file="nsnps_locus_names_ref", sep=" ", ncolumns=length(nsnps))" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
@@ -203,50 +210,105 @@ for QUAL in $qual_list
 #### Running RaxML w/ Ref #############
 #######################################
               
-              		sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | head -n 1 | cut -f 2 -d' ')
+              		sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy | head -n 1 | cut -f 2 -d' ')
 			        
-               		if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out ]]
+               		if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out ]]
 				              then
-                          rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out
+                          rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out
           			      else
            				        echo "everything is good; running raxml"
         	     	  fi
         	     	  
+        	     	  echo "creating partition for gene trees"
+        	     	  python ${REF_PATH}/script_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
+        		      
         		      echo "running raxml to create gene tree alignments"
-        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.partitions.out
+        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.partitions.out
         		      
         		      echo "running raxml on concatenated SNPs"
-              		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.EXT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
-        
+              		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+
+                  echo "running raxml to create gene trees"
+                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy.gene*.phy
+                      do echo "$phy"
+                      base=`echo $phy | sed 's/\.phy//g'`
+                      if [[ -s RAxML_info.${base}.REF.${int}.filtered.out ]]
+ 		  		                then
+  					                  rm -f RAxML_info.${base}.REF.${int}.filtered.out
+          			          else
+           				            echo "everything is good"
+        		          fi
+        		
+        		          raxmlHPC-PTHREADS-AVX -T 1 -s $phy -n ${base}.REF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        		      done
+
+                  if [ ! -d  astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files/ ]; then
+				              mkdir astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.gene_tree_files
+			            fi
+        		
+        		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+                  
+                  echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  paste <(printf %s "$(cat nsnps_locus_names_ref | tr ' ' '\n')") <(printf %s "$(cat nsnps_per_loc_ref | tr ' ' '\n')") >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  
 #######################################
 #### Running RaxML w/o Ref ############
 ##### First delete ref from .phy ######
 #######################################
 
-			numtaxa=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | head -n1 | awk '{print $1;}')
-			newtaxa=$(($numtaxa - 1))
+			            numtaxa=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | head -n1 | awk '{print $1;}')
+		            	newtaxa=$(($numtaxa - 1))
 			
-			cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | sed '/^'sim_${taxa_ref}'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
+			            cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | sed '/^'sim_${taxa_ref}'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
 			
-			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy',format='phylip')" > Rscript.R
+			            printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file="nsnps_per_loc_noref", sep=" ", ncolumns=length(nsnps))\nwrite(names(nsnps), file="nsnps_locus_names_noref", sep=" ", ncolumns=length(nsnps))" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
-      			sites_noref=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
+      			      sites_noref=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy | cut -f 2 -d' ')
 
-        		if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.EXT.filtered.out ]]
- 		  		then
-  					rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.EXT.filtered.out
-          			else
-           				echo "everything is good"
-        		fi
+        		      if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out ]]
+ 		  		              then
+  					            rm -f RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out
+          			  else
+           				      echo "everything is good"
+        		      fi
         		
-        		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.EXT.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
-        
-        
-			mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.EXT.ref-${taxa_ref}.phylip_tree_files
-        		mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.EXT.ref-${taxa_ref}.phylip_tree_files
-        		mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.EXT.ref-${taxa_ref}.phylip_tree_files
+        		      echo "creating partition for gene trees"
+        	        python ${REF_PATH}/script_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
+        		      
+        		      echo "running raxml to create gene tree alignments"
+        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
+
+        		      echo "running raxml on concatenated SNPs"
+        		      raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
+                  
+                  echo "running raxml to create gene trees"
+                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy.gene*.phy
+                      do echo "$phy"
+                      base=`echo $phy | sed 's/\.phy//g'`
+                      if [[ -s RAxML_info.${base}.NOREF.${int}.filtered.out ]]
+ 		  		                then
+  					                  rm -f RAxML_info.${base}.NOREF.${int}.filtered.out
+          			          else
+           				            echo "everything is good"
+        		          fi
+        		
+        		          raxmlHPC-PTHREADS-AVX -T 1 -s $phy -n ${base}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        		      done
+
+                  if [ ! -d  astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/ ]; then
+				              mkdir astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+			            fi
+        		
+        		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+                  
+                  echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  paste <(printf %s "$(cat nsnps_locus_names_noref | tr ' ' '\n')") <(printf %s "$(cat nsnps_per_loc_noref | tr ' ' '\n')") >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  
+                  mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
+        		      mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
+        		      mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
 
                 done
          done
@@ -265,11 +327,8 @@ cp *.fa sim${sim}/ref.fasta_files
 cat s${sim}*q*miss*/*bipartitions* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}*q*miss*/*bipartitions* >> ${output_dir}/${day}-${tree_height}-tree.names
 
-#/project/phylogenref/scripts/astral_script_031119.sh $sim $tree_height $taxa_ref EXT
+### Create a loop to run ASTRAL
 date
-echo "all done with RAxML analyses; now just waiting for ASTRAL"
 
-wait
-
-echo "done with all processes for $tree_height sim${sim} EXT; exiting now"
+echo "done with all processes for $tree_height sim${sim} ${int}; exiting now"
 date
