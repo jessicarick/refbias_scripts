@@ -204,7 +204,7 @@ for QUAL in $qual_list
 #### Removing invariant sites  ########
 #######################################           
 
-		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file="nsnps_per_loc_ref", sep=" ", ncolumns=length(nsnps))\nwrite(names(nsnps), file="nsnps_locus_names_ref", sep=" ", ncolumns=length(nsnps))" > Rscript.R
+		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps_per_loc_ref', sep=' ', ncolumns=length(nsnps))\nwrite(names(nsnps), file='nsnps_locus_names_ref', sep=' ', ncolumns=length(nsnps))" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
@@ -222,7 +222,7 @@ for QUAL in $qual_list
         	     	  fi
         	     	  
         	     	  echo "creating partition for gene trees"
-        	     	  python ${REF_PATH}/script_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
+        	     	  python ${REF_PATH}/snp_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
         		      
         		      echo "running raxml to create gene tree alignments"
         		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.partitions.out
@@ -268,7 +268,7 @@ for QUAL in $qual_list
 			
 			            cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy | sed '/^'sim_${taxa_ref}'/ d' | sed "1s/$numtaxa/$newtaxa/" > OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy
 			
-			            printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file="nsnps_per_loc_noref", sep=" ", ncolumns=length(nsnps))\nwrite(names(nsnps), file="nsnps_locus_names_noref", sep=" ", ncolumns=length(nsnps))" > Rscript.R
+			            printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps_per_loc_noref', sep=' ', ncolumns=length(nsnps))\nwrite(names(nsnps), file='nsnps_locus_names_noref', sep=' ', ncolumns=length(nsnps))" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
@@ -282,7 +282,7 @@ for QUAL in $qual_list
         		      fi
         		
         		      echo "creating partition for gene trees"
-        	        python ${REF_PATH}/script_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
+        	        python ${REF_PATH}/snp_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
         		      
         		      echo "running raxml to create gene tree alignments"
         		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
