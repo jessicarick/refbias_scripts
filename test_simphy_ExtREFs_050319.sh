@@ -47,13 +47,13 @@ fastq_list=0
 
 while [ $(echo "$(expr length "$fastq_list")") -lt 2 ]
 do
-        i=$(shuf -i 1-$gene_length -n 1)
-        if [ ! -f gene${i}_sim${sim}/fastq/sim*/sim_0_0_0*_1.fq.gz ]
+        i=$(seq -w $genes | shuf -n 1)
+        if [ ! -f gene${i}_sim${sim}/fastq/sim_0_0_0/sim_0_0_0_1.fq.gz ]
                 then
                         echo "File empty. try again"
                 else
                         echo "File present, well done"
-                        declare fastq_list=`ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//'`
+                        declare fastq_list=`ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1\.fq\.gz//'`
                         #export "$fastq_list"
         fi
         ##export $fastq_list
@@ -191,9 +191,10 @@ for QUAL in $qual_list
                         echo "DNA,  ${gene}=${start}-${end}" >> partitions.txt
                         echo $gene >> phynames
         
-                        seq=`cat $phy | tail -n +2 | cut -f 2 -d' ' | cut -c${start}-${end}`
-                        paste phy.tmp <(printf %s "$seq") > phy2.tmp
+                        cat $phy | tail -n +2 | cut -f 2 -d' ' | cut -c${start}-${end} > seq.tmp
+			paste phy.tmp seq.tmp > phy2.tmp
                         mv phy2.tmp phy.tmp
+			rm -f seq.tmp
                       fi
                   done
                   
@@ -250,7 +251,12 @@ for QUAL in $qual_list
         		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
                   
                   echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
-                  paste <(printf %s "$(cat nsnps_locus_names_ref | tr ' ' '\n')") <(printf %s "$(cat nsnps_per_loc_ref | tr ' ' '\n')") >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  
+		  `cat nsnps_locus_names_ref | tr ' ' '\n'` > locnames.tmp
+		  `cat nsnps_per_loc_ref | tr ' ' '\n'` > locnsnps.tmp	
+		  paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+		  rm -f locnames.tmp
+		  rm -f locsnps.tmp
                   
 #######################################
 #### Running RaxML w/o Ref ############
@@ -305,7 +311,12 @@ for QUAL in $qual_list
         		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
                   
                   echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
-                  paste <(printf %s "$(cat nsnps_locus_names_noref | tr ' ' '\n')") <(printf %s "$(cat nsnps_per_loc_noref | tr ' ' '\n')") >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                  
+		  cat nsnps_locus_names_noref | tr ' ' '\n' > locnames.tmp
+		  cat nsnps_per_loc_noref | tr ' ' '\n' > locnsnps.tmp
+		  paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+		  rm -f locnames.tmp
+		  rm -f locnsnps.tmp
                   
                   mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
         		      mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
