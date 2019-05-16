@@ -47,7 +47,7 @@ my $tree_height = $ARGV[1];
 #}
 
 push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_050319.sh $sim $tree_height \n";
-push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_050319.sh $sim $tree_height \n";
+#push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_050319.sh $sim $tree_height \n";
 
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
@@ -70,7 +70,7 @@ push @modules, 'module load raxml';
 push @modules, 'module load r';
 
 
-my $workdir = '/lscratch'; 
+my $workdir = '/gscratch/jrick'; 
 ## Set to /lscratch on mtmoran.  This is local disk with high
 ## performance.  This is where results will be written temporarily on
 ## a node. 

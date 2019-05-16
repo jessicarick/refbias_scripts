@@ -231,8 +231,8 @@ for QUAL in $qual_list
               		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
                   echo "running raxml to create gene trees"
-                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy.gene*.phy
-                      do echo "$phy"
+                  for phy in `ls OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy.gene*.phy`
+                      do echo "starting raxml on $phy"
                       base=`echo $phy | sed 's/\.phy//g'`
                       if [[ -s RAxML_info.${base}.REF.${int}.filtered.out ]]
  		  		                then
@@ -291,8 +291,8 @@ for QUAL in $qual_list
         		      raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
                   
                   echo "running raxml to create gene trees"
-                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy.gene*.phy
-                      do echo "$phy"
+                  for phy in `ls OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy.gene*.phy`
+                      do echo "starting raxml on $phy"
                       base=`echo $phy | sed 's/\.phy//g'`
                       if [[ -s RAxML_info.${base}.NOREF.${int}.filtered.out ]]
  		  		                then
