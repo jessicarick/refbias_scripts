@@ -172,31 +172,46 @@ for QUAL in $qual_list
 #### CREATING PARTITIONS FILE ####
 ##################################
                   
-                  echo ' ' > sites.txt
-                  for locus in `seq $genes`
+		  phy=OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy
+
+                  echo '' > sites.txt
+                  for locus in `seq -w $genes`
                       do name=`echo gene${locus}`
-                      sites=`vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr  ${reference_prefix} --from-bp $((1000*$((i-1))+1)) --to-bp $((1000*i)) --recode --stdout | grep -v  '^#' | wc -l`
+                      sites=`vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr lmariae_genome_Feb2018_${ref_length} --from-bp $((1000*$((10#${locus}-1))+1)) --to-bp $((1000*10#${locus})) --recode --stdout | grep -v  '^#' | wc -l`
                       echo "${name},${sites}" >> sites.txt
                   done
                   
-                  echo ' ' phy.tmp
-                  echo ' ' partitions.txt
+                  echo '' > phy.tmp
+                  echo '' > partitions.txt
                   for line in `cat sites.txt`;
                       do gene=`echo "$line" | cut -f 1 -d','`
                       nsnp=`echo $line | cut -f 2 -d','`
                       if (( $nsnp > 0 )); then
-                        prev=`tail -n 1 partitions.txt | cut  -f 2 -d'-'`
-                        start=$((prev+1)); end=$((start + sites))
+                        if [ -f partitions.txt ]; then
+				prev=`tail -n 1 partitions.txt | cut  -f 2 -d'-'`
+                        else
+				prev=0
+			fi
+			start=$((prev+1))
                         end=$((start + nsnp))
                         echo "DNA,  ${gene}=${start}-${end}" >> partitions.txt
                         echo $gene >> phynames
         
                         cat $phy | tail -n +2 | cut -f 2 -d' ' | cut -c${start}-${end} > seq.tmp
-			paste phy.tmp seq.tmp > phy2.tmp
-                        mv phy2.tmp phy.tmp
+			if [ -f phy.tmp ]; then
+				paste phy.tmp seq.tmp > phy2.tmp
+				mv phy2.tmp phy.tmp
+			else
+				cp seq.tmp phy.tmp
+			fi
 			rm -f seq.tmp
                       fi
                   done
+		  cat $phy | tail -n +2 | cut -f 1 -d' ' > indnames
+		  paste indnames phy.tmp > phy2.tmp
+		  mv phy2.tmp phy.tmp
+		  #locnames=`cat phynames | tr "\n" "\t"`
+		  #sed -i "1s/^/${locnames}\n/" phy.tmp
                   
                   rm -f OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf
      
@@ -204,7 +219,7 @@ for QUAL in $qual_list
 #### Removing invariant sites  ########
 #######################################           
 
-		              printf "library(ape)\nlibrary(phrynomics)\nReadSNP('OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy', fileFormat='phy', extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps_per_loc_ref', sep=' ', ncolumns=length(nsnps))\nwrite(names(nsnps), file='nsnps_locus_names_ref', sep=' ', ncolumns=length(nsnps))" > Rscript.R
+		              printf "library(ape)\nlibrary(phrynomics)\nphynames<-scan('phynames',character())\nphy<-read.table('phy.tmp',skip=1)\ncolnames(phy) <- phynames\nReadSNP(phy)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps_per_loc_ref', sep=' ', ncolumns=length(nsnps))\nwrite(names(nsnps), file='nsnps_locus_names_ref', sep=' ', ncolumns=length(nsnps))" > Rscript.R
                 
                 	R --vanilla --no-save < Rscript.R
                 
@@ -231,8 +246,8 @@ for QUAL in $qual_list
               		raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
                   echo "running raxml to create gene trees"
-                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy.gene*.phy
-                      do echo "$phy"
+                  for phy in `ls OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.phy.gene*.phy`
+                      do echo "starting raxml on $phy"
                       base=`echo $phy | sed 's/\.phy//g'`
                       if [[ -s RAxML_info.${base}.REF.${int}.filtered.out ]]
  		  		                then
@@ -281,42 +296,42 @@ for QUAL in $qual_list
            				      echo "everything is good"
         		      fi
         		
-        		      echo "creating partition for gene trees"
-        	        python ${REF_PATH}/snp_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
+#        		      echo "creating partition for gene trees"
+#        	        python ${REF_PATH}/snp_part_raxml.py -snpfile nsnps_per_loc_ref -namesfile nsnps_locus_names_ref > raxml_partitions.txt
         		      
-        		      echo "running raxml to create gene tree alignments"
-        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
+#        		      echo "running raxml to create gene tree alignments"
+#        		      raxmlHPC-PTHREADS-AVX -T 8 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
 
         		      echo "running raxml on concatenated SNPs"
         		      raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
                   
-                  echo "running raxml to create gene trees"
-                  for phy in OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy.gene*.phy
-                      do echo "$phy"
-                      base=`echo $phy | sed 's/\.phy//g'`
-                      if [[ -s RAxML_info.${base}.NOREF.${int}.filtered.out ]]
- 		  		                then
-  					                  rm -f RAxML_info.${base}.NOREF.${int}.filtered.out
-          			          else
-           				            echo "everything is good"
-        		          fi
-        		
-        		          raxmlHPC-PTHREADS-AVX -T 1 -s $phy -n ${base}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
-        		      done
-
-                  if [ ! -d  astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/ ]; then
-				              mkdir astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
-			            fi
-        		
-        		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
-                  
+#                  echo "running raxml to create gene trees"
+#                  for phy in `ls OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy.gene*.phy`
+#                      do echo "$phy"
+#                      base=`echo $phy | sed 's/\.phy//g'`
+#                      if [[ -s RAxML_info.${base}.NOREF.${int}.filtered.out ]]
+# 		  		                then
+#  					                  rm -f RAxML_info.${base}.NOREF.${int}.filtered.out
+#          			          else
+#           				            echo "everything is good"
+#        		          fi
+#        		
+#        		          raxmlHPC-PTHREADS-AVX -T 1 -s $phy -n ${base}.NOREF.${int}.filtered.out -j --no-bfgs --silent -m ASC_GTRCAT -V --asc-corr=lewis -f a -x 223 -N 100 -p 466
+#        		      done
+#
+#                  if [ ! -d  astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/ ]; then
+#				              mkdir astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
+#			            fi
+#        		
+#        		      mv RAxML*gene*.out astral/${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+#                  
                   echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
                   
-		  cat nsnps_locus_names_noref | tr ' ' '\n' > locnames.tmp
-		  cat nsnps_per_loc_noref | tr ' ' '\n' > locnsnps.tmp
-		  paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
-		  rm -f locnames.tmp
-		  rm -f locnsnps.tmp
+#		  cat nsnps_locus_names_noref | tr ' ' '\n' > locnames.tmp
+#		  cat nsnps_per_loc_noref | tr ' ' '\n' > locnsnps.tmp
+#		  paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+#		  rm -f locnames.tmp
+#		  rm -f locnsnps.tmp
                   
                   mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
         		      mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
