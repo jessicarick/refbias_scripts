@@ -6,7 +6,7 @@ num_sims='3'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
-reference_prefix=lmariae_100000
+reference_prefix=lmariae_500000
 
 ref_length=500000
 gene_length=1000
