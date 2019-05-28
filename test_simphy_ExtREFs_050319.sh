@@ -224,7 +224,8 @@ for QUAL in $qual_list
 		echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.phy" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
 
                 cat nsnps_locus_names_ref | tr ' ' '\n' > locnames.tmp
-                cat nsnps_per_loc_ref | tr ' ' '\n' > locnsnps.tmp
+                cat nsnps_per_loc_ref | tr ' ' '\n' | awk 'p{print $0-p}{p=$0}' > locnsnps.tmp	
+
                 paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
                   
  
