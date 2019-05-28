@@ -208,6 +208,10 @@ for QUAL in $qual_list
 		cat $phy | tail -n +2 | cut -f 1 -d' ' > indnames
 		paste indnames phy.tmp > phy2.tmp
 		mv phy2.tmp phy.tmp
+
+		echo "height${height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF" >> /project/phylogenref/scripts/output/${day}-variants-${tree_height}-sim${sim}-${int}
+                cat partitions.txt >> /project/phylogenref/scripts/output/${day}-variants-${tree_height}-sim${sim}-${int}
+
 		#locnames=`cat phynames | tr "\n" "\t"`
 		#sed -i "1s/^/${locnames}\n/" phy.tmp
                   
@@ -317,6 +321,9 @@ for QUAL in $qual_list
                 cat $phy | tail -n +2 | cut -f 1 -d' ' > indnames
                 paste indnames phy.tmp > phy2.tmp
                 mv phy2.tmp phy.tmp
+		
+		echo "height${height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF" >> /project/phylogenref/scripts/output/${day}-variants-${tree_height}-sim${sim}-${int}
+		cat partitions.txt >> /project/phylogenref/scripts/output/${day}-variants-${tree_height}-sim${sim}-${int}
 
 		printf "library(ape)\nlibrary(phrynomics)\nphynames<-scan('phynames',character())\nphy<-read.table('phy.tmp',row.names=1)\ncolnames(phy) <- phynames\nReadSNP(phy)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps_per_loc_noref', sep=' ', ncolumns=length(nsnps))\nwrite(names(nsnps), file='nsnps_locus_names_noref', sep=' ', ncolumns=length(nsnps))" > Rscript.R
               
@@ -356,14 +363,14 @@ for QUAL in $qual_list
 		wait
                   
 		cat nsnps_locus_names_noref | tr ' ' '\n' > locnames.tmp
-		cat nsnps_per_loc_noref | tr ' ' '\n' > locnsnps.tmp
+		cat nsnps_per_loc_noref | tr ' ' '\n' | awk 'p{print $0-p}{p=$0}' > locnsnps.tmp
 		paste locnames.tmp locnsnps.tmp >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
 		rm -f locnames.tmp
 		rm -f locnsnps.tmp
                   
                 mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
-        	  mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
-        	  mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
+        	mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
+        	mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
 
                 done
          done
