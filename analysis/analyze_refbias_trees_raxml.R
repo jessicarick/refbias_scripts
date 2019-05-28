@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-#raxml.trees <- "042419-all-raxml.trees"
-#raxml.tree.names <- "042419-all-raxml.names"
-#astral.trees <- "042419-all-astral.trees"
-#astral.tree.names <- "042419-all-astral.names"
-#ml.trees <- "042419-s_tree.tree"
-#ml.tree.names <- "042419-s_tree.names"
-#output <- "042419-output"
-#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+raxml.trees <- "052419-all-raxml.trees"
+raxml.tree.names <- "052419-all-raxml.names"
+astral.trees <- "052419-all-astral.trees"
+astral.tree.names <- "052419-all-astral.names"
+ml.trees <- "052419-s_tree.tree"
+ml.tree.names <- "052419-s_tree.names"
+output <- "052419-output"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -70,10 +70,10 @@ raxml.tree.names<-read.table(paste("output/",args$raxml.tree.names,sep=""),strin
 ml.tree.names <- read.table(paste("output/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
 
 ###Pull info about ml species trees
-ml.tree.info <- data.frame(simulation = numeric(length(ml.tree.names)),height=numeric(length(ml.tree.names)))
-for (i in 1:length(ml.tree.names)){
-  ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i], regexec('sim([0-9]+)', ml.tree.names[i]))[[1]][2])
-  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i], regexec('height([0-9]+)', ml.tree.names[i]))[[1]][2])
+ml.tree.info <- data.frame(simulation = numeric(nrow(ml.tree.names)),height=numeric(nrow(ml.tree.names)))
+for (i in 1:nrow(ml.tree.names)){
+  ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sim([0-9]+)', ml.tree.names[i,1]))[[1]][2])
+  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('height([0-9]+)', ml.tree.names[i,1]))[[1]][2])
 }
 
 ###################
