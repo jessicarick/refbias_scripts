@@ -73,5 +73,5 @@ cd ../
 done
 
 echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
-echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
+#echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
