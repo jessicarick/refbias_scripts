@@ -20,8 +20,8 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-#my $runtime = '02-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
-my $runtime = '1:00:00';
+my $runtime = '05-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+#my $runtime = '12:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater
 # priority if you specify a minimal walltime
@@ -46,8 +46,8 @@ my $tree_height = $ARGV[1];
 #	exit;
 #}
 
-push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_050319.sh $sim $tree_height \n";
-#push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_050319.sh $sim $tree_height \n";
+#push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_050319.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_050319.sh $sim $tree_height \n";
 
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
@@ -68,9 +68,9 @@ push @modules, 'module load htslib';
 push @modules, 'module load bcftools';
 push @modules, 'module load raxml';
 push @modules, 'module load r';
+push @modules, 'module load parallel';
 
-
-my $workdir = '/gscratch/jrick'; 
+my $workdir = '/lscratch'; 
 ## Set to /lscratch on mtmoran.  This is local disk with high
 ## performance.  This is where results will be written temporarily on
 ## a node. 
@@ -106,7 +106,7 @@ push @slurmdirectives, "#SBATCH --account=$arccproject";
 push @slurmdirectives, "#SBATCH --job-name=$jobname";
 push @slurmdirectives, "#SBATCH --time=$runtime"; 
 push @slurmdirectives, "#SBATCH --nodes=1";
-push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 16 cores per node
+push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 32 cores per node
 push @slurmdirectives, "#SBATCH --mem=124G"; 
 push @slurmdirectives, "#SBATCH --workdir=$logdir";
 #          SLURM can send informative email messages to you about the
