@@ -342,10 +342,10 @@ for QUAL in $qual_list
         	python ${REF_PATH}/snp_part_raxml.py -snpfile nsnps_per_loc_noref -namesfile nsnps_locus_names_noref > raxml_partitions.txt
        		      
         	echo "running raxml to create gene tree alignments"
-        	raxmlHPC-PTHREADS-AVX -T 2 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
+        	raxmlHPC-PTHREADS-AVX -T 2 -f s -q raxml_partitions.txt -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv.phy -m ASC_GTRGAMMA --asc-corr=lewis -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.NOREF.${int}.partitions.out
 
         	echo "running raxml on concatenated SNPs"
-        	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.noInv.NOREF.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
+        	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
                   
 #                echo "running raxml to create gene trees"
 		echo "not creating gene trees right now"  
