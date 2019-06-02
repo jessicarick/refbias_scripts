@@ -56,7 +56,8 @@ for tree_height in $tree_height_list
 	rand_num=`echo $RANDOM`
 	echo "random number seed: ${rand_num}"
 	
-	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:0.1 -cs $rand_num -o species_tree${sim}
+	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:10 -cs $rand_num -o species_tree${sim}
+
 		
 #	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
 #	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
