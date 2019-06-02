@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-raxml.trees <- "052419-all-raxml.trees"
-raxml.tree.names <- "052419-all-raxml.names"
-astral.trees <- "052419-all-astral.trees"
-astral.tree.names <- "052419-all-astral.names"
-ml.trees <- "052419-s_tree.tree"
-ml.tree.names <- "052419-s_tree.names"
-output <- "052419-output"
-args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+# raxml.trees <- "053019-all-raxml.trees"
+# raxml.tree.names <- "053019-all-raxml.names"
+# astral.trees <- "053019-all-astral.trees"
+# astral.tree.names <- "053019-all-astral.names"
+# ml.trees <- "053019-s_tree.tree"
+# ml.tree.names <- "053019-s_tree.names"
+# output <- "053019-output"
+# args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -299,32 +299,38 @@ for (i in 1:length(raxml.trees)){
 }
 
 summary(results.raxml)
-write.csv(results.raxml,file=paste("output/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
+write.csv(results.raxml,file=paste("output/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,na="NA")
 
 #########################
 ####Clean up dataframe
 # #########################
-results.raxml$int <- as.factor(results.raxml$int)
-results.raxml$noref <- as.factor(results.raxml$noref)
-results.raxml$simulation <- as.factor(results.raxml$simulation)
-results.raxml$missing <- as.factor(results.raxml$missing)
-results.raxml$method <- as.factor(results.raxml$method)
+# results.raxml$int <- as.factor(results.raxml$int)
+# results.raxml$noref <- as.factor(results.raxml$noref)
+# results.raxml$simulation <- as.factor(results.raxml$simulation)
+# results.raxml$missing <- as.factor(results.raxml$missing)
+# results.raxml$method <- as.factor(results.raxml$method)
 # 
 
 ####As a start, visualize correlations between all variables
-psych::pairs.panels(results.raxml[,c("quality","missing","maf","int","noref","gamma","colless","sackin","tree.height","Avg.BLs","SD.BLs","ingroup.gamma","ingroup.colless","ingroup.sackin","mean.support","sd.support")],cex.cor=2)
-
+# pdf(paste("output/pairs-",args$output,".pdf",sep=""))
+# psych::pairs.panels(results.raxml[,c("quality","missing","maf","int","noref","gamma","colless","sackin","tree.height","Avg.BLs","SD.BLs","ingroup.gamma","ingroup.colless","ingroup.sackin","mean.support","sd.support")],cex.cor=2)
+# dev.off()
 
 ####################BEGIN ANALYSIS ################################
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
+results.raxml <- read.csv(file=paste("output/",args$output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
 pdf(paste("output/",args$output,".pdf",sep=""))
-for (h in unique(as.numeric(results.raxml$height))){
-  for (i in unique(as.numeric(results.raxml$simulation))){
+for (h in unique(as.numeric(as.character(results.raxml$height)))){
+  for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
     
     j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
     subset <- which(results.raxml$simulation == i & results.raxml$noref == "REF" & results.raxml$height == h)
-    trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
-    
+    if (length(subset) != 0) {
+      trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
+    } else {
+      print(paste("no trees for sim",i," for height ",h)) 
+      next
+    }
     rf_matrix<-multiRF(trees.subset)
     
     ####PcOA of RF distance matrix for plotting trees in tree space
@@ -348,7 +354,7 @@ for (h in unique(as.numeric(results.raxml$height))){
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       geom_label_repel(label=c(paste("MAF",results.raxml$maf[subset],"MISS",results.raxml$missing[subset],sep=" "),"truth"),size=rel(1))+
       scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("astral","raxml","ml"),values=c(1,16,17))
+      scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
     print(plot)
     
     plot2 <- biplot +
@@ -367,7 +373,7 @@ for (h in unique(as.numeric(results.raxml$height))){
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
       scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("astral","raxml","ml"),values=c(1,16,17))
+      scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
     print(plot2)
     
     heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$int,sep=","))
