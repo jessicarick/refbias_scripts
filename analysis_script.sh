@@ -1,5 +1,13 @@
 #!/bin/sh
 
+#SBATCH --account=phylogenref
+#SBATCH --nodes=1
+#SBATCH --time=8:00:00
+#SBATCH --mail-type=all
+
+module load gcc
+module load r
+
 day=$1
 
 # concatenating raxml trees
