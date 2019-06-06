@@ -8,27 +8,29 @@
 ## (JAR on my own)
 ## added some of chad's script
 ##############################
-results <- read.table()
 
-#check for the argparse package installed
-if (!('argparse' %in% installed.packages()[, 'Package'])) {
-  install.packages('argparse', repos='http://cran.rstudio.com/')
-}
+output <- "053019-output"
+results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
-suppressPackageStartupMessages(library('argparse'))
-
-parse.args <- function() {
-  parser <- ArgumentParser()
-  parser$add_argument('--ml.trees', help='file with ML (true) trees')
-  parser$add_argument('--ml.tree.names', help='file with names of ML trees')
-  parser$add_argument('--raxml.trees', help='file with raxml trees')
-  parser$add_argument('--raxml.tree.names', help='file with raxml tree names')
-  parser$add_argument('--astral.trees', help='file with astral trees')
-  parser$add_argument('--astral.tree.names', help='file with astral tree names')
-  parser$add_argument('-o', '--output', help='output file prefix')
-  return(parser$parse_args())
-}
-args <- parse.args()
+# #check for the argparse package installed
+# if (!('argparse' %in% installed.packages()[, 'Package'])) {
+#   install.packages('argparse', repos='http://cran.rstudio.com/')
+# }
+# 
+# suppressPackageStartupMessages(library('argparse'))
+# 
+# parse.args <- function() {
+#   parser <- ArgumentParser()
+#   parser$add_argument('--ml.trees', help='file with ML (true) trees')
+#   parser$add_argument('--ml.tree.names', help='file with names of ML trees')
+#   parser$add_argument('--raxml.trees', help='file with raxml trees')
+#   parser$add_argument('--raxml.tree.names', help='file with raxml tree names')
+#   parser$add_argument('--astral.trees', help='file with astral trees')
+#   parser$add_argument('--astral.tree.names', help='file with astral tree names')
+#   parser$add_argument('-o', '--output', help='output file prefix')
+#   return(parser$parse_args())
+# }
+# args <- parse.args()
 
 library(CCA)
 library(CCP)
@@ -37,6 +39,7 @@ library(sem)
 library(dplyr)
 library(MuMIn)
 library(car)
+library(lme4)
 
 results.num <- results.raxml
 results.num$int <- as.numeric(as.factor(results.num$int))
@@ -49,7 +52,7 @@ resp <- as.matrix(results.num[,c(12:26)])
 
 cca.out <- cca(preds[,-2],  resp[,-c(11:15)],  xcenter = TRUE, ycenter = TRUE, xscale = TRUE, yscale = TRUE)
 cca.out
-p.perm(preds[,-2], resp[,-c(11:16)])
+p.perm(preds[,-2], resp[,-c(11:15)])
 
 par(mar = c(2,2,2,2), mfrow = c(1,2))
 yacca::helio.plot(cca.out, cv = 1, x.name = "Predictors", y.name = "Response")
@@ -92,8 +95,9 @@ results.mod$maf <- as.numeric(results.mod$maf)
 
 # JMA Modeling ###########################################
 # RF Distance ############################################
-dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, std.sites, simulation, height, method))
+dat_rf <- subset(results.mod, select=c(RF.Dist.ML, quality, missing, maf, int, noref, std.sites, simulation, height))
 dat_rf$missing <- as.factor(dat_rf$missing)
+dat_rf$maf <- as.factor(dat_rf$maf)
 
 dat_astral <- dat_rf[dat_rf$method == "astral",]
 dat_raxml <- dat_rf[dat_rf$method == "raxml",]
@@ -101,28 +105,29 @@ dat_raxml <- dat_rf[dat_rf$method == "raxml",]
 mod <- lm(RF.Dist.ML ~ .*., data=dat_rf)
 formula(mod)
 
-m.rf <- lm(RF.Dist.ML ~ quality + missing + maf + int + missing + noref, data = dat_raxml)
+m.rf <- lm(RF.Dist.ML ~ quality + maf + int + missing + noref + std.sites + height, data = dat_rf)
 summary(m.rf)
 r.squaredGLMM(m.rf)
 car::vif(m.rf)
 
-m.rf1 <- lmer(RF.Dist.ML ~ (quality + missing + maf + int + noref + std.sites)#*(quality + missing + maf + int + noref + std.sites + height) 
-              + (1 | simulation), data = dat_raxml, REML=FALSE)
+m.rf1 <- lmer(RF.Dist.ML ~ (quality + missing + maf + int + noref + std.sites + height)#*(quality + missing + maf + int + noref + std.sites + height) 
+              + (1 | simulation), data = dat_rf, REML=FALSE)
 
 summary(m.rf1)
 vif(m.rf1)
 r.squaredGLMM(m.rf1)
 
-m.rf2 <- lm(RF.Dist.ML ~ (quality + missing + maf + int + noref + height + std.sites)*(quality + missing + maf + int + noref + height + std.sites), 
-            data = dat_raxml)
+m.rf2 <- lm(RF.Dist.ML ~ (maf + int + noref + height)*(maf + int + noref + height), 
+            data = dat_rf)
 summary(m.rf2)
+vif(m.rf2)
 r.squaredGLMM(m.rf2)
 
 options(na.action="na.fail")
 m_list <- dredge(m.rf2, rank="AIC",trace=1)
 head(m_list, 10)
 
-m.rf_list <- get.models(m_list, subset = delta < 5)
+m.rf_list <- get.models(m_list, subset = delta < 15)
 
 m.rf_avg <- model.avg(m.rf_list, revised.var = TRUE)
 sum.rf <- summary(m.rf_avg)
