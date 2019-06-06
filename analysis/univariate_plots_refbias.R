@@ -1,7 +1,7 @@
 #######################
 ## univariate plots
 ######################
-output <- "052419-output"
+output <- "053019-output"
 
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
