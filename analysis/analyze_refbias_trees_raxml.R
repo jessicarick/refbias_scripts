@@ -53,6 +53,7 @@ parse.args <- function() {
   parser$add_argument('--raxml.tree.names', help='file with raxml tree names')
   parser$add_argument('--astral.trees', help='file with astral trees')
   parser$add_argument('--astral.tree.names', help='file with astral tree names')
+  parser$add_argument('--refdist', help='file with reference distances')
   parser$add_argument('-o', '--output', help='output file prefix')
   return(parser$parse_args())
 }
@@ -75,6 +76,8 @@ for (i in 1:nrow(ml.tree.names)){
   ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sim([0-9]+)', ml.tree.names[i,1]))[[1]][2])
   ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('height([0-9]+)', ml.tree.names[i,1]))[[1]][2])
 }
+
+refdist <- read.table(paste("output/",args$refdist,sep=""),header=T,stringsAsFactors = FALSE)
 
 ###################
 ## changing tip labels on ml trees to match the sim trees
@@ -111,6 +114,7 @@ results.raxml<-data.frame(simulation=integer(),
                     int=character(), 
                     noref=character(),
                     taxa_ref=character(),
+                    refdist=numeric(),
                     sites=integer(), 
                     std.sites=numeric(),
                     gamma=integer(), 
@@ -138,6 +142,9 @@ for (i in 1:length(raxml.trees)) {
   results.raxml$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+).filtered', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('ref-([sim[0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
+  results.raxml$refdist[i]<-refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
+                                               refdist$tree_height == results.raxml$height[i] &
+                                               refdist$int == results.raxml$int[i]][1]
 }
 
 # for (i in 1:length(astral.trees)) {
