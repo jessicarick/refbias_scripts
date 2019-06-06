@@ -48,6 +48,7 @@ Rscript analysis/analyze_refbias_trees_raxml.R \
 	--raxml.tree.names ${day}-all-raxml.names \
 	--astral.trees ${day}-all-astral.trees \
 	--astral.tree.names ${day}-all-astral.names \
+	--refdist ${day}-refdist.txt \
 	--output ${day}-output 
 
 #Rscript analysis/analyze_refbias_trees_astral.R \
