@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-# raxml.trees <- "053019-all-raxml.trees"
-# raxml.tree.names <- "053019-all-raxml.names"
-# astral.trees <- "053019-all-astral.trees"
-# astral.tree.names <- "053019-all-astral.names"
-# ml.trees <- "053019-s_tree.tree"
-# ml.tree.names <- "053019-s_tree.names"
-# output <- "053019-output"
-# args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+raxml.trees <- "053019-all-raxml.trees"
+raxml.tree.names <- "053019-all-raxml.names"
+astral.trees <- "053019-all-astral.trees"
+astral.tree.names <- "053019-all-astral.names"
+ml.trees <- "053019-s_tree.tree"
+ml.tree.names <- "053019-s_tree.names"
+output <- "053019-output"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -365,7 +365,7 @@ for (h in unique(as.numeric(as.character(results.raxml$height)))){
     print(plot)
     
     plot2 <- biplot +
-      geom_jitter(aes(color=as.factor(c(results.raxml$int[subset],3)),shape=as.factor(c(results.raxml$method[subset],3))),alpha=0.5,size=5,height=2,width=2)+
+      geom_jitter(aes(color=as.factor(c(results.raxml$maf[subset],6)),shape=as.factor(c(results.raxml$miss[subset],"true"))),alpha=0.5,size=5,height=2,width=2)+
       theme_bw()+
       theme(legend.text = element_text(size=rel(1.5)),
             legend.title = element_blank(),
@@ -379,11 +379,11 @@ for (h in unique(as.numeric(as.character(results.raxml$height)))){
       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
+      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black"))+
+      scale_shape_manual(values=c(0,1,2,3,16,17))
     print(plot2)
     
-    heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$int,sep=","))
+    heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$miss,results.raxml[subset,]$int,sep=","),cex.lab=0.5)
   }
 }
 dev.off()

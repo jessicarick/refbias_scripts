@@ -7,16 +7,17 @@ output <- "053019-output"
 
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
-responses <- colnames(results.raxml[,10:27])
+responses <- colnames(results.raxml[,13:28])
 
 pdf(paste("output/",output,"-univariate-plots.pdf",sep=""),width=11,height=8)
 
 for (i in 1:length(responses)){
-  plot1 <- ggplot(data = results.raxml, aes(factor(maf),results.raxml[,responses[i]],fill=factor(int)))
+  plot1 <- ggplot(data = results.raxml, aes(y=as.factor(maf),x=results.raxml[,responses[7]],color=factor(height),fill=factor(height)))
   
   plot2 <- plot1 +
-    geom_boxplot(alpha=0.7)+
-    scale_fill_manual(values=c("#009980", "#006699"),name="")+
+    #geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE,weight=2)+
+    geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
+    #scale_fill_manual(values=c("#009980", "#006699","turquoise","magenta","orange","green"),name="",aesthetics = "fill")+
     theme_classic()+
     theme(axis.title.y = element_text(angle=90, size=rel(2), face="plain"),
           axis.text.y = element_text(size=rel(2)),
@@ -26,10 +27,14 @@ for (i in 1:length(responses)){
           legend.title = element_text(size=rel(2)),
           plot.margin = unit(c(6,5.5,20,10),"points"),
           line = element_line(size=1),
-          panel.border = element_rect(color = "black", fill=NA, size=1))+
-    scale_y_continuous(name=responses[i])+
-    scale_x_discrete(name="Minor Allele Frequency Cutoff")+
-    facet_wrap(vars(noref))
+          panel.border = element_rect(color = "black", fill=NA, size=1),
+          strip.text.x = element_text(size = 16))+
+    scale_x_continuous(name="RF Distance to True Tree")+
+    scale_y_discrete(name="MAF")+
+    #xlim(-50,10)+
+    facet_wrap(vars(int),nrow=2,strip.position = "top")+
+    geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
+    theme_ridges()
   
   # ylim1 = boxplot.stats(results.raxml[,responses[i]])$stats[c(1, 5)]
   # 
