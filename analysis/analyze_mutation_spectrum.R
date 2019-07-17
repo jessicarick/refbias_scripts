@@ -2,7 +2,7 @@ library(tidyverse)
 library(ggpubr)
 
 ## Pulling info on simulated number of sites
-mut.files <- list.files(path="output/",pattern="042919-varSites*")
+mut.files <- list.files(path="output/",pattern="053019-varSites*")
 
 mut.all <- data.frame(gene=integer(),
                       variants=integer(),
@@ -32,7 +32,7 @@ ggpubr::ggdensity(data=mut.all,x="variants",
                     add="mean")
 
 ## Pulling information from individual filtering combinations
-mut.filtered <- read.csv("output/042419-mutations.txt",header=TRUE,stringsAsFactors = FALSE)
+mut.filtered <- read.csv("output/053019-mutations.txt",header=TRUE,stringsAsFactors = FALSE)
 mut <- mut.filtered[mut.filtered$gene != "gene",]
 mut$num_nonInv<-as.numeric(mut$num_nonInv)
 mut$num_noRef<-as.numeric(mut$num_noRef)
