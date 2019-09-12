@@ -25,7 +25,7 @@ echo "max length: $max"
 for tree_height in $tree_height_list
 	do mkdir sims_$tree_height
 	cd sims_$tree_height
-	for sim in `seq $num_sims`
+	for sim in $num_sims
 		do mkdir sim${sim}
 		cd sim${sim}
 		
@@ -39,7 +39,7 @@ for tree_height in $tree_height_list
 
 		header=`grep '^>' $reference | sed 's/>//g'`
 		echo "header is $header"
-		echo ">${header}_${ref_length}" > ${reference_prefix}.random_sim${sim}.fa
+		#echo ">${header}_${ref_length}" > ${reference_prefix}.random_sim${sim}.fa
 
 		for i in `seq -w $genes`;
 			do range=`sed -n "${i}p" ${reference_prefix}.random.txt`;
@@ -47,7 +47,9 @@ for tree_height in $tree_height_list
 			echo ">${header}_${ref_length}" > ${reference_prefix}.random_${i}.fa
 			grep -v '^>' ${reference_prefix}.random_${i}.tmp | tr -d '\n' >> ${reference_prefix}.random_${i}.fa
 			rm -f ${reference_prefix}.random_${i}.tmp
+			echo ">gene${i}" >> ${reference_prefix}.random_sim${sim}.fa
 			grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
+			echo >> ${reference_prefix}.random_sim${sim}.fa
 		done
 
 ##############################################
