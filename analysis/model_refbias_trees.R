@@ -81,8 +81,8 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 # CDB Modeling ###########################################
 # using LMER convienence functions #######################
-m.rf <- lmer(RF.Dist.ML ~ (quality + missing + maf + refdist + noref + height)*
-               (quality + missing + maf + refdist + noref + height) 
+m.rf <- lmer(RF.Dist.ML ~ (quality + missing + maf + refdist + height)*
+               (quality + missing + maf + refdist + height) 
              + (1 | simulation), data = results.mod)
 
 m.rf1 <- bfFixefLMER_F.fnc(m.rf, method="AIC",threshold=5)
@@ -92,9 +92,11 @@ r.squaredGLMM(m.rf1)
 
 options(na.action="na.fail")
 #clust <- try(makeCluster(getOption("cl.cores", 4), type = "SOCK"))
-m_list_rf <- dredge(m.rf, rank="AIC",trace=TRUE)
+m_list_rf <- dredge(m.rf1, rank="AIC",trace=TRUE)
 head(m_list_rf, 10)
 subset(m_list_rf, delta < 10)
+m.rf_list <- get.models(m_list_rf, subset = delta < 10)
+
 plot(m_list_rf)
 
 ## gamma
@@ -103,13 +105,17 @@ m.gam <- lmer(std.gamma ~ (quality + missing + maf + refdist + height)*
                 (quality + missing + maf + refdist + height) + (1 | simulation), 
               data = results.ref)
 
-m.gam1 <- bfFixefLMER_F.fnc(m.gam, method="AIC",threshold=5)
+m.gam1 <- bfFixefLMER_F.fnc(m.gam, method="AIC",threshold=10)
 pamer.fnc(m.gam1)
 summary(m.gam1)
 r.squaredGLMM(m.gam1)
 
 options(na.action="na.fail")
-m_list_gam <- dredge(m.gam, rank="AIC")
+m_list_gam <- dredge(m.gam1, rank="AIC")
+head(m_list_gam, 10)
+subset(m_list_gam, delta < 10)
+m.gam_list <- get.models(m_list_gam, subset = delta < 10)
+
 head(m_list_gam, 10)
 
 ## colless
@@ -117,15 +123,17 @@ m.imb <- lmer(ingroup.colless ~ (quality + missing + maf + refdist + height)*
                 (quality + missing + maf + refdist + height) + (1 | simulation), 
               data = results.ref)
 
-m.imb1 <- bfFixefLMER_F.fnc(m.imb, method="AIC",threshold=5)
+m.imb1 <- bfFixefLMER_F.fnc(m.imb, method="AIC",threshold=10)
 pamer.fnc(m.imb1)
 summary(m.imb1)
 r.squaredGLMM(m.imb1)
 
 options(na.action="na.fail")
-m_list_imb <- dredge(m.imb, rank="AIC")
+m_list_imb <- dredge(m.imb1, rank="AIC")
 head(m_list_imb, 10)
 subset(m_list_imb, delta < 10)
+m.imb_list <- get.models(m_list_imb, subset = delta < 10)
+
 plot(m_list_imb)
 
 ##########################################################
@@ -172,7 +180,7 @@ head(m_list, 10)
 m.rf_list <- get.models(m_list, subset = cumsum(weight) < 0.999)
 m.rf_list_short <- get.models(m_list, subset = delta < 10)
 
-m.rf_avg <- model.avg(m.rf_list_short, revised.var = TRUE)
+m.rf_avg <- model.avg(m.rf_list, revised.var = TRUE)
 sum.rf <- summary(m.rf_avg)
 
 confint.rf<-data.frame(confint(m.rf_avg,type="FULL"))
