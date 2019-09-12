@@ -270,7 +270,7 @@ for QUAL in $qual_list
 				mkdir ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files
 			fi
         		cp OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}*noInv*.phy ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
-        		cp RAxML*.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/
+        		cp RAxML*.OUTFILE_gene${i}_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}* ../${tree_height}_sim${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.${int}.gene_tree_files/  
 
 #######################################
 #### run ASTRAL on the gene trees #####
