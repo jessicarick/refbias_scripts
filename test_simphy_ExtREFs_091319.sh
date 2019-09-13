@@ -249,11 +249,18 @@ for QUAL in $qual_list
          
         echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy,${sites_ref},${sites_noref}" >> /project/phylogenref/scripts/output/${day}-filteredSites-${tree_height}-sim${sim}-${int}
 
-		wait
-                  
-          mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
-        	mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
-        	mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}.noref-${taxa_ref}.phylip_tree_files
+#######################################
+#### Subsample & Run RAxML ############
+#######################################
+
+          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv $sites_ref $max
+          
+          echo "running raxml on subsampled phylip"
+              	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
+
+          mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
+        	mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
+        	mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
 
                 done
          done
@@ -268,9 +275,13 @@ mkdir -p sim${sim}/ref.fasta_files
 mv *_config sim${sim}/config_files
 mv *.fa sim${sim}/ref.fasta_files
 				
-###Create a batch file with all trees in order by file type, and create a name file
-cat s${sim}*q*miss*/*bipartitions* >> ${output_dir}/${day}-${tree_height}-batch.trees
-ls s${sim}*q*miss*/*bipartitions* >> ${output_dir}/${day}-${tree_height}-tree.names
+###Create a batch file with all normal trees in order by file type, and create a name file
+cat s${sim}*q*miss*/*bipartitions*filtered* >> ${output_dir}/${day}-${tree_height}-batch.trees
+ls s${sim}*q*miss*/*bipartitions*filtered* >> ${output_dir}/${day}-${tree_height}-tree.names
+
+###Create a batch file with all subsampled trees in order by file type, and create a name file
+cat s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
+ls s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
 
 ### Create a loop to run ASTRAL
 
