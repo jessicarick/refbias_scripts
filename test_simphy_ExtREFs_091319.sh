@@ -62,7 +62,6 @@ do
 done
 
 
-
 for fastq in $fastq_list
 		
     do mkdir -p fastq_reads/sim${sim}/fastq/${fastq}
