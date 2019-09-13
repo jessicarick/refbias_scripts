@@ -9,7 +9,7 @@
 ## added some of chad's script
 ##############################
 
-output <- "053019-output"
+output <- "091119-output"
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 # #check for the argparse package installed
@@ -85,14 +85,14 @@ m.rf <- lmer(RF.Dist.ML ~ (quality + missing + maf + refdist + height)*
                (quality + missing + maf + refdist + height) 
              + (1 | simulation), data = results.mod)
 
-m.rf1 <- bfFixefLMER_F.fnc(m.rf, method="AIC",threshold=5)
+m.rf1 <- bfFixefLMER_F.fnc(m.rf, method="AIC",threshold=10)
 pamer.fnc(m.rf1)
 sum.rf <- summary(m.rf1)
 r.squaredGLMM(m.rf1)
 
 options(na.action="na.fail")
 #clust <- try(makeCluster(getOption("cl.cores", 4), type = "SOCK"))
-m_list_rf <- dredge(m.rf1, rank="AIC",trace=TRUE)
+m_list_rf <- dredge(m.rf, rank="AIC",trace=TRUE)
 head(m_list_rf, 10)
 subset(m_list_rf, delta < 10)
 m.rf_list <- get.models(m_list_rf, subset = delta < 10)
