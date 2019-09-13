@@ -4,21 +4,21 @@
 library(tidyverse)
 library(ggridges)
 
-output <- "053019-output"
+output <- "091119-output"
 
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 responses <- colnames(results.raxml[,13:28])
 
-pdf(paste("output/",output,"-univariate-plots_refdist_082819.pdf",sep=""),width=11,height=8)
+pdf(paste("output/",output,"-univariate-plots_refdist_091219.pdf",sep=""),width=11,height=8)
 
 for (i in 1:length(responses)){
-  plot1 <- ggplot(data = results.raxml, aes(x=as.factor(results.raxml$refdist),y=results.raxml[,responses[i]]))
+  plot1 <- ggplot(data = results.raxml, aes(x=as.factor(results.raxml$maf),y=results.raxml[,responses[i]],fill=results.raxml$int))
   
   plot2 <- plot1 +
     geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE, weight=2)+
     #geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
-    #scale_fill_manual(values=c("#009980", "#006699","turquoise","magenta","orange","green"),name="",aesthetics = "fill")+
+    scale_fill_manual(values=c("#009980", "#006699","turquoise","magenta","orange","green"),name="",aesthetics = "fill")+
     theme_classic()+
     theme(axis.title.y = element_text(angle=90, size=rel(2), face="plain"),
           axis.text.y = element_text(size=rel(2)),
@@ -31,7 +31,7 @@ for (i in 1:length(responses)){
           panel.border = element_rect(color = "black", fill=NA, size=1),
           strip.text.x = element_text(size = 16))+
     scale_y_continuous(name=responses[i])+
-    scale_x_discrete(name="refdist")+
+    scale_x_discrete(name="MAF")+
     #xlim(-50,10)+
     #facet_wrap(vars(int),nrow=2,strip.position = "top")+
     geom_hline(yintercept=0,cex=2,lty=2,col="gray")#+
