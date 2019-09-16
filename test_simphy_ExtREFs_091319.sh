@@ -22,6 +22,8 @@ nloci=$(($genes + 1))
 var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci`)
 echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-${int}
 
+#if false; then # DEBUGGING
+
 export REF_PATH
 export tree_height
 export sim
@@ -38,6 +40,8 @@ cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${si
 # if [ ! -d astral/ ]; then
 #     mkdir astral/
 # fi
+
+#fi # DEBUGGING
 
 ##############################################
 ### Concatenate reads into single file########
@@ -169,14 +173,14 @@ for QUAL in $qual_list
 
         for gene in `seq -w ${genes}`
                 do vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
-                      --chr gene${gene}
-                      --recode
-                      --out gene${gene}
+                      --chr gene${gene} \
+                      --recode \
+                      --out gene${gene}.REF
                       
-                python ${REF_PATH}/vcf2phylip.py -i gene${gene}.recode.vcf \
-                    	-o gene${gene}.phy -r
+                python ${REF_PATH}/vcf2phylip.py -i gene${gene}.REF.recode.vcf \
+                    	-o gene${gene}.REF.phy -r
                 
-                printf "library(ape)\nlibrary(phrynomics)\nReadSNP(gene${gene}.phy,',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
+                printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.REF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.REF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
                 R --vanilla --no-save < Rscript.R    	
                 
                 nsnps=`cat nsnps`
@@ -185,14 +189,14 @@ for QUAL in $qual_list
         
         ## combine into one supermatrix
 
-        Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}
-        rm -f gene*.noInv.phy
+        Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF
+        rm -f gene*.REF.noInv.phy
         
 #######################################
 #### Running RaxML w/ Ref #############
 #######################################
               
-        sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv.phy | head -n 1 | cut -f 2 -d' ')
+        sites_ref=$(cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.phy | head -n 1 | awk '{print $2}' )
 			        
         if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out ]]
 		        then
@@ -202,7 +206,7 @@ for QUAL in $qual_list
         fi
         	     	  
         echo "running raxml on concatenated SNPs"
-              	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
+              	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
 
 #######################################
 #### Running RaxML w/o Ref ############
@@ -214,14 +218,14 @@ for QUAL in $qual_list
 
         for gene in `seq -w ${genes}`
                 do vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
-                      --chr gene${gene}
-                      --recode
+                      --chr gene${gene} \
+                      --recode \
                       --out gene${gene}.NOREF
                       
                 python ${REF_PATH}/vcf2phylip.py -i gene${gene}.NOREF.recode.vcf \
                     	-o gene${gene}.NOREF.phy
                 
-                printf "library(ape)\nlibrary(phrynomics)\nReadSNP(gene${gene}.NOREF.phy,',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
+                printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
                 R --vanilla --no-save < Rscript.R    	
                 
                 nsnps=`cat nsnps`
@@ -231,10 +235,10 @@ for QUAL in $qual_list
         ## combine into one supermatrix
 
         Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF
-        rm -f gene*NOREF.noInv.phy   
+        rm -f gene*.NOREF.noInv.phy   
         
         
-      	sites_noref=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv.phy | cut -f 2 -d' ')
+      	sites_noref=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv.phy | awk '{print $2}' )
 
         if [[ -s RAxML_info.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out ]]
  			        then
@@ -244,16 +248,16 @@ for QUAL in $qual_list
         fi
         		
       	echo "running raxml on concatenated SNPs"
-      	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
+      	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
                   
          
-        echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.phy,${sites_ref},${sites_noref}" >> /project/phylogenref/scripts/output/${day}-filteredSites-${tree_height}-sim${sim}-${int}
+        echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf},${sites_ref},${sites_noref}" >> /project/phylogenref/scripts/output/${day}-filteredSites-${tree_height}-sim${sim}-${int}
 
 #######################################
 #### Subsample & Run RAxML ############
 #######################################
 
-          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv $sites_ref $max
+          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv $sites_ref $maxSNP
           
           echo "running raxml on subsampled phylip"
               	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
