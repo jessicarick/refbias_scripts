@@ -2,7 +2,7 @@ REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.
 output_dir=/project/phylogenref/scripts/output
 day=`date +%m%d%y`
 
-num_sims='21'
+num_sims='2'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
@@ -13,14 +13,13 @@ gene_length=1000
 genes=$(expr $ref_length / $gene_length)
 #max=`grep -v '^>' $reference | wc -m`
 
-var_sites=15
+var_sites=30
 
 echo "1,1,1,1,1,1" > rat.matrix
 
 ###Added variable for number of species and individuals for simulation - Values can be changed
 num_sp=100
 num_ind=1
-
 tree_height_list='500000'
 	
 ##############################################
@@ -28,10 +27,13 @@ tree_height_list='500000'
 ##############################################
 
 ## for testing
-#qual_list='0'
+qual_list='0'
 #maf_list='0'
 #miss_list='0'
 
-qual_list='0 20 40 60'
-maf_list='0 0.01 0.02 0.03 0.04 0.05'
+#qual_list='0 20 40 60'
+maf_list='0 0.01 0.02 0.03 0.04 0.05 0.10 0.20'
 miss_list='0 0.25 0.50 0.75 1.0'
+
+# set max sites for subsampling
+maxSNP=1000

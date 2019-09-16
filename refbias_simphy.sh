@@ -25,7 +25,7 @@ echo "max length: $max"
 for tree_height in $tree_height_list
 	do mkdir sims_$tree_height
 	cd sims_$tree_height
-	for sim in $num_sims
+	for sim in `seq $num_sims`
 		do mkdir sim${sim}
 		cd sim${sim}
 		
