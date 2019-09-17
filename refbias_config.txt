@@ -20,7 +20,7 @@ echo "1,1,1,1,1,1" > rat.matrix
 ###Added variable for number of species and individuals for simulation - Values can be changed
 num_sp=100
 num_ind=1
-tree_height_list='500000'
+tree_height_list='10000000'
 	
 ##############################################
 ### Filtering parameters for sims ############

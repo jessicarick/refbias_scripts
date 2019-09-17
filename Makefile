@@ -22,5 +22,5 @@ analyze_refbias_trees: ./output/${day}-*
 	--astral.tree.names ${day}-all-astral.names \
 	--output ${day}-output
 
-simulations: refbias_config.txt refbias_simphy.sh wrap_slurm_teton_refbias.pl test_simphy_ExtREFs_031119.sh test_simphy_IntREFs_031119.sh vcf2phylip.py astral_script_031119.sh latesGBS.txt 
+simulations: refbias_config.txt refbias_simphy.sh wrap_slurm_teton_refbias.pl test_simphy_ExtREFs_031119.sh test_simphy_IntREFs_031119.sh vcf2phylip.py astral_script_031119.sh latesGBS.txt subsamp.R make_supermat.R
 	source refbias_simphy.sh

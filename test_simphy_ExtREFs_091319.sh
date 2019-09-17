@@ -257,7 +257,7 @@ for QUAL in $qual_list
 #### Subsample & Run RAxML ############
 #######################################
 
-          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv $sites_ref $maxSNP
+          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv $sites_ref $maxSNP
           
           echo "running raxml on subsampled phylip"
               	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
