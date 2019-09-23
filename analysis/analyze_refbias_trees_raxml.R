@@ -25,14 +25,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-raxml.trees <- "053019-all-raxml.trees"
-raxml.tree.names <- "053019-all-raxml.names"
-astral.trees <- "053019-all-astral.trees"
-astral.tree.names <- "053019-all-astral.names"
-ml.trees <- "053019-s_tree.tree"
-ml.tree.names <- "053019-s_tree.names"
-output <- "053019-output"
-args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+#raxml.trees <- "053019-all-raxml.trees"
+#raxml.tree.names <- "053019-all-raxml.names"
+#astral.trees <- "053019-all-astral.trees"
+#astral.tree.names <- "053019-all-astral.names"
+#ml.trees <- "053019-s_tree.tree"
+#ml.tree.names <- "053019-s_tree.names"
+#output <- "053019-output"
+#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
 
 ############################################
 ## Reading in command line arguments #######
