@@ -25,14 +25,15 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-#raxml.trees <- "053019-all-raxml.trees"
-#raxml.tree.names <- "053019-all-raxml.names"
-#astral.trees <- "053019-all-astral.trees"
-#astral.tree.names <- "053019-all-astral.names"
-#ml.trees <- "053019-s_tree.tree"
-#ml.tree.names <- "053019-s_tree.names"
-#output <- "053019-output"
-#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","output"))
+raxml.trees <- "091819-all-raxml.trees"
+raxml.tree.names <- "091819-all-raxml.names"
+astral.trees <- "091819-all-astral.trees"
+astral.tree.names <- "091819-all-astral.names"
+ml.trees <- "091819-s_tree.tree"
+ml.tree.names <- "091819-s_tree.names"
+output <- "091819-output"
+refdist <- "091819-refdist.txt"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -141,7 +142,7 @@ for (i in 1:length(raxml.trees)) {
   results.raxml$sites[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('sites([0-9]*?)\\.', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+).filtered', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('([A-Z]+-[0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
+  results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('[A-Z]-([0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
   results.raxml$refdist[i]<-refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
                                                refdist$tree_height == results.raxml$height[i] &
                                                refdist$int == results.raxml$int[i]][1]
@@ -227,9 +228,8 @@ for (i in 1:length(raxml.trees)){
       results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
       results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
       
-      ## normalized gamma
+      ## normalized gamma and imbalance
       results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
-
       results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
 
       results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
@@ -237,6 +237,8 @@ for (i in 1:length(raxml.trees)){
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
+      results.raxml$std.ingroup.gamma[i] <- gammaStat(ingroup)[1] - gammaStat(ml.ingroup)[1]
+      
     } else {
       s <- as.integer(results.raxml$simulation[i])
       h <- as.integer(results.raxml$height[i])
@@ -251,13 +253,17 @@ for (i in 1:length(raxml.trees)){
       ## normalized gamma
       results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
       
+      ## normalized imbalance
       results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
       
+      ## standardized num sites
       results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
       
+      ## ingroup standardization
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
-      ml.ingroup <- drop.tip(ml.tree.pruned,"sim_0_0_0")
+      ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
+      results.raxml$std.ingroup.gamma[i] <- gammaStat(ingroup)[1] - gammaStat(ml.ingroup)[1]
     }
   } else if (results.raxml$taxa_ref[i] != "0_0_0"){
     if (results.raxml$noref[i] == "REF"){
@@ -270,9 +276,8 @@ for (i in 1:length(raxml.trees)){
       results.raxml$RF.Dist.ML[i] <- multiRF(trees.both,multi2di=TRUE)[[2]]
       results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
        
-      ## normalized gamma
+      ## normalized gamma and colless
       results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
-      
       results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
       
       results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
@@ -280,6 +285,8 @@ for (i in 1:length(raxml.trees)){
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
+      results.raxml$std.ingroup.gamma[i] <- gammaStat(ingroup)[1] - gammaStat(ml.ingroup)[1]
+      
     } else {
       s <- as.integer(results.raxml$simulation[i])
       h <- as.integer(results.raxml$height[i])
@@ -289,11 +296,10 @@ for (i in 1:length(raxml.trees)){
       
       ###RF distance to ML tree
       results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
-      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned,check.labels=FALSE)
+      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned)
                            
-      ## normalized gamma
+      ## normalized gamma and colless
       results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
-      
       results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
       
       results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
@@ -301,6 +307,8 @@ for (i in 1:length(raxml.trees)){
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree.pruned,"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
+      results.raxml$std.ingroup.gamma[i] <- gammaStat(ingroup)[1] - gammaStat(ml.ingroup)[1]
+      
     }
   }
 }

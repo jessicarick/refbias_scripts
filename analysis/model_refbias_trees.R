@@ -77,7 +77,6 @@ results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.factor(results.mod$missing)
 results.mod$maf <- as.factor(results.mod$maf)
- 
 
 # CDB Modeling ###########################################
 # using LMER convienence functions #######################
