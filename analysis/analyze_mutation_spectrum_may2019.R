@@ -85,7 +85,10 @@ summary(varsites.all)
 ## Putting the data together
 varsites.all$int <- as.factor(varsites.all$int)
 pre.post <- varsites.all %>%
-  left_join(mut.all,by=c("sim" = "sim_num","height" = "tree_height", "int" = "int_ext", "locus" = "gene"))
+  left_join(mut.all,by=c("sim" = "sim_num",
+                         "height" = "tree_height", 
+                         "int" = "int_ext", 
+                         "locus" = "gene"))
 summary(pre.post)
 pre.post$diff <- pre.post$variants - pre.post$SNPs
 hist(pre.post$diff)
