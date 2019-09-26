@@ -141,7 +141,7 @@ for (i in 1:length(raxml.trees)) {
   results.raxml$sites[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('sites([0-9]*?)\\.', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+).filtered', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('ref-([sim[0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
+  results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('([A-Z]+-[0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
   results.raxml$refdist[i]<-refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
                                                refdist$tree_height == results.raxml$height[i] &
                                                refdist$int == results.raxml$int[i]][1]
@@ -379,7 +379,7 @@ for (h in unique(as.numeric(as.character(results.raxml$height)))){
       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black"))+
+      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black","pink","turquoise"))+
       scale_shape_manual(values=c(0,1,2,3,16,17))
     print(plot2)
     
