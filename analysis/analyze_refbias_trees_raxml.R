@@ -387,7 +387,7 @@ for (h in unique(as.numeric(as.character(results.raxml$height)))){
       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
       #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black"))+
+      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black","pink","turquoise"))+
       scale_shape_manual(values=c(0,1,2,3,16,17))
     print(plot2)
     
