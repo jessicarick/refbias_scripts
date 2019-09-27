@@ -9,7 +9,7 @@
 ## added some of chad's script
 ##############################
 
-output <- "091119-output"
+output <- "091819-output"
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 # #check for the argparse package installed
@@ -292,7 +292,7 @@ my.models<-model.sel(m.rf.1,m.rf.2,m.rf.3,m.rf.4,m.rf.5,m.rf.6,m.rf.7,m.rf.8,m.r
 my.models
 
 options(na.action="na.fail")
-m_list <- dredge(m.rf.12, rank="AIC")
+m_list <- dredge(m.rf.3, rank="AIC")
 head(m_list, 10)
 
 m.rf_list <- get.models(m_list, subset = delta < 10)

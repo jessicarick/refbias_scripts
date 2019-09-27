@@ -1,5 +1,5 @@
 library(lme4)
-library(dplyr)
+library(tidyverse)
 library(MuMIn)
 library(car)
 library(LMERConvenienceFunctions)
@@ -13,19 +13,19 @@ results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.factor(results.mod$missing)
 results.mod$maf <- as.factor(results.mod$maf)
 
-results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
-                          nrow=5760,ncol=2,byrow=TRUE)[,2])
+#results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
+#                          nrow=5760,ncol=2,byrow=TRUE)[,2])
 
 ## gamma
 # short
 
-m.gam.short <- lm(std.gamma ~ int + maf + missing + quality +
-                     int:maf + int:missing + int:quality,
+m.gam.short <- lmer(std.ingroup.gamma ~ int + maf + missing + quality +
+                     int:maf + int:missing + int:quality + (1 | simulation),
                    data = results.mod[results.mod$height == "500000" & results.mod$noref == "REF",])
 sum.gam.short <- summary(m.gam.short)
 r.squaredGLMM(m.gam.short)
 
-confint.gam<-data.frame(confint(m.gam.short))
+confint.gam<-data.frame(confint(m.gam.short))[-c(1,2),]
 colnames(confint.gam) <- c("minCI","maxCI")
 confint.gam$var <- rownames(confint.gam)
 confint.gam$est <- sum.gam.short$coefficients[,1]
@@ -63,8 +63,8 @@ vars.gam.short.bars
 
 # med
 
-m.gam.med <- lm(std.gamma ~ int + maf + missing + quality +
-                   int:maf + int:missing + int:quality,
+m.gam.med <- lmer(std.gamma ~ int + maf + missing + quality +
+                   int:maf + int:missing + int:quality + (1 | simulation),
                  data = results.mod[results.mod$height == "2000000"  & results.mod$noref == "REF",])
 sum.gam.med <- summary(m.gam.med)
 r.squaredGLMM(m.gam.med)
@@ -163,7 +163,7 @@ ggarrange(vars.gam.short.bars,
 ## ridgeline plots
 plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
                 aes(y=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                    x=results.raxml[results.raxml$noref == "REF","std.gamma"],
+                    x=results.raxml[results.raxml$noref == "REF","std.ingroup.gamma"],
                     fill=results.raxml$int[results.raxml$noref == "REF"]))
 
 plot2 <- plot1 +
@@ -181,7 +181,7 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  scale_x_continuous(name="Standardized Gamma", lim=c(-50,25))+
+  scale_x_continuous(name="Standardized Ingroup Gamma", lim=c(-50,25))+
   scale_y_discrete(name="MAF")+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
