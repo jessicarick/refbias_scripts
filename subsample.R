@@ -22,7 +22,7 @@ diff <- nsnp - max
 if (diff > 0) {
 	omit <- sample(1:nsnp, diff, replace=F)
 	} else {
-	omit <- 0
+	omit <- sample(1:nsnp, 1, replace=F)
 }
 
 # read in phylip and remove randomly chosen snps
