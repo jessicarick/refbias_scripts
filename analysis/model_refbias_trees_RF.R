@@ -5,6 +5,9 @@ library(car)
 library(LMERConvenienceFunctions)
 library(ggsci)
 
+cols <- c("#F2AD00","gray80","#00A08A")
+
+
 ## preparing data object
 results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
@@ -161,7 +164,7 @@ ggarrange(vars.imb.short.bars,
 ## ridgeline plots
 plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
                 aes(y=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                    x=results.raxml[results.raxml$noref == "REF","RF.Dist.ML"],
+                    x=results.raxml[results.raxml$noref == "REF","sites"],
                     fill=results.raxml$int[results.raxml$noref == "REF"]))
 
 plot2 <- plot1 +

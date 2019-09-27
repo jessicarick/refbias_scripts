@@ -224,16 +224,16 @@ for (i in 1:length(raxml.trees)){
       j <- which(ml.tree.info$simulation == s & ml.tree.info$height == h)
       trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree[[j]]))
 
-      ###RF distance to ML tree
-      results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
-      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
-      
-      ## normalized gamma and imbalance
-      results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
-      results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
-
-      results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
-      
+      # ###RF distance to ML tree
+      # results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
+      # results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
+      # 
+      # ## normalized gamma and imbalance
+      # results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
+      # results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
+      # 
+      # results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
+      # 
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
@@ -245,20 +245,20 @@ for (i in 1:length(raxml.trees)){
       j <- which(ml.tree.info$simulation == s & ml.tree.info$height == h)
       ml.tree.pruned <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree.pruned))
-      
-      ###RF distance to ML tree
-      results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
-      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned,check.labels=FALSE)
-       
-      ## normalized gamma
-      results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
-      
-      ## normalized imbalance
-      results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
-      
-      ## standardized num sites
-      results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
-      
+      # 
+      # ###RF distance to ML tree
+      # results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
+      # results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned,check.labels=FALSE)
+      #  
+      # ## normalized gamma
+      # results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
+      # 
+      # ## normalized imbalance
+      # results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
+      # 
+      # ## standardized num sites
+      # results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
+      # 
       ## ingroup standardization
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
@@ -271,17 +271,17 @@ for (i in 1:length(raxml.trees)){
       h <- as.integer(results.raxml$height[i])
       j <- which(ml.tree.info$simulation == s & ml.tree.info$height == h)
       trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree[[j]]))
-      
-      ###RF distance to ML tree
-      results.raxml$RF.Dist.ML[i] <- multiRF(trees.both,multi2di=TRUE)[[2]]
-      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
-       
-      ## normalized gamma and colless
-      results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
-      results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
-      
-      results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
-      
+      # 
+      # ###RF distance to ML tree
+      # results.raxml$RF.Dist.ML[i] <- multiRF(trees.both,multi2di=TRUE)[[2]]
+      # results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree[[j]],check.labels=FALSE)
+      #  
+      # ## normalized gamma and colless
+      # results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree[[j]])[1]
+      # results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree[[j]],model="pda"))
+      # 
+      # results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
+      # 
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree[[j]],"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))
@@ -293,17 +293,17 @@ for (i in 1:length(raxml.trees)){
       j <- which(ml.tree.info$simulation == s & ml.tree.info$height == h)
       ml.tree.pruned <- drop.tip(ml.tree[[j]],paste("sim_",results.raxml$taxa_ref[i]))
       trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree.pruned))
-      
-      ###RF distance to ML tree
-      results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
-      results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned)
-                           
-      ## normalized gamma and colless
-      results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
-      results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
-      
-      results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
-      
+      # 
+      # ###RF distance to ML tree
+      # results.raxml$RF.Dist.ML[i]<- multiRF(trees.both,multi2di=TRUE)[[2]]
+      # results.raxml$weighted.rf[i] <- wRF.dist(raxml.trees[[i]],ml.tree.pruned)
+      #                      
+      # ## normalized gamma and colless
+      # results.raxml$std.gamma[i] <- gammaStat(raxml.trees[[i]])[1] - gammaStat(ml.tree.pruned)[1]
+      # results.raxml$std.colless[i] <- colless(as.treeshape(raxml.trees[[i]], model="pda")) - colless(as.treeshape(ml.tree.pruned,model="pda"))
+      # 
+      # results.raxml$std.sites[i] <- results.raxml$sites[i] / max(results.raxml$sites[results.raxml$simulation == s])
+      # 
       ingroup <- drop.tip(raxml.trees[[i]],"sim_0_0_0")
       ml.ingroup <- drop.tip(ml.tree.pruned,"sim_0_0_0")
       results.raxml$std.ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda")) - colless(as.treeshape(ml.ingroup,model="pda"))

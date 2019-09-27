@@ -27,7 +27,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## imbalance
 # short
 
-m.imb.short <- lmer(std.ingroup.colless ~ int + maf + missing + quality +
+m.imb.short <- lmer(ingroup.sackin ~ int + maf + missing + quality +
                       int:maf + int:missing + int:quality + (1 | simulation),
                     data = results.mod[results.mod$height == "500000" & results.mod$noref == "REF",])
 sum.imb.short <- summary(m.imb.short)
@@ -73,7 +73,7 @@ print(vars.imb.short.bars)
 
 # med
 
-m.imb.med <- lmer(std.ingroup.colless ~ int + maf + missing + quality +
+m.imb.med <- lmer(ingroup.sackin ~ int + maf + missing + quality +
                     int:maf + int:missing + int:quality + (1 | simulation),
                   data = results.mod[results.mod$height == "2000000"  & results.mod$noref == "REF",])
 sum.imb.med <- summary(m.imb.med)
@@ -119,7 +119,7 @@ vars.imb.med.bars
 
 # long
 
-m.imb.long <- lmer(std.ingroup.colless ~ int + maf + missing + quality +
+m.imb.long <- lmer(ingroup.sackin ~ int + maf + missing + quality +
                      int:maf + int:missing + int:quality + (1 | simulation),
                    data = results.mod[results.mod$height == "10000000" & results.mod$noref == "REF",])
 sum.imb.long <- summary(m.imb.long)
@@ -173,7 +173,7 @@ ggarrange(vars.imb.short.bars,
 ## ridgeline plots
 plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
                 aes(y=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                    x=results.raxml[results.raxml$noref == "REF","std.ingroup.colless"],
+                    x=results.raxml[results.raxml$noref == "REF","ingroup.sackin"],
                     fill=results.raxml$int[results.raxml$noref == "REF"]))
 
 plot2 <- plot1 +
@@ -191,7 +191,7 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  scale_x_continuous(name="Std Ingroup Colless")+
+  scale_x_continuous(name="Std Ingroup Sackin")+
   scale_y_discrete(name="MAF")+
   #xlim(-50,10)+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
