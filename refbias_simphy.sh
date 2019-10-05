@@ -23,8 +23,8 @@ echo "max length: $max"
 ##############################################
 
 for tree_height in $tree_height_list
-	do mkdir sims_$tree_height
-	cd sims_$tree_height
+	do mkdir sims_${tree_height}_subsamp
+	cd sims_${tree_height}_subsamp
 	for sim in `seq $num_sims`
 		do mkdir sim${sim}
 		cd sim${sim}
@@ -63,11 +63,11 @@ for tree_height in $tree_height_list
 		
 #	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
 #	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
-	cat species_tree${sim}/1/s_tree.trees >> ${output_dir}/${day}-s_tree.tree
-	echo "height${tree_height}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-s_tree.names
+	cat species_tree${sim}/1/s_tree.trees >> ${output_dir}/${day}-subsamp-s_tree.tree
+	echo "height${tree_height}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-subsamp-s_tree.names
 
 	conda deactivate
-	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $tree_height
+	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias_subsamp.pl $sim $tree_height
 	
 	cd ../
 	done
@@ -75,6 +75,6 @@ for tree_height in $tree_height_list
 cd ../
 done
 
-echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
+echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist_subsamp.txt
 #echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
