@@ -25,15 +25,15 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-#raxml.trees <- "091819-all-raxml.trees"
-#raxml.tree.names <- "091819-all-raxml.names"
-#astral.trees <- "091819-all-astral.trees"
-#astral.tree.names <- "091819-all-astral.names"
-#ml.trees <- "091819-s_tree.tree"
-#ml.tree.names <- "091819-s_tree.names"
-#output <- "091819-output"
-#refdist <- "091819-refdist.txt"
-#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
+raxml.trees <- "100219-all-subsamp-raxml.trees"
+raxml.tree.names <- "100219-all-subsamp-raxml.names"
+astral.trees <- "100219-all-subsamp-astral.trees"
+astral.tree.names <- "100219-all-subsamp-astral.names"
+ml.trees <- "100219-subsamp-s_tree.tree"
+ml.tree.names <- "100219-subsamp-s_tree.names"
+output <- "100219-subsamp-output"
+refdist <- "100219-refdist_subsamp.txt"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
 ## Reading in command line arguments #######
