@@ -6,7 +6,7 @@ library(LMERConvenienceFunctions)
 library(ggsci)
 
 ## preparing data object
-results.mod <- results.raxml
+results.mod <- results.raxml[results.raxml$sites == 1000,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
@@ -48,6 +48,7 @@ vars.gam.short.bars <- vars.gam.short + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
+  ylim(-400,400)+
   ylab("Parameter Estimate\nHeight = 500,000")+
   #scale_color_npg() +
   #scale_x_reverse() +
@@ -93,6 +94,7 @@ vars.gam.med.bars <- vars.gam.med + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
+  ylim(-400,400)+
   ylab("Parameter Estimate\nHeight = 2,000,000")+
   #scale_color_npg() +
   #scale_x_reverse() +
@@ -138,6 +140,7 @@ vars.gam.long.bars <- vars.gam.long + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
+  ylim(-400,400)+
   ylab("Parameter Estimate\nHeight = 10,000,000")+
   #scale_color_npg() +
   #scale_x_reverse() +
