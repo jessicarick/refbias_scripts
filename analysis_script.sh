@@ -2,7 +2,8 @@
 
 #SBATCH --account=phylogenref
 #SBATCH --nodes=1
-#SBATCH --time=8:00:00
+#SBATCH --time=2-00:00:00
+#SBATCH --mem=124G
 #SBATCH --mail-type=all
 
 module load gcc
@@ -41,15 +42,18 @@ fi
 
 echo "beginning R analysis of astral and raxml trees!"
 
+#for i in `seq -w 00 09`
+#do echo "working with batch ${i} of 09"
 Rscript analysis/analyze_refbias_trees_raxml.R \
 	--ml.trees ${day}-s_tree.tree \
 	--ml.tree.names ${day}-s_tree.names \
-	--raxml.trees ${day}-all-raxml.trees \
-	--raxml.tree.names ${day}-all-raxml.names \
+	--raxml.trees ${day}-all-raxml.trees.new \
+	--raxml.tree.names ${day}-all-raxml.names.new \
 	--astral.trees ${day}-all-astral.trees \
 	--astral.tree.names ${day}-all-astral.names \
 	--refdist ${day}-refdist.txt \
-	--output ${day}-output 
+	--output ${day}-output${i} 
+#done
 
 #Rscript analysis/analyze_refbias_trees_astral.R \
 #	--ml.trees ${day}-s_tree.tree \
