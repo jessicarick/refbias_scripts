@@ -18,8 +18,10 @@ int=EXT
 ##############################################
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
+echo "starting analysis for $tree_height, sim $sim, $int"
+
 nloci=$(($genes + 1))
-var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci`)
+var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci $varsites`)
 echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-${int}
 
 #if false; then # DEBUGGING
@@ -219,11 +221,16 @@ for QUAL in $qual_list
                 python ${REF_PATH}/vcf2phylip.py -i gene${gene}.NOREF.recode.vcf \
                     	-o gene${gene}.NOREF.phy
                 
-                printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')" > Rscript.R
-                R --vanilla --no-save < Rscript.R    	
-                
+                sites=`cat gene${gene}.NOREF.phy | head -n 1 | awk '{print $2}'`
+		if [ "$sites" -eq "0" ]; then
+			cat gene${gene}.NOREF.phy > gene${gene}.NOREF.noInv.phy
+		else
+			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')" > Rscript.R
+                	R --vanilla --no-save < Rscript.R    	
+                fi
                 nsnps=`cat gene${gene}.NOREF.noInv.phy | head -n 1 | awk '{print $2}'`
-                echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                
+		echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
         done
         
         ## combine into one supermatrix

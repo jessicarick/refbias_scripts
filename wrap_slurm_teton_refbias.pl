@@ -20,7 +20,7 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-my $runtime = '07-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+my $runtime = '02-00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
 #my $runtime = '12:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater
@@ -47,7 +47,7 @@ my $tree_height = $ARGV[1];
 #}
 
 push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_091319.sh $sim $tree_height \n";
-#push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_091319.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_091319.sh $sim $tree_height \n";
 
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
@@ -107,7 +107,7 @@ push @slurmdirectives, "#SBATCH --job-name=$jobname";
 push @slurmdirectives, "#SBATCH --time=$runtime"; 
 push @slurmdirectives, "#SBATCH --nodes=1";
 push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 32 cores per node
-push @slurmdirectives, "#SBATCH --mem=124G"; 
+#push @slurmdirectives, "#SBATCH --mem=124G"; 
 push @slurmdirectives, "#SBATCH --workdir=$logdir";
 #          SLURM can send informative email messages to you about the
 #          status of your job.  
