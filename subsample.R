@@ -36,3 +36,4 @@ final.phy <- data.frame(seq.text=phy.subsamp)
 row.names(final.phy) <- alignment$seq.name
 final.snp <- ReadSNP(final.phy)
 WriteSNP(final.snp, file=paste0(args[1],".subsamp.phy"),format='phylip')
+

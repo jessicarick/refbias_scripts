@@ -18,8 +18,10 @@ int=INT
 ##############################################
 ### Simulate reads for each gene w/ TTR ######
 ##############################################
+echo "starting analysis for $tree_height, sim $sim, $int"
+
 nloci=$(($genes + 1))
-var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci`)
+var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci $varsites`)
 echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-${int}
 
 #if false; then # DEBUGGING
@@ -172,7 +174,7 @@ for QUAL in $qual_list
         #               --out gene${gene}.REF
         #               
         #         python ${REF_PATH}/vcf2phylip.py -i gene${gene}.REF.recode.vcf \
-        #             	-o gene${gene}.REF.phy
+        #             	-o gene${gene}.REF.phy -r
         #         
         #         printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.REF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.REF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
         #         R --vanilla --no-save < Rscript.R    	
@@ -185,7 +187,7 @@ for QUAL in $qual_list
         # 
         # Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF
         # rm -f gene*.REF.noInv.phy
-        
+        # 
 #######################################
 #### Running RaxML w/ Ref #############
 #######################################
@@ -219,11 +221,16 @@ for QUAL in $qual_list
                 python ${REF_PATH}/vcf2phylip.py -i gene${gene}.NOREF.recode.vcf \
                     	-o gene${gene}.NOREF.phy
                 
-                printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')" > Rscript.R
-                R --vanilla --no-save < Rscript.R    	
-                
+                sites=`cat gene${gene}.NOREF.phy | head -n 1 | awk '{print $2}'`
+		if [ "$sites" -eq "0" ]; then
+			cat gene${gene}.NOREF.phy > gene${gene}.NOREF.noInv.phy
+		else
+			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')" > Rscript.R
+                	R --vanilla --no-save < Rscript.R    	
+                fi
                 nsnps=`cat gene${gene}.NOREF.noInv.phy | head -n 1 | awk '{print $2}'`
-                echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
+                
+		echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-sim${sim}-${int}
         done
         
         ## combine into one supermatrix
@@ -253,7 +260,7 @@ for QUAL in $qual_list
 
 #           Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv $sites_ref $maxSNP
 # 
-# 	sites_samp=$(( $sites_ref < $maxSNP ? $sites_ref : $maxSNP ))
+# 	sites_samp=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy | awk '{print $2}')
 #           
 #           echo "running raxml on subsampled phylip"
 #               	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
@@ -279,9 +286,9 @@ mv *.fa sim${sim}/ref.fasta_files
 cat s${sim}*q*miss*/*bipartitionsBranch*filtered* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}*q*miss*/*bipartitionsBranch*filtered* >> ${output_dir}/${day}-${tree_height}-tree.names
 
-###Create a batch file with all subsampled trees in order by file type, and create a name file
-#cat s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
-#ls s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
+# ###Create a batch file with all subsampled trees in order by file type, and create a name file
+# cat s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
+# ls s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
 
 ### Create a loop to run ASTRAL
 

@@ -19,3 +19,4 @@ distMat.py -g ${output}.geno.gz -f phased --windType cat -o ${output}.dist
 avg_dist=`grep "sim_${taxa_ref}" ${output}.dist | cut -f 2- -d' ' | sed 's/ /\n/g' | awk '{s+=$1} END {print s/NR}'`
 
 echo "$sim $tree_height $int $taxa_ref $avg_dist" >> ${output_dir}/${day}-refdist.txt
+
