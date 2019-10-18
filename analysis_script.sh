@@ -47,8 +47,8 @@ echo "beginning R analysis of astral and raxml trees!"
 Rscript analysis/analyze_refbias_trees_raxml.R \
 	--ml.trees ${day}-s_tree.tree \
 	--ml.tree.names ${day}-s_tree.names \
-	--raxml.trees ${day}-all-raxml.trees.new \
-	--raxml.tree.names ${day}-all-raxml.names.new \
+	--raxml.trees ${day}-all-raxml.trees \
+	--raxml.tree.names ${day}-all-raxml.names \
 	--astral.trees ${day}-all-astral.trees \
 	--astral.tree.names ${day}-all-astral.names \
 	--refdist ${day}-refdist.txt \

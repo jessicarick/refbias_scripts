@@ -20,7 +20,7 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-my $runtime = '01-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+my $runtime = '04-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
 #my $runtime = '12:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater

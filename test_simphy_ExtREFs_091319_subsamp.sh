@@ -218,28 +218,10 @@ for QUAL in $qual_list
 #### and removing invariant sites #####
 #### making one phylip per gene #######
 #######################################
+echo "beginning creation of gene phylip files in parallel"
+seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  --env QUAL --env miss --env maf --env int "vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr gene{} --recode --out gene{}.NOREF && python ${REF_PATH}/vcf2phylip.py -i gene{}.NOREF.recode.vcf -o gene{}.NOREF.phy && sites=`head -n 1 gene{}.NOREF.phy | awk '{print $2}'` && if [ "$sites" -eq "0" ]; then cat gene{}.NOREF.phy > gene{}.NOREF.noInv.phy; else printf \"library(ape)\nlibrary(phrynomics)\nReadSNP('gene{}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene{}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')\" > Rscript.R; R --vanilla --no-save < Rscript.R;fi; nsnps=`head -n 1 gene{}.NOREF.noInv.phy | awk '{print $2}'`; echo \"gene{},${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}.REF.noInv,${nsnps}\" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all"
+#        done
 
-        for gene in `seq -w ${genes}`
-                do vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
-                      --chr gene${gene} \
-                      --recode \
-                      --out gene${gene}.NOREF
-                     
-                python ${REF_PATH}/vcf2phylip.py -i gene${gene}.NOREF.recode.vcf \
-                    	-o gene${gene}.NOREF.phy
-               
-                sites=`head -n 1 gene${gene}.NOREF.phy | awk '{print $2}'`
-		if [ "$sites" -eq "0" ]; then
-			cat gene${gene}.NOREF.phy > gene${gene}.NOREF.noInv.phy
-		else
-			printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')" > Rscript.R
-        	        R --vanilla --no-save < Rscript.R    	
-               	fi
-
-                nsnps=`head -n 1 gene${gene}.NOREF.noInv.phy | awk '{print $2}'`
-                echo "gene${gene},${height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}REF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all
-        done
-       
        ## combine into one supermatrix
 
         Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF
