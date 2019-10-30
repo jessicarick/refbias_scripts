@@ -219,7 +219,7 @@ for QUAL in $qual_list
 #### making one phylip per gene #######
 #######################################
 echo "beginning creation of gene phylip files in parallel"
-seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  --env QUAL --env miss --env maf --env int "vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr gene{} --recode --out gene{}.NOREF && python ${REF_PATH}/vcf2phylip.py -i gene{}.NOREF.recode.vcf -o gene{}.NOREF.phy && sites=`head -n 1 gene{}.NOREF.phy | awk '{print $2}'` && if [ "$sites" -eq "0" ]; then cat gene{}.NOREF.phy > gene{}.NOREF.noInv.phy; else printf \"library(ape)\nlibrary(phrynomics)\nReadSNP('gene{}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene{}.NOREF.noInv.phy',format='phylip')\nnsnps <- GetNumberOfSitesForLocus(snps)\nwrite(nsnps, file='nsnps')\" > Rscript.R; R --vanilla --no-save < Rscript.R;fi; nsnps=`head -n 1 gene{}.NOREF.noInv.phy | awk '{print $2}'`; echo \"gene{},${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}.REF.noInv,${nsnps}\" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all"
+seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  --env QUAL --env miss --env maf --env int "vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr gene{} --recode --out gene{}.NOREF && python ${REF_PATH}/vcf2phylip.py -i gene{}.NOREF.recode.vcf -o gene{}.NOREF.phy && sites=`head -n 1 gene{}.NOREF.phy | awk '{print $2}'` && printf \"library(ape)\nlibrary(phrynomics)\nReadSNP('gene{}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene{}.NOREF.noInv.phy',format='phylip')\" > Rscript.R; R --vanilla --no-save < Rscript.R; nsnps=`head -n 1 gene{}.NOREF.noInv.phy | tr -s ' ' | cut -d',' -f 2`; echo \"gene{},${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}.REF.noInv,${nsnps}\" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all"
 #        done
 
        ## combine into one supermatrix
@@ -247,7 +247,7 @@ seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  -
 #### Subsample & Run RAxML ############
 #######################################
 
-          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv $sites_ref $maxSNP
+          Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv $sites_noref $maxSNP
 
 	sites_samp=$(head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv.subsamp.phy | awk '{print $2}')
 	echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/${day}-subsampSites-all
@@ -277,8 +277,8 @@ mv *.fa sim${sim}/ref.fasta_files
 #ls s${sim}*q*miss*/*bipartitions*filtered* >> ${output_dir}/${day}-${tree_height}-tree.names
 
 ###Create a batch file with all subsampled trees in order by file type, and create a name file
-cat s${sim}*q*miss*/*bipartitionsBranchLabels*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
-ls s${sim}*q*miss*/*bipartitionsBranchLabels*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
+cat s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
+ls s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
 
 ### Create a loop to run ASTRAL
 
