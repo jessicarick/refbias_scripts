@@ -1,7 +1,7 @@
 REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
 output_dir=/project/phylogenref/scripts/output
-#day=`date +%m%d%y`
-day=101519
+day=`date +%m%d%y`
+#day=101519
 
 num_sims='1 10'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
