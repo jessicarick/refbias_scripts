@@ -80,8 +80,8 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 # CDB Modeling ###########################################
 # using LMER convienence functions #######################
-m.rf <- lmer(RF.Dist.ML ~ (quality + missing + maf + refdist + height)*
-               (quality + missing + maf + refdist + height) 
+m.rf <- lmer(RF.Dist.ML ~ (missing + maf + refdist + height)*
+               (missing + maf + refdist + height) 
              + (1 | simulation), data = results.mod)
 
 m.rf1 <- bfFixefLMER_F.fnc(m.rf, method="AIC",threshold=10)
@@ -100,9 +100,9 @@ plot(m_list_rf)
 
 ## gamma
 results.ref <- results.mod[results.mod$noref == "REF",]
-m.gam <- lmer(std.gamma ~ (quality + missing + maf + refdist + height)*
-                (quality + missing + maf + refdist + height) + (1 | simulation), 
-              data = results.ref)
+m.gam <- lmer(std.gamma ~ (missing + maf + refdist + height)*
+                (missing + maf + refdist + height) + (1 | simulation), 
+              data = results.mod)
 
 m.gam1 <- bfFixefLMER_F.fnc(m.gam, method="AIC",threshold=10)
 pamer.fnc(m.gam1)
@@ -118,9 +118,9 @@ m.gam_list <- get.models(m_list_gam, subset = delta < 10)
 head(m_list_gam, 10)
 
 ## colless
-m.imb <- lmer(ingroup.colless ~ (quality + missing + maf + refdist + height)*
-                (quality + missing + maf + refdist + height) + (1 | simulation), 
-              data = results.ref)
+m.imb <- lmer(ingroup.colless ~ (missing + maf + refdist + height)*
+                (missing + maf + refdist + height) + (1 | simulation), 
+              data = results.mod)
 
 m.imb1 <- bfFixefLMER_F.fnc(m.imb, method="AIC",threshold=10)
 pamer.fnc(m.imb1)
