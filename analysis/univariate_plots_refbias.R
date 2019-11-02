@@ -4,19 +4,19 @@
 library(tidyverse)
 library(ggridges)
 
-output <- "091819-output"
+output <- "101419-output"
 
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
-responses <- colnames(results.raxml[,13:28])
+responses <- colnames(results.raxml[,13:29])
 
 pdf(paste("output/",output,"-univariate-plots_refdist.pdf",sep=""),width=11,height=8)
 
 for (i in 1:length(responses)){
-  plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
-                  aes(x=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                      y=results.raxml[results.raxml$noref == "REF",responses[i]],
-                      fill=results.raxml$int[results.raxml$noref == "REF"]))
+  plot1 <- ggplot(data = results.raxml[results.raxml$noref == "NOREF",], 
+                  aes(x=as.factor(results.raxml$maf[results.raxml$noref == "NOREF"]),
+                      y=results.raxml[results.raxml$noref == "NOREF",responses[i]],
+                      fill=results.raxml$int[results.raxml$noref == "NOREF"]))
   
   plot2 <- plot1 +
     geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE, weight=2)+
@@ -36,7 +36,7 @@ for (i in 1:length(responses)){
     scale_y_continuous(name=responses[i])+
     scale_x_discrete(name="MAF")+
     #xlim(-50,10)+
-    #facet_wrap(vars(int),nrow=2,strip.position = "top")+
+    facet_wrap(vars(height),nrow=2,strip.position = "top")+
     geom_hline(yintercept=0,cex=2,lty=2,col="gray")#+
     #theme_ridges()
   
@@ -55,10 +55,10 @@ dev.off()
 
 ############################
 
-plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
-                aes(y=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                    x=results.raxml[results.raxml$noref == "REF","RF.Dist.ML"],
-                    fill=results.raxml$int[results.raxml$noref == "REF"]))
+plot1 <- ggplot(data = results.raxml, 
+                aes(y=as.factor(results.raxml$maf),
+                    x=results.raxml[,"RF.Dist.ML"],
+                    fill=results.raxml$int))
 
 plot2 <- plot1 +
   #geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE, weight=2)+
