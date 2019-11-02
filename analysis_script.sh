@@ -12,15 +12,15 @@ module load r
 day=$1
 
 # concatenating raxml trees
-if [ ! -f output/${day}-all-raxml.trees ]; then
+if [ ! -f output/${day}-subsamp-all-raxml.trees ]; then
 	echo "concatenating raxml trees..."
 	for height in 500000 2000000 10000000;
 #	for height in `cat refbias_config.txt | grep 'tree_height_list' | sed 's/tree_height_list=\'//' | sed 's/\'//' `;
-		do trees=output/${day}-${height}-batch.trees;
-		names=output/${day}-${height}-tree.names;
-		cat $trees >> output/${day}-all-raxml.trees;
+		do trees=output/${day}-${height}-subsamp-batch.trees;
+		names=output/${day}-${height}-subsamp-tree.names;
+		cat $trees >> output/${day}-subsamp-all-raxml.trees;
 		for name in `cat $names`;
-			do echo "${height}-${name}" >> output/${day}-all-raxml.names;
+			do echo "${height}-${name}" >> output/${day}-subsamp-all-raxml.names;
 		done;
 	done
 else
@@ -45,14 +45,14 @@ echo "beginning R analysis of astral and raxml trees!"
 #for i in `seq -w 00 09`
 #do echo "working with batch ${i} of 09"
 Rscript analysis/analyze_refbias_trees_raxml.R \
-	--ml.trees ${day}-s_tree.tree \
-	--ml.tree.names ${day}-s_tree.names \
-	--raxml.trees ${day}-all-raxml.trees \
-	--raxml.tree.names ${day}-all-raxml.names \
+	--ml.trees ${day}-subsamp-s_tree.tree \
+	--ml.tree.names ${day}-subsamp-s_tree.names \
+	--raxml.trees ${day}-subsamp-all-raxml.trees \
+	--raxml.tree.names ${day}-subsamp-all-raxml.names \
 	--astral.trees ${day}-all-astral.trees \
 	--astral.tree.names ${day}-all-astral.names \
 	--refdist ${day}-refdist.txt \
-	--output ${day}-output${i} 
+	--output ${day}-subsamp-output
 #done
 
 #Rscript analysis/analyze_refbias_trees_astral.R \
