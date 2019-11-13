@@ -1,42 +1,48 @@
 library(lme4)
-library(dplyr)
+library(tidyverse)
 library(MuMIn)
 library(car)
 library(LMERConvenienceFunctions)
 library(ggsci)
+library(ggpubr)
+library(ggridges)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
+output <- "103019-subsamp-output"
+results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+
 ## preparing data object
-results.mod <- results.raxml[results.raxml$sites == 1000,]
+results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.factor(results.mod$missing)
 results.mod$maf <- as.factor(results.mod$maf)
-summary(results.mod)
 
 ## rf distance
 # short
 
-m.rf.short <- lmer(RF.Dist.ML ~ int + maf + int:maf + (1 | simulation),
+m.rf.short <- lmer(RF.Dist.ML ~ int + maf +
+                     int:maf + (1 | simulation),
                    data = results.mod[results.mod$height == "500000",])
-sum.rf <- summary(m.rf.short)
+sum.rf.short <- summary(m.rf.short)
 r.squaredGLMM(m.rf.short)
 
-confint.rf<-data.frame(confint(m.rf.short)[-c(1:2),])
-colnames(confint.rf) <- c("minCI","maxCI")
-confint.rf$var <- rownames(confint.rf)
-confint.rf$est <- sum.rf$coefficients[,1]
+confint.rf.short<-data.frame(confint(m.rf.short)[-c(1:3),])
+colnames(confint.rf.short) <- c("minCI","maxCI")
+confint.rf.short$var <- rownames(confint.rf.short)
+confint.rf.short$est <- sum.rf.short$coefficients[-1,1]
 #confint.rf$cond.est <- sum.rf$coefficients[2,]
-confint.rf$sig <- sum.rf$coefmat.full[,5]
-confint.rf$sig <- case_when(confint.rf$minCI > 0 ~ "pos",
-                            confint.rf$maxCI < 0 ~ "neg",
+confint.rf.short$sig <- sum.rf.short$coefmat.full[-1,5]
+confint.rf.short$sig <- case_when(confint.rf.short$minCI > 0 ~ "pos",
+                            confint.rf.short$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
+confint.rf.short$sig <- factor(confint.rf.short$sig, levels=c("pos","ns","neg"))
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.short <- ggplot(confint.rf, aes(x = var, y = est, color=sig))
+vars.rf.short <- ggplot(confint.rf.short, aes(x = var, y = est, color=sig))
 vars.rf.short.bars <- vars.rf.short + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
@@ -50,12 +56,14 @@ vars.rf.short.bars <- vars.rf.short + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Model Averaged Parameter Estimate")+
+  ylab("Coefficient")+
+  #xlim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
+  #scale_y_continuous(limits=c(-25,150))+
   scale_color_manual(values=cols)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
-  geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
   coord_flip() +
   theme_minimal() +
   theme(axis.text = element_text(size=15),legend.position="none",
@@ -64,24 +72,27 @@ vars.rf.short.bars
 
 # med
 
-m.rf.med <- lmer(RF.Dist.ML ~ int + maf + int:maf + (1 | simulation),
+m.rf.med <- lmer(RF.Dist.ML ~ int + maf +
+                   int:maf + (1 | simulation),
                  data = results.mod[results.mod$height == "2000000",])
 sum.rf.med <- summary(m.rf.med)
 r.squaredGLMM(m.rf.med)
 
-confint.rf<-data.frame(confint(m.rf.med)[-c(1:2),])
-colnames(confint.rf) <- c("minCI","maxCI")
-confint.rf$var <- rownames(confint.rf)
-confint.rf$est <- sum.rf.med$coefficients[,1]
+confint.rf.med<-data.frame(confint(m.rf.med)[-c(1:3),])
+colnames(confint.rf.med) <- c("minCI","maxCI")
+confint.rf.med$var <- rownames(confint.rf.med)
+confint.rf.med$est <- sum.rf.med$coefficients[-1,1]
 #confint.rf$cond.est <- sum.rf$coefficients[2,]
-confint.rf$sig <- sum.rf.med$coefmat.full[,5]
-confint.rf$sig <- case_when(confint.rf$minCI > 0 ~ "pos",
-                            confint.rf$maxCI < 0 ~ "neg",
+confint.rf.med$sig <- sum.rf.med$coefmat.full[-1,5]
+confint.rf.med$sig <- case_when(confint.rf.med$minCI > 0 ~ "pos",
+                            confint.rf.med$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
+confint.rf.med$sig <- factor(confint.rf.med$sig, levels=c("pos","ns","neg"))
+
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.med <- ggplot(confint.rf, aes(x = var, y = est, color=sig))
+vars.rf.med <- ggplot(confint.rf.med, aes(x = var, y = est, color=sig))
 vars.rf.med.bars <- vars.rf.med + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
@@ -95,12 +106,14 @@ vars.rf.med.bars <- vars.rf.med + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Model Averaged Parameter Estimate")+
+  ylab("Coefficient")+
+  #xlim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
+  #scale_y_continuous(limits=c(-25,150))+
   scale_color_manual(values=cols)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
-  geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
   coord_flip() +
   theme_minimal() +
   theme(axis.text = element_text(size=15),legend.position="none",
@@ -108,24 +121,27 @@ xlab("")+
 vars.rf.med.bars
 
 # long
-m.rf.long <- lmer(RF.Dist.ML ~ int + maf + int:maf + (1 | simulation),
+m.rf.long <- lmer(RF.Dist.ML ~ int + maf +
+                    int:maf  + (1 | simulation),
                   data = results.mod[results.mod$height == "10000000",])
 sum.rf.long <- summary(m.rf.long)
 r.squaredGLMM(m.rf.long)
 
-confint.rf<-data.frame(confint(m.rf.long)[-c(1:2),])
-colnames(confint.rf) <- c("minCI","maxCI")
-confint.rf$var <- rownames(confint.rf)
-confint.rf$est <- sum.rf.long$coefficients[,1]
+confint.rf.long<-data.frame(confint(m.rf.long)[-c(1:3),])
+colnames(confint.rf.long) <- c("minCI","maxCI")
+confint.rf.long$var <- rownames(confint.rf.long)
+confint.rf.long$est <- sum.rf.long$coefficients[-1,1]
 #confint.rf$cond.est <- sum.rf$coefficients[2,]
-confint.rf$sig <- sum.rf.long$coefmat.full[,5]
-confint.rf$sig <- case_when(confint.rf$minCI > 0 ~ "pos",
-                            confint.rf$maxCI < 0 ~ "neg",
+confint.rf.long$sig <- sum.rf.long$coefmat.full[-1,5]
+confint.rf.long$sig <- case_when(confint.rf.long$minCI > 0 ~ "pos",
+                            confint.rf.long$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
+confint.rf.long$sig <- factor(confint.rf.long$sig, levels=c("pos","ns","neg"))
+
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.long <- ggplot(confint.rf, aes(x = var, y = est, color=sig))
+vars.rf.long <- ggplot(confint.rf.long, aes(x = var, y = est, color=sig))
 vars.rf.long.bars <- vars.rf.long + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
@@ -139,12 +155,14 @@ vars.rf.long.bars <- vars.rf.long + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Model Averaged Parameter Estimate")+
+  ylab("Coefficient")+
+  #ylim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
+  #scale_y_continuous(limits=c(-25,150))+
   scale_color_manual(values=cols)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
-  geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
   coord_flip() +
   theme_minimal() +
   theme(axis.text = element_text(size=15),legend.position="none",
@@ -159,10 +177,10 @@ ggarrange(vars.rf.short.bars,
           ncol=3)
 
 ## ridgeline plots
-plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
-                aes(y=as.factor(results.raxml$maf[results.raxml$noref == "REF"]),
-                    x=results.raxml[results.raxml$noref == "REF","sites"],
-                    fill=results.raxml$int[results.raxml$noref == "REF"]))
+plot1 <- ggplot(data = results.raxml, 
+                aes(y=as.factor(results.raxml$maf),
+                    x=results.raxml[,"RF.Dist.ML"],
+                    fill=results.raxml$int))
 
 plot2 <- plot1 +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+

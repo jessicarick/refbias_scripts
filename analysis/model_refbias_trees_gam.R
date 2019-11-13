@@ -30,12 +30,12 @@ m.gam.short <- lmer(ingroup.gamma ~ int + maf + missing +
 sum.gam.short <- summary(m.gam.short)
 r.squaredGLMM(m.gam.short)
 
-confint.gam.short<-data.frame(confint(m.gam.short))[-c(1:2),]
+confint.gam.short<-data.frame(confint(m.gam.short))[-c(1:3),]
 colnames(confint.gam.short) <- c("minCI","maxCI")
 confint.gam.short$var <- rownames(confint.gam.short)
-confint.gam.short$est <- sum.gam.short$coefficients[,1]
+confint.gam.short$est <- sum.gam.short$coefficients[-1,1]
 #confint.gam$cond.est <- sum.gam$coefficients[2,]
-confint.gam.short$sig <- sum.gam.short$coefmat.full[,5]
+confint.gam.short$sig <- sum.gam.short$coefmat.full[-1,5]
 confint.gam.short$sig <- case_when(confint.gam.short$minCI > 0 ~ "pos",
                             confint.gam.short$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
@@ -77,12 +77,12 @@ m.gam.med <- lmer(ingroup.gamma ~ int + maf + missing +
 sum.gam.med <- summary(m.gam.med)
 r.squaredGLMM(m.gam.med)
 
-confint.gam.med<-data.frame(-confint(m.gam.med)[-c(1:2),])
-colnames(confint.gam.med) <- c("maxCI","minCI")
+confint.gam.med<-data.frame(confint(m.gam.med)[-c(1:3),])
+colnames(confint.gam.med) <- c("minCI","maxCI")
 confint.gam.med$var <- rownames(confint.gam.med)
-confint.gam.med$est <- -1*sum.gam.med$coefficients[,1]
+confint.gam.med$est <- sum.gam.med$coefficients[-1,1]
 #confint.gam$cond.est <- sum.gam$coefficients[2,]
-confint.gam.med$sig <- sum.gam.med$coefmat.full[,5]
+confint.gam.med$sig <- sum.gam.med$coefmat.full[-1,5]
 confint.gam.med$sig <- case_when(confint.gam.med$minCI > 0 ~ "pos",
                             confint.gam.med$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
@@ -125,12 +125,12 @@ m.gam.long <- lmer(ingroup.gamma ~ int + maf + missing +
 sum.gam.long <- summary(m.gam.long)
 r.squaredGLMM(m.gam.long)
 
-confint.gam.long<-data.frame(confint(m.gam.long)[-c(1:2),])
+confint.gam.long<-data.frame(confint(m.gam.long)[-c(1:3),])
 colnames(confint.gam.long) <- c("minCI","maxCI")
 confint.gam.long$var <- rownames(confint.gam.long)
-confint.gam.long$est <- sum.gam.long$coefficients[,1]
+confint.gam.long$est <- sum.gam.long$coefficients[-1,1]
 #confint.gam$cond.est <- sum.gam$coefficients[2,]
-confint.gam.long$sig <- sum.gam.long$coefmat.full[,5]
+confint.gam.long$sig <- sum.gam.long$coefmat.full[-1,5]
 confint.gam.long$sig <- case_when(confint.gam.long$minCI > 0 ~ "pos",
                             confint.gam.long$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
@@ -173,10 +173,10 @@ ggarrange(vars.gam.short.bars,
           ncol=3)
 
 ## ridgeline plots
-plot1 <- ggplot(data = results.raxml, 
-                aes(y=as.factor(results.raxml$maf),
-                    x=results.raxml[,"ingroup.gamma"],
-                    fill=results.raxml$int))
+plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
+                aes(y=as.factor(results.raxml[results.raxml$noref == "REF",]$maf),
+                    x=results.raxml[results.raxml$noref == "REF",][,"ingroup.gamma"],
+                    fill=results.raxml[results.raxml$noref == "REF",]$int))
 
 plot2 <- plot1 +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
@@ -193,7 +193,7 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  scale_x_continuous(name="Standardized Ingroup Gamma", lim=c(-50,25))+
+  scale_x_continuous(name="Ingroup Gamma",limits = c(-5,15))+
   scale_y_discrete(name="MAF")+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
