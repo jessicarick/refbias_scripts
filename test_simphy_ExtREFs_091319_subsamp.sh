@@ -213,14 +213,14 @@ for QUAL in $qual_list
 #              	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466 
 
 #######################################
-#### Running RaxML w/o Ref ############
+#### Running RaxML w/ Ref ############
 #######################################
 #### CONVERTING VCF TO PHYLIP FILE ####
 #### and removing invariant sites #####
 #### making one phylip per gene #######
 #######################################
 echo "beginning creation of gene phylip files in parallel"
-seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  --env QUAL --env miss --env maf --env int "vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr gene{} --recode --out gene{}.NOREF && python ${REF_PATH}/vcf2phylip.py -i gene{}.NOREF.recode.vcf -o gene{}.NOREF.phy && sites=`head -n 1 gene{}.NOREF.phy | awk '{print $2}'` && printf \"library(ape)\nlibrary(phrynomics)\nReadSNP('gene{}.NOREF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene{}.NOREF.noInv.phy',format='phylip')\" > Rscript.R; R --vanilla --no-save < Rscript.R; nsnps=`head -n 1 gene{}.NOREF.noInv.phy | tr -s ' ' | cut -d',' -f 2'`; echo \"gene{},${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}.REF.noInv,${nsnps}\" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all"
+seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim  --env QUAL --env miss --env maf --env int "vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf --chr gene{} --recode --out gene{}.REF && python ${REF_PATH}/vcf2phylip.py -i gene{}.REF.recode.vcf -o gene{}.REF.phy && sites=`head -n 1 gene{}.REF.phy | awk '{print $2}'` && printf \"library(ape)\nlibrary(phrynomics)\nReadSNP('gene{}.REF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene{}.REF.noInv.phy',format='phylip')\" > Rscript.R; R --vanilla --no-save < Rscript.R; nsnps=`head -n 1 gene{}.REF.noInv.phy | tr -s ' ' | cut -d',' -f 2'`; echo \"gene{},${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}.REF.noInv,${nsnps}\" >> /project/phylogenref/scripts/output/${day}-SNPs-subsamp-all"
 #        done
 
        ## combine into one supermatrix
