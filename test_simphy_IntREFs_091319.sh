@@ -114,7 +114,7 @@ for QUAL in $qual_list
    	fi
 
 	rm -f *sam
-
+exit 0
 	ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//' > names     
 	bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
 
@@ -279,7 +279,7 @@ for QUAL in $qual_list
 
     done
 
-rm -f *.bam
+#rm -f *.bam
 
 mkdir -p sim${sim}/config_files
 mkdir -p sim${sim}/ref.fasta_files

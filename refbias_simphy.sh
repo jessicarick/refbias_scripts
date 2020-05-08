@@ -9,7 +9,7 @@ source activate new_env
 
 PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
-source refbias_config.txt
+source refbias_config_subsamp.txt
 max=100000000
 
 echo "reference: $reference"
