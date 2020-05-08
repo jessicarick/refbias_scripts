@@ -3,13 +3,13 @@ output_dir=/project/phylogenref/scripts/output
 day=`date +%m%d%y`
 #day=101519
 
-num_sims='1 10'
+num_sims='11 20'
 reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
 reference_prefix=lmariae_500000
 
-ref_length=4000000
+ref_length=2000000
 gene_length=1000
 genes=$(expr $ref_length / $gene_length)
 #max=`grep -v '^>' $reference | wc -m`
@@ -30,11 +30,11 @@ tree_height_list='500000 2000000 10000000'
 ## for testing
 qual_list='40'
 #maf_list='0'
-miss_list='0'
+#miss_list='0'
 
 #qual_list='0 20 40 60'
 maf_list='0 0.01 0.02 0.03 0.04 0.05 0.10'
-#miss_list='0 0.25 0.50 0.75 1.0'
+miss_list='0 0.25 0.50 0.75 1.0'
 
 # set max sites for subsampling
 maxSNP=1000
