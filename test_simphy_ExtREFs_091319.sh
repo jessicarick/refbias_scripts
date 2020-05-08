@@ -86,7 +86,7 @@ for fastq in $fastq_list
 
       echo "Mapping reads for $fastq \n"
       bwa index ${reference_prefix}_sim${sim}.fa
-      bwa mem -t 32 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz > $sam
+      bwa mem -t 16 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz > $sam
 
       echo "Converting sam to bam for $fastq \n"
       samtools view -b -S -o $bam $sam
