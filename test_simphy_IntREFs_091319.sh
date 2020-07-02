@@ -22,7 +22,7 @@ echo "starting analysis for $tree_height, sim $sim, $int"
 
 nloci=$(($genes + 1))
 var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci $varsites`)
-echo ${var_sites[*]} >> /project/phylogenref/scripts/output/${day}-varSites-${tree_height}-sim${sim}-${int}
+echo ${var_sites[*]} >> ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}
 
 #if false; then # DEBUGGING
 
@@ -34,12 +34,14 @@ export taxa_ref
 export reference_prefix
 export error
   
-seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 400 -s 20 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
+seq -w $genes | parallel --delay 5 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 1000 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
 
 #echo ">lmariae_genome_Feb2018_${ref_length}" > ${reference_prefix}_sim${sim}.fa
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
 
-#fi # DEBUGGING
+#fi # DEiBUGGING
+
+#exit 0 # debugging
 
 ##############################################
 ### Concatenate reads into single file########
@@ -65,11 +67,9 @@ done
 
 
 for fastq in $fastq_list
-		
     do mkdir -p fastq_reads/sim${sim}/fastq/${fastq}
-		zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
-    zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz
-      	  
+	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
+	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz  
 done
 
 ##############################################
@@ -113,16 +113,13 @@ for QUAL in $qual_list
           		exit 1
    	fi
 
-	rm -f *sam
-exit 0
+	rm -f *.sam
+	rm -f *.bam
+
 	ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//' > names     
 	bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
 
-##############################################
-#### CREATING RAW VARIANTS FILE FROM BAMs ####
-#### DO ONCE FOR EACH MAPPING QUALITY ########
-#### FOR EACH GENOME #########################
-##############################################
+	rm -f gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz
 
 	bcftools call -m \
                 --variants-only \
@@ -144,7 +141,7 @@ exit 0
                     echo "done calculating Dxy"
                 else
 		                echo "QUAL is $QUAL; not calculating Dxy this time"
-		            fi
+		fi
                 
 #################################
 #### FILTERING WITH VCFTOOLS ####
@@ -185,7 +182,7 @@ exit 0
                  	R --vanilla --no-save < Rscript.R    	
 		fi
                  nsnps=`cat gene${gene}.REF.noInv.phy | head -n 1 | awk '{print $2}'`
-                 echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-${int}
+                 echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.noInv,${nsnps}" >> ${output_dir}/${day}-SNPs-${tree_height}-${int}
          done
          
          ## combine into one supermatrix
@@ -235,7 +232,7 @@ exit 0
                 fi
                 nsnps=`cat gene${gene}.NOREF.noInv.phy | head -n 1 | awk '{print $2}'`
                 
-		echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> /project/phylogenref/scripts/output/${day}-SNPs-${tree_height}-${int}
+		echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.noInv,${nsnps}" >> ${output_dir}/${day}-SNPs-${tree_height}-${int}
         done
         
         ## combine into one supermatrix
@@ -257,7 +254,7 @@ exit 0
       	raxmlHPC-PTHREADS-AVX -T 16 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.NOREF.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_noref}.NOREF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 323 -N 100 -p 476
                   
          
-        echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf},${sites_ref},${sites_noref}" >> /project/phylogenref/scripts/output/${day}-filteredSites-${tree_height}-sim${sim}-${int}
+        echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf},${sites_ref},${sites_noref}" >> ${output_dir}/${day}-filteredSites-${tree_height}-${int}
 
 #######################################
 #### Subsample & Run RAxML ############
@@ -279,7 +276,7 @@ exit 0
 
     done
 
-#rm -f *.bam
+rm -f *.bam
 
 mkdir -p sim${sim}/config_files
 mkdir -p sim${sim}/ref.fasta_files

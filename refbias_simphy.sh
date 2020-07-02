@@ -22,10 +22,10 @@ echo "max length: $max"
 #### CREATING FOLDERS FOR SIMULATIONS ########
 ##############################################
 
-for tree_height in $tree_height_list
-	do mkdir sims_${tree_height}
-	cd sims_${tree_height}
-	for sim in `seq $num_sims`
+for ils_level in $ils_level_list
+	do mkdir sims_${ils_level}
+	cd sims_${ils_level}
+	for sim in $num_sims
 		do mkdir sim${sim}
 		cd sim${sim}
 		
@@ -50,6 +50,25 @@ for tree_height in $tree_height_list
 			echo ">gene${i}" >> ${reference_prefix}.random_sim${sim}.fa
 			grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
 			echo >> ${reference_prefix}.random_sim${sim}.fa
+			
+			###Counts Ns and stores as variable counts if needed
+
+			counts=`awk -F'|' 'BEGIN{print "count", "lineNum"}{print gsub(/N/,"") "\t" NR}' ${reference_prefix}.random_${i}.fa | awk 'FNR == 3 {print $1}'`
+			echo "replacing $counts N's with random AGCTs"
+
+			#####Draws random values from ACGT of length counts
+			res=`head -n $counts /dev/urandom | tr -dc ACGT | head -n $counts ; echo ''`
+			
+			k=0
+			while [ $k -le $counts ]
+				do sed -i "s/N/${res:$k:1}/" ${reference_prefix}.random_${i}.fa
+				k=$(($k + 1))
+			done
+
+#			bases="ACGT"
+#			randbase=${bases:$(( RANDOM % ${#bases} )):1}
+#			sed -i "s/N/$randbase/g" ${reference_prefix}.random_${i}.fa
+#			sed -i "s/N/$randbase/g" ${reference_prefix}.random_sim${sim}.fa
 		done
 
 ##############################################
@@ -58,17 +77,41 @@ for tree_height in $tree_height_list
 	rand_num=`echo $RANDOM`
 	echo "random number seed: ${rand_num}"
 	
-	simphy_lnx64 -rl f:$genes -rg 1 -rs 1 -sl f:$num_sp -sb f:0.0000001 -si f:$num_ind -sp f:50000 -st f:$tree_height -so f:10 -cs $rand_num -o species_tree${sim}
-
+	if [ "${tree_height}" == "NH" ]; then
+	        echo "simulation without specifying tree height"
+		simphy_lnx64 -rl f:$genes \
+        	        -rg 1 \
+                	-rs 1 \
+	                -sl f:$num_sp \
+        	        -sb f:$sp_rate \
+                	-si f:$num_ind \
+	                -sp f:50000 \
+        	        -so f:10 \
+                	-cs $rand_num \
+        	        -o species_tree${sim}
+		tree_height=${ils_level}
+	else
+		simphy_lnx64 -rl f:$genes \
+			-rg 1 \
+			-rs 1 \
+			-sl f:$num_sp \
+			-sb f:$sp_rate \
+			-si f:$num_ind \
+			-sp f:50000 \
+			-so f:10 \
+			-st f:$tree_height \
+			-cs $rand_num \
+			-o species_tree${sim}
+	fi
 		
 #	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
 #	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
 	cat species_tree${sim}/1/s_tree.trees >> ${output_dir}/${day}-s_tree.tree
-	echo "height${tree_height}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-s_tree.names
+	echo "height${ils_level}_sim${sim}_s_tree.trees" >> ${output_dir}/${day}-s_tree.names
 
 	conda deactivate
 
-	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $tree_height
+	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $ils_level
 	
 	cd ../
 	done
@@ -76,6 +119,6 @@ for tree_height in $tree_height_list
 cd ../
 done
 
-echo "sim tree_height int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
+echo "sim ils_level int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
 #echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 
