@@ -52,32 +52,33 @@ for ils_level in $ils_level_list
 			echo >> ${reference_prefix}.random_sim${sim}.fa
 			
 			###Counts Ns and stores as variable counts if needed
+		
 
-			counts=`awk -F'|' 'BEGIN{print "count", "lineNum"}{print gsub(/N/,"") "\t" NR}' ${reference_prefix}.random_${i}.fa | awk 'FNR == 3 {print $1}'`
-			echo "replacing $counts N's with random AGCTs"
+		counts=`awk -F'|' 'BEGIN{print "count", "lineNum"}{print gsub(/N/,"") "\t" NR}' ${reference_prefix}.random_${i}.fa | awk 'FNR == 3 {print $1}'`
+		echo "replacing $counts N's with random AGCTs"
 
-			#####Draws random values from ACGT of length counts
-			res=`head -n $counts /dev/urandom | tr -dc ACGT | head -n $counts ; echo ''`
+		#####Draws random values from ACGT of length counts
+		res=`head -n $counts /dev/urandom | tr -dc ACGT | head -n $counts ; echo ''`
 			
-			k=0
-			while [ $k -le $counts ]
-				do sed -i "s/N/${res:$k:1}/" ${reference_prefix}.random_${i}.fa
-				k=$(($k + 1))
-			done
+		k=0
+		while [ $k -le $counts ]
+			do sed -i "s/N/${res:$k:1}/" ${reference_prefix}.random_${i}.fa
+			k=$(($k + 1))
+		done
 
 #			bases="ACGT"
 #			randbase=${bases:$(( RANDOM % ${#bases} )):1}
 #			sed -i "s/N/$randbase/g" ${reference_prefix}.random_${i}.fa
 #			sed -i "s/N/$randbase/g" ${reference_prefix}.random_sim${sim}.fa
-		done
 
+		done
 ##############################################
 ### For each gene, simulate MSC genealogy#####
 ##############################################
 	rand_num=`echo $RANDOM`
 	echo "random number seed: ${rand_num}"
 	
-	if [ "${tree_height}" == "NH" ]; then
+#	if [ "${tree_height}" == "NH" ]; then
 	        echo "simulation without specifying tree height"
 		simphy_lnx64 -rl f:$genes \
         	        -rg 1 \
@@ -89,20 +90,22 @@ for ils_level in $ils_level_list
         	        -so f:10 \
                 	-cs $rand_num \
         	        -o species_tree${sim}
+		
 		tree_height=${ils_level}
-	else
-		simphy_lnx64 -rl f:$genes \
-			-rg 1 \
-			-rs 1 \
-			-sl f:$num_sp \
-			-sb f:$sp_rate \
-			-si f:$num_ind \
-			-sp f:50000 \
-			-so f:10 \
-			-st f:$tree_height \
-			-cs $rand_num \
-			-o species_tree${sim}
-	fi
+#	else
+#		echo "simulation WITH specifying tree height"
+#		simphy_lnx64 -rl f:$genes \
+#			-rg 1 \
+#			-rs 1 \
+#			-sl f:$num_sp \
+#			-sb f:$sp_rate \
+#			-si f:$num_ind \
+#			-sp f:50000 \
+#			-so f:10 \
+#			#-st f:$tree_height \
+#			-cs $rand_num \
+#			-o species_tree${sim}
+#	fi
 		
 #	for file in species_tree${sim}/1/g_trees0*; do cp $file `echo $file | sed 's/0//'`; done
 #	rename g_trees0 g_trees species_tree${sim}/1/g_trees0*
