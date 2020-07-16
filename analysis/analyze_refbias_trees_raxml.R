@@ -25,15 +25,15 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-raxml.trees <- "103019-subsamp-all-raxml.trees"
-raxml.tree.names <- "103019-subsamp-all-raxml.names"
-astral.trees <- "101819-all-subsamp-astral.trees"
-astral.tree.names <- "101819-all-subsamp-astral.names"
-ml.trees <- "103019-subsamp-s_tree.tree"
-ml.tree.names <- "103019-subsamp-s_tree.names"
-output <- "103019-subsamp-output"
-refdist <- "103019-refdist.txt"
-args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
+#raxml.trees <- "103019-all-raxml.trees"
+#raxml.tree.names <- "103019-all-raxml.names"
+#astral.trees <- "101819-all-astral.trees"
+#astral.tree.names <- "101819-all-astral.names"
+#ml.trees <- "103019-s_tree.tree"
+#ml.tree.names <- "103019-s_tree.names"
+#output <- "103019-output"
+#refdist <- "103019-refdist.txt"
+#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -62,23 +62,24 @@ args <- parse.args()
 
 
 ####Read in concatenated tree file and ML tree file (make sure the latter is ultrametric)
-raxml.trees<-read.tree(paste("output/",args$raxml.trees,sep=""))
+raxml.trees<-read.tree(paste("output/new/",args$raxml.trees,sep=""))
 #astral.trees<-read.tree(paste("output/",args$astral.trees,sep=""))
-ml.tree<-read.tree(paste("output/",args$ml.trees,sep=""))
+ml.tree<-read.tree(paste("output/new/",args$ml.trees,sep=""))
 
 ###Read in file of tree names
-raxml.tree.names<-read.table(paste("output/",args$raxml.tree.names,sep=""),stringsAsFactors=FALSE)
+raxml.tree.names<-read.table(paste("output/new/",args$raxml.tree.names,sep=""),stringsAsFactors=FALSE)
 #astral.tree.names<-read.table(paste("output/",args$astral.tree.names,sep=""),stringsAsFactors = FALSE)
-ml.tree.names <- read.table(paste("output/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
+ml.tree.names <- read.table(paste("output/new/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)
 
 ###Pull info about ml species trees
-ml.tree.info <- data.frame(simulation = numeric(nrow(ml.tree.names)),height=numeric(nrow(ml.tree.names)))
+ml.tree.info <- data.frame(simulation = numeric(nrow(ml.tree.names)),
+		height=character(nrow(ml.tree.names)))
 for (i in 1:nrow(ml.tree.names)){
   ml.tree.info$simulation[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('sim([0-9]+)', ml.tree.names[i,1]))[[1]][2])
-  ml.tree.info$height[i] <- as.integer(regmatches(ml.tree.names[i,1], regexec('height([0-9]+)', ml.tree.names[i,1]))[[1]][2])
+  ml.tree.info$height[i] <- as.factor(regmatches(ml.tree.names[i,1], regexec('height([A-Z]+)', ml.tree.names[i,1]))[[1]][2])
 }
 
-refdist <- read.table(paste("output/",args$refdist,sep=""),header=T,stringsAsFactors = FALSE)
+refdist <- read.table(paste("output/new/",args$refdist,sep=""),header=T,stringsAsFactors = FALSE)
 
 ###################
 ## changing tip labels on ml trees to match the sim trees
@@ -115,7 +116,7 @@ for (i in 1:length(raxml.trees)){
 ###Create empty data frame and with named, empty columns 
 num.trees <- nrow(raxml.tree.names)
 results.raxml<-data.frame(simulation=integer(num.trees),
-                    height=integer(num.trees),
+                    height=character(num.trees),
                     method=character(num.trees),
                     quality=integer(num.trees), 
                     missing=numeric(num.trees), 
@@ -132,26 +133,22 @@ results.raxml<-data.frame(simulation=integer(num.trees),
                     tree.height=integer(num.trees), 
                     Avg.BLs=integer(num.trees), 
                     SD.BLs=integer(num.trees), 
-                    RF.Dist.ML=integer(num.trees))
-results.raxml$int <- as.character(results.raxml$int)
-results.raxml$noref <- as.character(results.raxml$noref)
-results.raxml$taxa_ref <- as.character(results.raxml$taxa_ref)
-results.raxml$method <- as.character(results.raxml$method)
+                    RF.Dist.ML=integer(num.trees), stringsAsFactors=FALSE)
 
 for (i in 1:length(raxml.trees)) {
   
   ####Use regex and sub to extract number for filtering and sim parameters and add them to data frame
-  results.raxml[i,1]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('-s([0-9]+)\\_q', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$height[i] <-as.integer(regmatches(raxml.tree.names[i,1], regexec('([0-9]+)-s[0-9]', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$method[i]<- as.character("raxml")
-  results.raxml$quality[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('q(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$missing[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('miss(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$maf[i]<-as.numeric(regmatches(raxml.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$sites[i]<-as.integer(regmatches(raxml.tree.names[i,1], regexec('sites([0-9]*?)\\.', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$int[i]<-(regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+)-', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$noref[i]<-(regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
-  results.raxml$taxa_ref[i]<-regmatches(raxml.tree.names[i,1],regexec('[A-Z]-([0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
-  results.raxml$refdist[i]<-refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
+  results.raxml[i,1] <- as.integer(regmatches(raxml.tree.names[i,1], regexec('-s([0-9]+)\\_q', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$height[i] <- as.character(regmatches(raxml.tree.names[i,1], regexec('([0-9]+)-s[0-9]', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$method[i] <- as.character("raxml")
+  results.raxml$quality[i] <- as.integer(regmatches(raxml.tree.names[i,1], regexec('q(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$missing[i] <- as.numeric(regmatches(raxml.tree.names[i,1], regexec('miss(.*?)\\_m', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$maf[i] <- as.numeric(regmatches(raxml.tree.names[i,1], regexec('maf(0.*?)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$sites[i] <- as.integer(regmatches(raxml.tree.names[i,1], regexec('sites([0-9]*?)\\.', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$int[i] <- (regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+)-', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$noref[i] <- (regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
+  results.raxml$taxa_ref[i] <- regmatches(raxml.tree.names[i,1],regexec('[A-Z]-([0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
+  results.raxml$refdist[i] <- refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
                                                refdist$tree_height == results.raxml$height[i] &
                                                refdist$int == results.raxml$int[i]][1]
 }
@@ -174,7 +171,7 @@ for (i in 1:length(raxml.trees)){
   #raxml.trees[[i]]$edge.length[is.na(raxml.trees[[i]]$edge.length)] <- 0
   
   ###Gamma stat
-  results.raxml$gamma[i]<-gammaStat(ultra)[1]
+  results.raxml$gamma[i] <- gammaStat(ultra)[1]
 
   ###Gamma on ingroup only
   if(!("sim_0_0_0" %in% raxml.trees[[i]]$tip.label)){
@@ -186,25 +183,25 @@ for (i in 1:length(raxml.trees)){
   results.raxml$ingroup.gamma[i] <- gammaStat(ingroup)[1]
 
   ###Colless or Ic stat
-  results.raxml$colless[i]<-colless(as.treeshape(ultra, model="pda"),norm="pda")
+  results.raxml$colless[i] <- colless(as.treeshape(ultra, model="pda"),norm="pda")
   results.raxml$ingroup.colless[i] <- colless(as.treeshape(ingroup, model="pda"),norm="pda")
 
   ###Sackin stat
-  results.raxml$sackin[i]<-sackin(as.treeshape(ultra, model="pda"))
-  results.raxml$ingroup.sackin[i]<-sackin(as.treeshape(ingroup, model="pda"))
+  results.raxml$sackin[i] <- sackin(as.treeshape(ultra, model="pda"))
+  results.raxml$ingroup.sackin[i] <- sackin(as.treeshape(ingroup, model="pda"))
 
   ###Total tree height
-  results.raxml$tree.height[i]<-max(branching.times(rooted),na.rm=T)
+  results.raxml$tree.height[i] <- max(branching.times(rooted),na.rm=T)
 
   ###Mean BLs
-  results.raxml$Avg.BLs[i]<-mean(rooted$edge.length,na.rm=T)
+  results.raxml$Avg.BLs[i] <- mean(rooted$edge.length,na.rm=T)
 
   ###SD BLs
-  results.raxml$SD.BLs[i]<-sd(rooted$edge.length,na.rm=T)
+  results.raxml$SD.BLs[i] <- sd(rooted$edge.length,na.rm=T)
 
   ####Add mean and SD of BS support values
-  results.raxml$mean.support[i]<-mean(as.numeric(rooted$node.label[-1]),na.rm=T)
-  results.raxml$sd.support[i]<-sd(as.numeric(rooted$node.label[-1]),na.rm=T)
+  results.raxml$mean.support[i] <- mean(as.numeric(rooted$node.label[-1]),na.rm=T)
+  results.raxml$sd.support[i] <- sd(as.numeric(rooted$node.label[-1]),na.rm=T)
   
 }
 
@@ -215,7 +212,7 @@ for (i in 1:length(raxml.trees)){
 
 for (i in 1:length(raxml.trees)){
   s <- as.integer(results.raxml$simulation[i])
-  h <- as.integer(results.raxml$height[i])
+  h <- as.character(results.raxml$height[i])
   j <- which(ml.tree.info$simulation == s & ml.tree.info$height == h)
   
   ml.tree.pruned <- drop.tip(ml.tree[[j]],results.raxml$taxa_ref[i])
@@ -282,7 +279,7 @@ write.csv(results.raxml,file=paste("output/",args$output,"-raxml.csv",sep=""),qu
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
 results.raxml <- read.csv(file=paste("output/",args$output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
 pdf(paste("output/",args$output,".pdf",sep=""))
-for (h in unique(as.numeric(as.character(results.raxml$height)))){
+for (h in unique(as.character(results.raxml$height))){
   for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
     
     j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
