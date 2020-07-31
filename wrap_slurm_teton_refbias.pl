@@ -83,7 +83,7 @@ my $resultdir = "/gscratch/jrick/phylogenref/slurm_results";
 ## -----------------------------------------------------------------------------------
 
 printf "Ready to submit %d jobs to SLURM (y/n): ", scalar @jobarray;
-my $response = <STDIN>;
+my $response = 'y';
 chomp $response;
 if($response eq 'n'){
     print "Exiting without any SLURM submissions.\n";
