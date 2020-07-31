@@ -1,5 +1,4 @@
 sim ils_level int taxa_ref avg_dist
-sim ils_level int taxa_ref avg_dist
 10 SHORT EXT 0_0_0 0.214113
 10 SHORT INT 87_0_0 0.0842196
 1 SHORT INT 4_0_0 0.081498
@@ -7,7 +6,6 @@ sim ils_level int taxa_ref avg_dist
 2 SHORT INT 19_0_0 0.0839863
 2 SHORT EXT 0_0_0 0.203375
 3 SHORT EXT 0_0_0 0.216552
-1 lates EXT Lcal 
 3 SHORT INT 20_0_0 0.0888225
 4 SHORT EXT 0_0_0 0.196023
 4 SHORT INT 63_0_0 0.0862539
@@ -19,7 +17,6 @@ sim ils_level int taxa_ref avg_dist
 8 SHORT INT 80_0_0 0.082252
 9 SHORT INT 55_0_0 0.0913137
 9 SHORT EXT 0_0_0 0.197527
-sim ils_level int taxa_ref avg_dist
 1 MED EXT 0_0_0 0.227683
 1 MED INT 76_0_0 0.0667363
 3 MED INT 90_0_0 0.0608137
@@ -42,7 +39,6 @@ sim ils_level int taxa_ref avg_dist
 6 SHORT INT 39_0_0 0.0839853
 7 SHORT EXT 0_0_0 0.20514
 5 MED EXT 0_0_0 0.259699
-sim ils_level int taxa_ref avg_dist
 1 LONG EXT 0_0_0 0.289623
 1 LONG INT 47_0_0 0.0372824
 2 LONG INT 39_0_0 0.0365275
@@ -93,6 +89,5 @@ sim ils_level int taxa_ref avg_dist
 5 LONG INT 84_0_0 0.0412157
 6 LONG INT 32_0_0 0.038549
 6 LONG EXT 0_0_0 0.29919
-1 lates EXT Lcal 
 7 SHORT EXT 0_0_0 0.204006
 7 SHORT INT 80_0_0 0.0848539
