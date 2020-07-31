@@ -11,6 +11,8 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 source /project/phylogenref/scripts/refbias_config.txt
 tree_height="lates"
 int=EXT
+day=072720
+
 if [ "$int" == "EXT" ]; then
 	taxa_ref="Lcal"
 	ref_genome="${REF_PATH}/references/lcalcarifer_genome_v3_chromosomal.fa"
@@ -26,40 +28,25 @@ fi
 ###############################################
 echo "starting analysis for $int"
 
-declare fastq_list=`ls /project/phylogenref/data/fastqs/lates/*.fastq.gz | xargs -n 1 basename | sed 's/\.fastq\.gz//'`
+declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 basename | sed 's/\.fastq\.gz//'`
 
 ##############################################
 ### Align to reference  ######################
 ### Make sure everything in indexed! #########
 ##############################################
 
-for fastq in $fastq_list
-      do echo "Fastq: $fastq \n"
-        
-      sam=aln_${fastq}.sam
-      bam=aln_${fastq}.bam
-      sorted=aln_${fastq}.sorted.bam
+#export ref_genome
 
-      echo "Mapping reads for $fastq \n"
-      bwa mem -t 16 ${ref_genome} \
-	      	/project/phylogenref/data/fastqs/${fastq}/${fastq}.fastq.gz > $sam	
-	  
-      echo "Converting sam to bam for $fastq \n"
-      samtools view -b -S -o $bam $sam
-        
-      echo "Sorting and indexing bam files for $fastq \n"
-      samtools sort $bam -o $sorted
-      samtools index -c $sorted
-done
+#parallel --env ref_genome "echo 'Fastq: {} \n' && echo 'Mapping reads for {} \n' && bwa mem -t 16 ${ref_genome} /project/phylogenref/data/lates/{}.fastq.gz > aln_{}.sam && echo 'Converting sam to bam for {}' && samtools view -b -S -o aln_{}.bam aln_{}.sam && echo 'Sorting and indexing bam files for {} \n' && samtools sort aln_{}.bam -o aln_{}.sorted.bam && samtools index -c aln_{}.sorted.bam" ::: $fastq_list
 
-rm -f *.sam
-rm -f *[0-9].bam
+#rm -f *.sam
+#rm -f *[0-9].bam
 
 #fi #DEBUGGING
-
+sims=5
 for sim in `seq $sims`; do
-	ls *.sorted.bam | grep -v 'SRR' | shuf -n 100 > rand_ind
-	echo "SRR3140997.sorted.bam" >> rand_ind
+	ls *.sorted.bam | grep -v 'SRR' | shuf -n 100 > rand_ind_sim${sim}.txt
+	echo "aln_SRR3140997.sorted.bam" >> rand_ind_sim${sim}.txt
 
 	for QUAL in $qual_list
 		do samtools mpileup -g -t DP,AD \
@@ -67,9 +54,9 @@ for sim in `seq $sims`; do
     	 	-P ILLUMINA \
         	-q $QUAL \
     	 	-f ${ref_genome} \
-   	    	-l rand_ind \
+   	    	-b rand_ind_sim${sim}.txt \
      	  	-o OUTFILE_q${QUAL}.bcf 
-    
+
       		if [[ -s OUTFILE_q${QUAL}.bcf ]]
         		then 
           			echo "OUTFILE_q${QUAL}.bcf not empty; moving on"
@@ -78,7 +65,7 @@ for sim in `seq $sims`; do
           			exit 1
    			fi
 
-		echo "$fastq_list" > names     
+		cat rand_ind_sim${sim}.txt > names     
 		bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
 
 ##############################################
