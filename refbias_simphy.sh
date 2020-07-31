@@ -25,7 +25,7 @@ echo "max length: $max"
 for ils_level in $ils_level_list
 	do mkdir sims_${ils_level}
 	cd sims_${ils_level}
-	for sim in $num_sims
+	for sim in `seq $num_sims`
 		do mkdir sim${sim}
 		cd sim${sim}
 		
