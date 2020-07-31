@@ -35,7 +35,7 @@ export taxa_ref
 export reference_prefix
 export error
   
-seq -w $genes | parallel --delay 5 --jobs 16 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
+seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
 
 #echo ">lmariae_genome_Feb2018_${ref_length}" > ${reference_prefix}_sim${sim}.fa
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
@@ -80,26 +80,13 @@ done
 ### Make sure everything in indexed! #########
 ##############################################
 
-for fastq in $fastq_list
-      do echo "Fastq: $fastq \n"
-        
-      sam=aln_${fastq}.sam
-      bam=aln_${fastq}.bam
-      sorted=aln_${fastq}.sorted.bam
+export reference_prefix
+export sim
 
-      echo "Mapping reads for $fastq \n"
-      bwa index ${reference_prefix}_sim${sim}.fa
-      bwa mem -t 16 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz > $sam
-
-      echo "Converting sam to bam for $fastq \n"
-      samtools view -b -S -o $bam $sam
-        
-      echo "Sorting and indexing bam files for $fastq \n"
-      samtools sort $bam -o $sorted
-      samtools index -c $sorted
-done	
+parallel --env reference_prefix --env sim -j 32 --delay 5 "echo 'Mapping reads for {}' && bwa index ${reference_prefix}_sim${sim}.fa && bwa mem -t 16 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read2.fq.gz > aln_{}.sam && echo 'Converting sam to bam for {}' && samtools view -b -S -o aln_{}.bam aln_{}.sam && echo 'Sorting and indexing bam files for {}' && samtools sort aln_{}.bam -o aln_{}.sorted.bam && samtools index -c aln_{}.sorted.bam" ::: $fastq_list
 
 rm -f *.sam
+rm -f *[0-9].bam
 
 #fi #DEBUGGING
 
@@ -321,7 +308,7 @@ mv *.fa sim${sim}/ref.fasta_files
 ####Create a batch file with all normal trees in order by file type, and create a name file
 cat s${sim}*q*miss*/*bipartitions.*filtered* >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}*q*miss*/*bipartitions.*filtered* >> ${output_dir}/${day}-${tree_height}-tree.names
-#
+
 ## ###Create a batch file with all subsampled trees in order by file type, and create a name file
 ## cat s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
 ## ls s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
