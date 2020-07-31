@@ -7,7 +7,7 @@ library(ggsci)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "101819-output"
+output <- "new/071320-output"
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
@@ -26,7 +26,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 m.gam.short <- lmer(ingroup.gamma ~ int + maf + missing +
                      int:maf + int:missing + (1 | simulation),
-                   data = results.mod[results.mod$height == "500000" & results.mod$noref == "REF",])
+                   data = results.mod[results.mod$height == "SHORT" & results.mod$noref == "REF",])
 sum.gam.short <- summary(m.gam.short)
 r.squaredGLMM(m.gam.short)
 
@@ -73,7 +73,7 @@ vars.gam.short.bars
 
 m.gam.med <- lmer(ingroup.gamma ~ int + maf + missing + 
                    int:maf + int:missing + (1 | simulation),
-                 data = results.mod[results.mod$height == "2000000" & results.mod$noref == "REF",])
+                 data = results.mod[results.mod$height == "MED" & results.mod$noref == "REF",])
 sum.gam.med <- summary(m.gam.med)
 r.squaredGLMM(m.gam.med)
 
@@ -119,9 +119,9 @@ vars.gam.med.bars
 
 # long
 
-m.gam.long <- lmer(ingroup.gamma ~ int + maf + missing +
+m.gam.long <- lmer(std.ingroup.gamma ~ int + maf + missing +
                     int:maf + int:missing + (1 | simulation),
-                  data = results.mod[results.mod$height == "10000000" & results.mod$noref == "REF",])
+                  data = results.mod[results.mod$height == "LONG" & results.mod$noref == "REF",])
 sum.gam.long <- summary(m.gam.long)
 r.squaredGLMM(m.gam.long)
 

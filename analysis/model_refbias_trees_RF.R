@@ -9,7 +9,7 @@ library(ggridges)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "101819-output"
+output <- "new/071320-output"
 results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
@@ -25,7 +25,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 m.rf.short <- lmer(RF.Dist.ML ~ int + maf + missing +
                      int:maf + int:missing + (1 | simulation),
-                   data = results.mod[results.mod$height == "500000",])
+                   data = results.mod[results.mod$height == "SHORT",])
 sum.rf.short <- summary(m.rf.short)
 r.squaredGLMM(m.rf.short)
 
@@ -74,7 +74,7 @@ vars.rf.short.bars
 
 m.rf.med <- lmer(RF.Dist.ML ~ int + maf + missing +
                    int:maf + int:missing + (1 | simulation),
-                 data = results.mod[results.mod$height == "2000000",])
+                 data = results.mod[results.mod$height == "MED",])
 sum.rf.med <- summary(m.rf.med)
 r.squaredGLMM(m.rf.med)
 
@@ -123,7 +123,7 @@ vars.rf.med.bars
 # long
 m.rf.long <- lmer(RF.Dist.ML ~ int + maf + missing +
                     int:maf + int:missing + (1 | simulation),
-                  data = results.mod[results.mod$height == "10000000",])
+                  data = results.mod[results.mod$height == "LONG",])
 sum.rf.long <- summary(m.rf.long)
 r.squaredGLMM(m.rf.long)
 
@@ -180,7 +180,7 @@ ggarrange(vars.rf.short.bars,
 plot1 <- ggplot(data = results.raxml, 
                 aes(y=as.factor(results.raxml$maf),
                     x=results.raxml[,"RF.Dist.ML"],
-                    fill=results.raxml$int))
+                    fill=int))
 
 plot2 <- plot1 +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+

@@ -29,7 +29,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 
 m.imb.short <- lmer(ingroup.colless ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
-                    data = results.mod[results.mod$height == "500000" & results.mod$noref == "REF",])
+                    data = results.mod[results.mod$height == "SHORT" & results.mod$noref == "REF",])
 sum.imb.short <- summary(m.imb.short)
 r.squaredGLMM(m.imb.short)
 
@@ -79,7 +79,7 @@ print(vars.imb.short.bars)
 
 m.imb.med <- lmer(ingroup.colless ~ int + maf + missing +
                     int:maf + int:missing + (1 | simulation),
-                  data = results.mod[results.mod$height == "2000000" & results.mod$noref == "REF",])
+                  data = results.mod[results.mod$height == "MED" & results.mod$noref == "REF",])
 sum.imb.med <- summary(m.imb.med)
 r.squaredGLMM(m.imb.med)
 
@@ -129,7 +129,7 @@ vars.imb.med.bars
 
 m.imb.long <- lmer(ingroup.colless ~ int + maf + missing +
                      int:maf + int:missing + (1 | simulation),
-                   data = results.mod[results.mod$height == "10000000" & results.mod$noref == "REF",])
+                   data = results.mod[results.mod$height == "LONG" & results.mod$noref == "REF",])
 sum.imb.long <- summary(m.imb.long)
 r.squaredGLMM(m.imb.long)
 
@@ -165,7 +165,7 @@ xlab("")+
   #ylim(-200,1200)+
   #scale_color_npg() +
   #scale_x_reverse() +
-  scale_color_manual(values=cols[c(2,1)])+
+  scale_color_manual(values=cols)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
   #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
   geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
