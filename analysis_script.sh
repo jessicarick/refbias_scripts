@@ -40,6 +40,8 @@ fi
 #	echo "astral trees already concatenated; moving on"
 #fi
 
+if false
+
 echo "beginning R analysis of raxml trees!"
 
 #for i in `seq -w 00 09`
@@ -63,3 +65,5 @@ Rscript analysis/analyze_refbias_trees_raxml.R \
 #	--astral.trees ${day}-all-astral.trees \
 #	--astral.tree.names ${day}-all-astral.names \
 #	--output ${day}-output 
+
+fi
