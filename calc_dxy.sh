@@ -1,7 +1,9 @@
 #!/bin/sh
 
 source /project/phylogenref/scripts/refbias_config.txt
-PATH=$PATH:/home/jrick/bin/genomics_general:/home/jrick/bin/genomics_general/VCF_processing/
+
+module load python/3.6.3
+module load py-numpy/1.14.3-py36
 
 ## script for calculating pairwise Dxy
 input=$1 # vcf file to analyze
@@ -12,9 +14,9 @@ tree_height=$3
 int=$4
 taxa_ref=$5
 
-parseVCF.py -i ${input} --skipIndels | gzip > ${output}.geno.gz
+python3 /home/jrick/bin/genomics_general/VCF_processing/parseVCF.py -i ${input} --skipIndels | gzip > ${output}.geno.gz
 
-distMat.py -g ${output}.geno.gz -f phased --windType cat -o ${output}.dist
+python3 /home/jrick/bin/genomics_general/distMat.py -g ${output}.geno.gz -f phased --windType cat -o ${output}.dist
 
 avg_dist=`grep "sim_${taxa_ref}" ${output}.dist | cut -f 2- -d' ' | sed 's/ /\n/g' | awk '{s+=$1} END {print s/NR}'`
 

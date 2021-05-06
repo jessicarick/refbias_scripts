@@ -11,7 +11,7 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 source /project/phylogenref/scripts/refbias_config.txt
 tree_height="lates"
 int=EXT
-day=072720
+day=102120
 
 if [ "$int" == "EXT" ]; then
 	taxa_ref="Lcal"
@@ -43,42 +43,48 @@ declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 b
 #rm -f *[0-9].bam
 
 #fi #DEBUGGING
-sims=5
+sims=1
 for sim in `seq $sims`; do
+	
+	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]]; then
 	ls *.sorted.bam | grep -v 'SRR' | shuf -n 100 > rand_ind_sim${sim}.txt
 	echo "aln_SRR3140997.sorted.bam" >> rand_ind_sim${sim}.txt
+	fi
 
 	for QUAL in $qual_list
-		do samtools mpileup -g -t DP,AD \
+		do if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]]; then
+		samtools mpileup -g -t DP,AD \
 			--skip-indels \
     	 	-P ILLUMINA \
         	-q $QUAL \
     	 	-f ${ref_genome} \
    	    	-b rand_ind_sim${sim}.txt \
-     	  	-o OUTFILE_q${QUAL}.bcf 
+     	  	-o OUTFILE_q${QUAL}_s${sim}.bcf 
 
-      		if [[ -s OUTFILE_q${QUAL}.bcf ]]
+      		if [[ -s OUTFILE_q${QUAL}_s${sim}.bcf ]]
         		then 
-          			echo "OUTFILE_q${QUAL}.bcf not empty; moving on"
+          			echo "OUTFILE_q${QUAL}_s${sim}.bcf not empty; moving on"
         		else
-          			echo "OUTFILE_q${QUAL}.bcf empty; something went wrong"
+          			echo "OUTFILE_q${QUAL}_s${sim}.bcf empty; something went wrong"
           			exit 1
    			fi
 
 		cat rand_ind_sim${sim}.txt > names     
-		bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
+		bcftools reheader -s names OUTFILE_q${QUAL}_s${sim}.bcf > OUTFILE_q${QUAL}_s${sim}_RN.bcf
+		fi
+
 
 ##############################################
 #### CREATING RAW VARIANTS FILE FROM BAMs ####
 #### DO ONCE FOR EACH MAPPING QUALITY ########
 #### FOR EACH GENOME #########################
 ##############################################
-
+if false; then
 		bcftools call -m \
                 --variants-only \
                 --format-fields GQ \
                 --skip-variants indels \
-                OUTFILE_q${QUAL}_RN.bcf | bcftools filter \
+                OUTFILE_q${QUAL}_s${sim}_RN.bcf | bcftools filter \
                         --set-GTs . \
                         --include $(printf "QUAL>$QUAL")$(printf "&&")$(printf "FMT/GQ>10") | bcftools view \
                                 --min-alleles 2 \
@@ -87,7 +93,7 @@ for sim in `seq $sims`; do
                                 --apply-filter "PASS" \
                                 --output-type v \
                                 --output-file OUTFILE.s${sim}_q${QUAL}.vcf
-                
+fi                
                 if [[ "$QUAL" -eq 40 ]]; then
                     echo "Calculating Dxy from calc_dxy script."
                     ${REF_PATH}/calc_dxy.sh OUTFILE.q${QUAL}.vcf $sim $tree_height $int $taxa_ref
@@ -113,7 +119,7 @@ for sim in `seq $sims`; do
 	parallel --delay 5 --jobs 4  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_maf_emp.sh {}" ::: $maf_list ::: $miss_list
 
     mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
-   	mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
+   	mv *OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
    	mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
 
     done # closing qual loop

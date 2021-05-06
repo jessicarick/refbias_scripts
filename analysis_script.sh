@@ -12,7 +12,7 @@ module load r
 day=$1
 
 # concatenating raxml trees
-if [ ! -f output/${day}-all-raxml.trees ]; then
+if [ ! -f output/new/${day}-all-raxml.trees ]; then
 	echo "concatenating raxml trees..."
 	for height in SHORT MED LONG;
 #	for height in `cat refbias_config.txt | grep 'tree_height_list' | sed 's/tree_height_list=\'//' | sed 's/\'//' `;
@@ -40,7 +40,7 @@ fi
 #	echo "astral trees already concatenated; moving on"
 #fi
 
-echo "beginning R analysis of astral and raxml trees!"
+echo "beginning R analysis of raxml trees!"
 
 #for i in `seq -w 00 09`
 #do echo "working with batch ${i} of 09"
