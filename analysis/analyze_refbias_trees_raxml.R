@@ -352,4 +352,4 @@ for (h in unique(as.character(results.raxml$height))){
 }
 dev.off()
 
-#write.csv(results.raxml,file=paste("output/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")
+write.csv(results.raxml,file=paste("output/new/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")

@@ -10,7 +10,7 @@ source activate new_env
 PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
 source refbias_config.txt
-max=100000000
+max=1000000000
 
 echo "reference: $reference"
 echo "ref_length: $ref_length"
@@ -25,7 +25,7 @@ echo "max length: $max"
 for ils_level in $ils_level_list
 	do mkdir sims_${ils_level}
 	cd sims_${ils_level}
-	for sim in `seq $num_sims`
+	for sim in $num_sims
 		do mkdir sim${sim}
 		cd sim${sim}
 		
@@ -87,7 +87,7 @@ for ils_level in $ils_level_list
         	        -sb f:$sp_rate \
                 	-si f:$num_ind \
 	                -sp f:50000 \
-        	        -so f:10 \
+        	        -so f:20 \
                 	-cs $rand_num \
         	        -o species_tree${sim}
 		
