@@ -26,15 +26,15 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-#raxml.trees <- "103019-all-raxml.trees"
-#raxml.tree.names <- "103019-all-raxml.names"
-#astral.trees <- "101819-all-astral.trees"
-#astral.tree.names <- "101819-all-astral.names"
-#ml.trees <- "103019-s_tree.tree"
-#ml.tree.names <- "103019-s_tree.names"
-#output <- "103019-output"
-#refdist <- "103019-refdist.txt"
-#args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
+raxml.trees <- "072221-all-raxml.trees"
+raxml.tree.names <- "072221-all-raxml.names"
+astral.trees <- "101819-all-astral.trees"
+astral.tree.names <- "101819-all-astral.names"
+ml.trees <- "072221-s_tree.tree"
+ml.tree.names <- "072221-s_tree.names"
+output <- "072221-output"
+refdist <- "072221-refdist.txt"
+args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
 ## Reading in command line arguments #######
@@ -156,10 +156,10 @@ for (i in 1:length(raxml.trees)) {
   #results.raxml$noref[i] <- (regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$taxa_ref[i] <- regmatches(raxml.tree.names[i,1],regexec('[A-Z]-([0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
   results.raxml$refdist[i] <- if (length(refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
-                                               refdist$tree_height == results.raxml$height[i] &
+                                               refdist$ils_level == results.raxml$height[i] &
                                                refdist$int == results.raxml$int[i]][1]) != 0) {
 					refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
-                                               refdist$tree_height == results.raxml$height[i] &
+                                               refdist$ils_level == results.raxml$height[i] &
                                                refdist$int == results.raxml$int[i]][1] } else {"NA"}				
 }
 
