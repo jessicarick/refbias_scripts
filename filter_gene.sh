@@ -23,6 +23,6 @@ else
 	rm -f Rscript_${gene}_miss${miss}_maf${maf}.R
 fi 
 
-nsnps=`cat gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy | head -n 1 | awk '{print $2}'` &&
+nsnps=`cat gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy | head -n 1 | awk '{print $2}'`
 
 echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.noInv,${nsnps}" >> ${output_dir}/${day}-SNPs-${tree_height}-${int}
