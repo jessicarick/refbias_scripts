@@ -2,8 +2,8 @@
 
 #SBATCH --account=phylogenref
 #SBATCH --nodes=1
-#SBATCH --time=2-00:00:00
-#SBATCH --mem=124G
+#SBATCH --time=0-01:00:00
+# #SBATCH --mem=124G
 #SBATCH --mail-type=all
 
 module load gcc
@@ -40,8 +40,9 @@ fi
 #	echo "astral trees already concatenated; moving on"
 #fi
 
-if false
+#if false
 
+exit
 echo "beginning R analysis of raxml trees!"
 
 #for i in `seq -w 00 09`
@@ -66,4 +67,4 @@ Rscript analysis/analyze_refbias_trees_raxml.R \
 #	--astral.tree.names ${day}-all-astral.names \
 #	--output ${day}-output 
 
-fi
+#fi
