@@ -1,16 +1,18 @@
 #!/bin/sh
 
 module load gcc
-module load miniconda2/4.3.30
-module load samtools
+module load miniconda3
+module load samtools/1.6
+module load htslib
 module load perl
 
-source activate new_env
+#source activate new_env
 
 PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
 source refbias_config.txt
-max=1000000000
+#max=1000000000
+max=586924072
 
 echo "reference: $reference"
 echo "ref_length: $ref_length"
@@ -33,28 +35,44 @@ for ils_level in $ils_level_list
 ### Random subsample of full ref, no overlap##
 ##############################################
 
+		source activate new_env
+
 #		reference_prefix=lmariae_${tree_height}_${sim}_
 
-		python ${REF_PATH}/rand_subsample.py -s 1 -e $max -n $genes -l $gene_length > ${reference_prefix}.random.txt;
+		python ${REF_PATH}/rand_subsample.py -s 1 -e $max -n $(( genes + 20 )) -l $gene_length > ${reference_prefix}.random.txt;
 
 		header=`grep '^>' $reference | sed 's/>//g'`
 		echo "header is $header"
 		#echo ">${header}_${ref_length}" > ${reference_prefix}.random_sim${sim}.fa
-
+		extra=1
 		for i in `seq -w $genes`;
 			do range=`sed -n "${i}p" ${reference_prefix}.random.txt`;
 			samtools faidx $reference $header:$range >> ${reference_prefix}.random_${i}.tmp;
 			echo ">${header}_${ref_length}" > ${reference_prefix}.random_${i}.fa
 			grep -v '^>' ${reference_prefix}.random_${i}.tmp | tr -d '\n' >> ${reference_prefix}.random_${i}.fa
 			rm -f ${reference_prefix}.random_${i}.tmp
-			echo ">gene${i}" >> ${reference_prefix}.random_sim${sim}.fa
-			grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
-			echo >> ${reference_prefix}.random_sim${sim}.fa
+#			echo ">gene${i}" >> ${reference_prefix}.random_sim${sim}.fa
+#			grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
+#			echo >> ${reference_prefix}.random_sim${sim}.fa
 			
 			###Counts Ns and stores as variable counts if needed
 		
 
 		counts=`awk -F'|' 'BEGIN{print "count", "lineNum"}{print gsub(/N/,"") "\t" NR}' ${reference_prefix}.random_${i}.fa | awk 'FNR == 3 {print $1}'`
+
+		if [[ $counts -eq $gene_length ]]; then
+			echo "all bases are N (counts = $counts), grabbing different locus"
+			range=`sed -n "${extra}p" ${reference_prefix}.random.txt`;
+                        samtools faidx $reference $header:$range > ${reference_prefix}.random_${i}.tmp;
+                        echo ">${header}_${ref_length}" > ${reference_prefix}.random_${i}.fa
+                        grep -v '^>' ${reference_prefix}.random_${i}.tmp | tr -d '\n' >> ${reference_prefix}.random_${i}.fa
+                        rm -f ${reference_prefix}.random_${i}.tmp
+
+			counts=`awk -F'|' 'BEGIN{print "count", "lineNum"}{print gsub(/N/,"") "\t" NR}' ${reference_prefix}.random_${i}.fa | awk 'FNR == 3 {print $1}'`
+
+			(( extra++ ))
+		fi
+	
 		echo "replacing $counts N's with random AGCTs"
 
 		#####Draws random values from ACGT of length counts
@@ -66,12 +84,16 @@ for ils_level in $ils_level_list
 			k=$(($k + 1))
 		done
 
+		echo ">gene${i}" >> ${reference_prefix}.random_sim${sim}.fa
+		grep -v '^>' ${reference_prefix}.random_${i}.fa | tr -d '\n' >> ${reference_prefix}.random_sim${sim}.fa
+		echo >> ${reference_prefix}.random_sim${sim}.fa
+
 #			bases="ACGT"
 #			randbase=${bases:$(( RANDOM % ${#bases} )):1}
 #			sed -i "s/N/$randbase/g" ${reference_prefix}.random_${i}.fa
 #			sed -i "s/N/$randbase/g" ${reference_prefix}.random_sim${sim}.fa
 
-		done
+	done
 ##############################################
 ### For each gene, simulate MSC genealogy#####
 ##############################################
@@ -122,6 +144,8 @@ for ils_level in $ils_level_list
 cd ../
 done
 
-echo "sim ils_level int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
+if [ ! -f "${output_dir}/${day}-refdist.txt" ]; then
+	echo "sim ils_level int taxa_ref avg_dist" >> ${output_dir}/${day}-refdist.txt
+fi
 #echo "gene,num_SNPs,num_noRef,num_nonInv" >> ${output_dir}/${day}-mutations.txt
 

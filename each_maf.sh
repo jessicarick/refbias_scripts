@@ -8,9 +8,11 @@ vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
          --remove-filtered-all \
          --maf $(printf "$maf") \
          --max-missing $(printf "$miss") \
+	 --min-alleles 2 \
+	 --max-alleles 2 \
          --recode \
          --recode-INFO-all \
-         --minDP 1 # keep the same?
+         --minDP 5 # keep the same?
 
 	#######################################
 	#### CONVERTING VCF TO PHYLIP FILE ####

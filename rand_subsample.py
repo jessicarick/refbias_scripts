@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys, getpass, re, argparse, random, numpy, scipy
@@ -33,7 +33,7 @@ def random_subsample(seq, n, l):
     return res
 
    
-#print "sequence =", start, end
+#print "sequence ='", start, end
 #print "Number of samples =", n
 #print "Length of Samples =", l
 
@@ -45,5 +45,5 @@ res = random_subsample(seq, n, l)
 
 for i in range(0, len(res)):
 
-	print str(res[i][0]) + str('-') + str(res[i][l-1])
+	print str(res[i][0]) + "-" + str(res[i][l-1])
 

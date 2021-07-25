@@ -13,6 +13,7 @@ sim=$2
 tree_height=$3
 int=$4
 taxa_ref=$5
+day=$6
 
 python3 /home/jrick/bin/genomics_general/VCF_processing/parseVCF.py -i ${input} --skipIndels | gzip > ${output}.geno.gz
 
