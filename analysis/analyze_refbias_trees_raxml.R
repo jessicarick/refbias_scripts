@@ -228,16 +228,16 @@ for (i in 1:length(raxml.trees)){
   ml.tree.pruned <- drop.tip(ml.tree[[j]],results.raxml$taxa_ref[i])
   
   if(results.raxml$taxa_ref[i] %in% raxml.trees[[i]]$tip.label){
-    trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree[[j]]))
+    trees.both <- as.multiPhylo(c(chronopl(raxml.trees[[i]], lambda=1, iter.max=100),ml.tree[[j]]))
   } else {
-    trees.both <- as.multiPhylo(c(raxml.trees[[i]],ml.tree.pruned))
+    trees.both <- as.multiPhylo(c(chronopl(raxml.trees[[i]], lambda=1, iter.max=100),ml.tree.pruned))
   }
 
   if(results.raxml$taxa_ref[i] %in% raxml.trees[[i]]$tip.label){
-    trees.both.root <- as.multiPhylo(c(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE),
+    trees.both.root <- as.multiPhylo(c(chronopl(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE), lambda=1, iter.max=100),
                                        root(ml.tree[[j]],"sim_0_0_0",resolve.root=TRUE)))
   } else {
-    trees.both.root <- as.multiPhylo(c(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE),
+    trees.both.root <- as.multiPhylo(c(chronopl(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE), lambda=1, iter.max=100),
                                        root(ml.tree.pruned,"sim_0_0_0",resolve.root=TRUE)))
   }
   
@@ -302,7 +302,7 @@ for (h in unique(as.character(results.raxml$height))){
       print(paste("no trees for sim",i," for height ",h)) 
       next
     }
-    rf_matrix<-multiRF(trees.subset)
+    rf_matrix <- multiRF(trees.subset)
     
     ####PcOA of RF distance matrix for plotting trees in tree space
     rf_pcoa <- pcoa(rf_matrix)
