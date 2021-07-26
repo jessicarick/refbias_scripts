@@ -7,8 +7,8 @@ library(ggsci)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "101819-output"
-results.raxml <- read.csv(paste("output/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+output <- "072820-output"
+results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
 results.mod <- results.raxml
@@ -24,9 +24,9 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## gamma
 # short
 
-m.gam.short <- lmer(ingroup.gamma ~ int + maf + missing +
-                     int:maf + int:missing + (1 | simulation),
-                   data = results.mod[results.mod$height == "500000" & results.mod$noref == "REF",])
+m.gam.short <- lmer(std.ingroup.gamma ~ int + maf + missing +
+                      int:maf + int:missing + (1 | simulation),
+                   data = results.mod[results.mod$height == "SHORT",])
 sum.gam.short <- summary(m.gam.short)
 r.squaredGLMM(m.gam.short)
 
@@ -56,7 +56,7 @@ vars.gam.short.bars <- vars.gam.short + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient\nHeight = 500,000")+
+  ylab("Coefficient\nSHORT Trees (High ILS)")+
   #scale_color_npg() +
   #scale_x_reverse() +
   scale_color_manual(values=cols)+
@@ -72,8 +72,8 @@ vars.gam.short.bars
 # med
 
 m.gam.med <- lmer(ingroup.gamma ~ int + maf + missing + 
-                   int:maf + int:missing + (1 | simulation),
-                 data = results.mod[results.mod$height == "2000000" & results.mod$noref == "REF",])
+                    int:maf + int:missing + (1 | simulation),
+                 data = results.mod[results.mod$height == "MED",])
 sum.gam.med <- summary(m.gam.med)
 r.squaredGLMM(m.gam.med)
 
@@ -104,7 +104,7 @@ vars.gam.med.bars <- vars.gam.med + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient\nHeight = 2,000,000")+
+  ylab("Coefficient\nMED Trees (Med ILS)")+
   #scale_color_npg() +
   #scale_x_reverse() +
   scale_color_manual(values=cols)+
@@ -120,8 +120,8 @@ vars.gam.med.bars
 # long
 
 m.gam.long <- lmer(ingroup.gamma ~ int + maf + missing +
-                    int:maf + int:missing + (1 | simulation),
-                  data = results.mod[results.mod$height == "10000000" & results.mod$noref == "REF",])
+                     int:maf + int:missing + (1 | simulation),
+                  data = results.mod[results.mod$height == "LONG",])
 sum.gam.long <- summary(m.gam.long)
 r.squaredGLMM(m.gam.long)
 
@@ -152,7 +152,7 @@ vars.gam.long.bars <- vars.gam.long + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient\nHeight = 10,000,000")+
+  ylab("Coefficient\nLONG Trees (Low ILS)")+
   #scale_color_npg() +
   #scale_x_reverse() +
   scale_color_manual(values=cols)+
@@ -193,7 +193,7 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  scale_x_continuous(name="Ingroup Gamma",limits = c(-5,15))+
+  #scale_x_continuous(name="Ingroup Gamma",limits = c(-5,15))+
   scale_y_discrete(name="MAF")+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
