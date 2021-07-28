@@ -46,8 +46,8 @@ my $tree_height = $ARGV[1];
 #	exit;
 #}
 
-push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_091319_subsamp.sh $sim $tree_height \n";
-push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_091319_subsamp.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_071121_subsamp.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_071121_subsamp.sh $sim $tree_height \n";
 
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
@@ -59,7 +59,7 @@ my $jobname = 'slurm.refbias.'.$ENV{USER};
 ### modules to load:
 my @modules =();
 push @modules, 'module load gcc';
-push @modules, 'module load miniconda2';
+push @modules, 'module load miniconda3';
 push @modules, 'module load perl';
 push @modules, 'module load vcftools';
 push @modules, 'module load bwa';
@@ -79,7 +79,7 @@ my $basestoredir = "/project/$arccproject/scripts";
 ## allocated disk space than your home directory.  Will write to
 ## slurm_log and slurm_results inside this directory
 my $logdir = "$basestoredir/slurm_log";
-my $resultdir = "$basestoredir/slurm_results";
+my $resultdir = "/gscratch/jrick/phylogenref/slurm_results";
 ## -----------------------------------------------------------------------------------
 
 printf "Ready to submit %d jobs to SLURM (y/n): ", scalar @jobarray;
@@ -106,9 +106,11 @@ push @slurmdirectives, "#SBATCH --account=$arccproject";
 push @slurmdirectives, "#SBATCH --job-name=$jobname";
 push @slurmdirectives, "#SBATCH --time=$runtime"; 
 push @slurmdirectives, "#SBATCH --nodes=1";
-push @slurmdirectives, "#SBATCH --ntasks-per-node=16"; # 32 cores per node
-push @slurmdirectives, "#SBATCH --mem=124G"; 
+push @slurmdirectives, "#SBATCH --ntasks-per-node=32"; # 32 cores per node
+#push @slurmdirectives, "#SBATCH --mem=124G"; 
 #push @slurmdirectives, "#SBATCH --workdir=$logdir";
+push @slurmdirectives, "#SBATCH --no-requeue";
+
 #          SLURM can send informative email messages to you about the
 #          status of your job.  
 if($sendmail eq 'TRUE'){

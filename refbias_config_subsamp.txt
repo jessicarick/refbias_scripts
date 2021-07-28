@@ -1,27 +1,29 @@
 REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
-output_dir=/project/phylogenref/scripts/output
-day=`date +%m%d%y`
-#day=101519
+output_dir=/project/phylogenref/scripts/output/new
+#day=`date +%m%d%y`
+day=072221
 
-num_sims='11 20'
-reference=$REF_PATH/references/lmariae_genome_Feb2018_concat.fa
+num_sims='1 2 3'
+reference=$REF_PATH/references/lcalcarifer_genome_v3_chromosomal_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
-reference_prefix=lmariae_500000
+reference_prefix=lcal_5000000
 
-ref_length=2000000
-gene_length=1000
+ref_length=5000000
+gene_length=5000
 genes=$(expr $ref_length / $gene_length)
 #max=`grep -v '^>' $reference | wc -m`
 
-varsites=50
+varsites=150 #also need to change in randomization script
 
 echo "1,1,1,1,1,1" > rat.matrix
 
 ###Added variable for number of species and individuals for simulation - Values can be changed
 num_sp=100
 num_ind=1
-tree_height_list='500000 2000000 10000000'
+tree_height='NH'
+ils_level_list='MED'
+sp_rate='0.00025'
 	
 ##############################################
 ### Filtering parameters for sims ############
@@ -29,12 +31,12 @@ tree_height_list='500000 2000000 10000000'
 
 ## for testing
 qual_list='40'
-#maf_list='0'
-#miss_list='0'
+#maf_list='0.05 0.1'
+#miss_list='0.75 1.0'
 
 #qual_list='0 20 40 60'
-maf_list='0 0.01 0.02 0.03 0.04 0.05 0.10'
-miss_list='0 0.25 0.50 0.75 1.0'
+maf_list='0.01 0.02 0.03 0.04 0.05 0.10'
+miss_list='0.50'
 
 # set max sites for subsampling
-maxSNP=1000
+maxSNP=5000
