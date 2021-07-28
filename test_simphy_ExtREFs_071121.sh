@@ -23,7 +23,7 @@ echo "starting analysis for $tree_height, sim $sim, $int"
 
 nloci=$(($genes + 1))
 var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci $varsites`)
-echo ${var_sites[*]} >> ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}-TEST
+#iecho ${var_sites[*]} >> ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}-TEST
 
 #if false; then # DEBUGGING
 
@@ -34,15 +34,17 @@ export var_sites
 export taxa_ref
 export reference_prefix
 export error
+
+seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error ${REF_PATH}/run_ttr.sh
   
-seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
+#seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  echo 'index is $index' && echo 'varsites is `echo ${var_sites[$index]}`' && exit 0 && python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
 
 #echo ">lmariae_genome_Feb2018_${ref_length}" > ${reference_prefix}_sim${sim}.fa
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
 
 #fi # DEBUGGING
 
-#exit 0 # debugging
+exit 0 # debugging
 
 ##############################################
 ### Concatenate reads into single file########
