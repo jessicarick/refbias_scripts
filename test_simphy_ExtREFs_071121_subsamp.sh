@@ -34,8 +34,12 @@ export var_sites
 export taxa_ref
 export reference_prefix
 export error
-  
-seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
+export int
+export day
+ 
+seq -w $genes | parallel --delay 5 --jobs 16  'snps=`head -n 1 ${REF_PATH}/output/new/${day}-varSites-${tree_height}-sim${sim}-${int}-subsamp | tr " " "\n" | head -n {} | tail -n 1` && python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo "$snps"` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa'
+ 
+#seq -w $genes | parallel --delay 5 --jobs 32 --env REF_PATH --env tree_height --env sim --env var_sites --env taxa_ref --env reference_prefix --env error "index=$(echo {} | sed 's/^0*//') &&  python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo ${var_sites[$index]}` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v '^>' ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa"
 
 #echo ">lmariae_genome_Feb2018_${ref_length}" > ${reference_prefix}_sim${sim}.fa
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
@@ -85,15 +89,15 @@ bwa index ${reference_prefix}_sim${sim}.fa
 export reference_prefix
 export sim
 
-parallel --env reference_prefix --env sim -j 32 --delay 5 "echo 'Mapping reads for {}' && bwa mem -t 16 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read2.fq.gz > aln_{}.sam && echo 'Converting sam to bam for {}' && samtools view -b -S -o aln_{}.bam aln_{}.sam && echo 'Sorting and indexing bam files for {}' && samtools sort aln_{}.bam -o aln_{}.sorted.bam && samtools index -c aln_{}.sorted.bam" ::: $fastq_list
+parallel --env reference_prefix --env sim -j 16 --delay 5 "echo 'Mapping reads for {}' && bwa mem -t 16 ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read2.fq.gz > aln_{}.sam && echo 'Converting sam to bam for {}' && samtools view -b -S -o aln_{}.bam aln_{}.sam && echo 'Sorting and indexing bam files for {}' && samtools sort aln_{}.bam -o aln_{}.sorted.bam && samtools index -c aln_{}.sorted.bam" ::: $fastq_list
 	
 rm -f *.sam
 rm -f *[0-9].bam
 
 #fi #DEBUGGING
 
-for QUAL in $qual_list
-	do samtools mpileup -g -t DP,AD \
+QUAL=40
+	 samtools mpileup -g -t DP,AD \
 		--skip-indels \
     	 	-P ILLUMINA \
         	-q $QUAL \
@@ -156,7 +160,7 @@ for QUAL in $qual_list
 	export miss_list
 	export genes
 
-	parallel --delay 5 --jobs 4  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_maf_subsamp.sh {}" ::: $maf_list ::: $miss_list
+	parallel --delay 5 --jobs 2  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_maf_subsamp.sh {}" ::: $maf_list ::: $miss_list
 
 
 #        for maf in $maf_list
@@ -299,7 +303,7 @@ for QUAL in $qual_list
 #                done
 #         done
 
-    done
+#    done
 
 mkdir -p sim${sim}/config_files
 mkdir -p sim${sim}/ref.fasta_files

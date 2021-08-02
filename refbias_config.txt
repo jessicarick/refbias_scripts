@@ -22,8 +22,8 @@ echo "1,1,1,1,1,1" > rat.matrix
 num_sp=100
 num_ind=1
 tree_height='NH'
-ils_level_list='MED'
-sp_rate='0.00025'
+ils_level_list='LONG'
+sp_rate='0.0005'
 	
 ##############################################
 ### Filtering parameters for sims ############
