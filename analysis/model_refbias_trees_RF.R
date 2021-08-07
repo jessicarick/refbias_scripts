@@ -13,18 +13,18 @@ output <- "072221-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml[results.raxml$simulation < 11,]
+results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.factor(results.mod$missing)
-results.mod$maf <- as.factor(results.mod$maf)
+results.mod$missing <- as.numeric(as.character(results.mod$missing))
+results.mod$maf <- as.numeric(results.mod$maf)
 results.mod$int <- as.factor(results.mod$int)
 
 ## rf distance
 # short
 
-m.rf.short <- lmer(RF.Dist.ML ~ int + maf + missing +
+m.rf.short <- lmer(RF.Dist.ML ~ maf + missing + int +
                      int:maf + int:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
 sum.rf.short <- summary(m.rf.short)
@@ -57,7 +57,7 @@ vars.rf.short.bars <- vars.rf.short + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient")+
+  ylab("Coefficient\nSHORT Trees")+
   #xlim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
@@ -107,7 +107,7 @@ vars.rf.med.bars <- vars.rf.med + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient")+
+  ylab("Coefficient\nMED Trees")+
   #xlim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
@@ -156,7 +156,7 @@ vars.rf.long.bars <- vars.rf.long + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
   xlab("")+
-  ylab("Coefficient")+
+  ylab("Coefficient\nLONG Trees")+
   #ylim(-20,120)+
   #scale_color_npg() +
   #scale_x_reverse() +
@@ -171,11 +171,12 @@ vars.rf.long.bars <- vars.rf.long + geom_blank() +
 vars.rf.long.bars
 
 # put them all together
-ggarrange(vars.rf.short.bars,
+vars.plots <- ggarrange(vars.rf.long.bars,
           vars.rf.med.bars,
-          vars.rf.long.bars,
-          labels=c("A","B","C"),
+          vars.rf.short.bars,
+          #labels=c("A","B","C"),
           ncol=3)
+print(vars.plots)
 
 ## ridgeline plots
 plot1 <- ggplot(data = results.mod, 
@@ -206,3 +207,5 @@ plot2 <- plot1 +
   theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
 
 print(plot2)
+
+ggarrange(vars.plots, plot2, ncol=1)

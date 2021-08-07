@@ -4,19 +4,20 @@
 library(tidyverse)
 library(ggridges)
 
-output <- "072221-output"
+output <- "072821-output"
 
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 responses <- colnames(results.raxml[,9:31])
 
-pdf(paste("output/",output,"-univariate-plots_refdist.pdf",sep=""),width=11,height=8)
+pdf(paste("output/new/",output,"-univariate-plots_refdist.pdf",sep=""),width=11,height=8)
 
+results <- as.data.frame(results.raxml)
 for (i in 1:length(responses)){
-  plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
-                  aes(x=as.factor(results.raxml[results.raxml$noref == "REF",]$maf),
-                      y=results.raxml[results.raxml$noref == "REF",responses[i]],
-                      fill=results.raxml[results.raxml$noref == "REF",]$int))
+  plot1 <- ggplot(data = results, 
+                  aes(x=as.factor(maf),
+                      y=results[,responses[i]],
+                      fill=int))
   
   plot2 <- plot1 +
     geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE, weight=2)+
@@ -57,7 +58,7 @@ dev.off()
 plot1 <- ggplot(data = results.raxml, 
                 aes(y=as.factor(results.raxml$maf),
                     x=RF.Dist.ML,
-                    fill=factor(int)))
+                    fill=factor(simulation)))
 
 plot2 <- plot1 +
   #geom_boxplot(alpha=0.7, notch=FALSE, varwidth=FALSE, weight=2)+
