@@ -26,14 +26,14 @@ suppressMessages(
 ## For debugging-- specifying files ########
 ############################################
 
-raxml.trees <- "072221-all-raxml.trees"
-raxml.tree.names <- "072221-all-raxml.names"
+raxml.trees <- "072821-all-raxml.trees"
+raxml.tree.names <- "072821-all-raxml.names"
 astral.trees <- "101819-all-astral.trees"
 astral.tree.names <- "101819-all-astral.names"
 ml.trees <- "072221-s_tree.tree"
 ml.tree.names <- "072221-s_tree.names"
-output <- "072221-output"
-refdist <- "072221-refdist.txt"
+output <- "072821-subsamp-output"
+refdist <- "072821-refdist.txt"
 args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
@@ -155,12 +155,12 @@ for (i in 1:length(raxml.trees)) {
   #results.raxml$int[i] <- (regmatches(raxml.tree.names[i,1], regexec('.([A-Z]+)-', raxml.tree.names[i,1]))[[1]][2])
   #results.raxml$noref[i] <- (regmatches(raxml.tree.names[i,1], regexec('[0-9].([A-Z]+)\\.[A-Z]', raxml.tree.names[i,1]))[[1]][2])
   results.raxml$taxa_ref[i] <- regmatches(raxml.tree.names[i,1],regexec('[A-Z]-([0-9]+_0_0)\\.phylip', raxml.tree.names[i,1]))[[1]][[2]]
-  results.raxml$refdist[i] <- if (length(refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
-                                               refdist$ils_level == results.raxml$height[i] &
-                                               refdist$int == results.raxml$int[i]][1]) != 0) {
-					refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
-                                               refdist$ils_level == results.raxml$height[i] &
-                                               refdist$int == results.raxml$int[i]][1] } else {"NA"}				
+#   results.raxml$refdist[i] <- if (length(refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
+#                                                refdist$ils_level == results.raxml$height[i] &
+#                                                refdist$int == results.raxml$int[i]][1]) != 0) {
+# 					refdist$avg_dist[refdist$sim == results.raxml$simulation[i] &
+#                                                refdist$ils_level == results.raxml$height[i] &
+#                                                refdist$int == results.raxml$int[i]][1] } else {"NA"}				
 }
 
 results.raxml$int <- case_when(results.raxml$taxa_ref == "0_0_0" ~ "EXT",
@@ -172,7 +172,7 @@ for (i in 1:length(raxml.trees)){
   if(!("sim_0_0_0" %in% raxml.trees[[i]]$tip.label)){
     rooted <- raxml.trees[[i]]
   } else {
-    rooted <- root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE)
+    rooted <- root(raxml.trees[[i]],"sim_0_0_0",resolve.root=FALSE)
   }
   
   ultra <- chronopl(rooted, lambda=1, iter.max=100)
@@ -181,13 +181,13 @@ for (i in 1:length(raxml.trees)){
   #raxml.trees[[i]]$edge.length[is.na(raxml.trees[[i]]$edge.length)] <- 0
   
   ###Gamma stat
-  results.raxml$gamma[i] <- gammaStat(ultra)[1]
+  results.raxml$gamma[i] <- gammaStat(rooted)[1]
 
   ###Gamma on ingroup only
   if(!("sim_0_0_0" %in% raxml.trees[[i]]$tip.label)){
-    ingroup <- ultra
+    ingroup <- rooted
   } else {
-    ingroup <- drop.tip(ultra,"sim_0_0_0")
+    ingroup <- drop.tip(rooted,"sim_0_0_0")
   }
 
   results.raxml$ingroup.gamma[i] <- gammaStat(ingroup)[1]
@@ -228,17 +228,17 @@ for (i in 1:length(raxml.trees)){
   ml.tree.pruned <- drop.tip(ml.tree[[j]],results.raxml$taxa_ref[i])
   
   if(results.raxml$taxa_ref[i] %in% raxml.trees[[i]]$tip.label){
-    trees.both <- as.multiPhylo(c(chronopl(raxml.trees[[i]], lambda=1, iter.max=100),ml.tree[[j]]))
+    trees.both <- c(raxml.trees[[i]],ml.tree[[j]])
   } else {
-    trees.both <- as.multiPhylo(c(chronopl(raxml.trees[[i]], lambda=1, iter.max=100),ml.tree.pruned))
+    trees.both <- c(raxml.trees[[i]],ml.tree.pruned)
   }
 
   if(results.raxml$taxa_ref[i] %in% raxml.trees[[i]]$tip.label){
-    trees.both.root <- as.multiPhylo(c(chronopl(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE), lambda=1, iter.max=100),
-                                       root(ml.tree[[j]],"sim_0_0_0",resolve.root=TRUE)))
+    trees.both.root <- c(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE),
+                                       root(ml.tree[[j]],"sim_0_0_0",resolve.root=TRUE))
   } else {
-    trees.both.root <- as.multiPhylo(c(chronopl(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE), lambda=1, iter.max=100),
-                                       root(ml.tree.pruned,"sim_0_0_0",resolve.root=TRUE)))
+    trees.both.root <- c(root(raxml.trees[[i]],"sim_0_0_0",resolve.root=TRUE),
+                                       root(ml.tree.pruned,"sim_0_0_0",resolve.root=TRUE))
   }
   
   ###RF distance to ML tree
@@ -290,66 +290,7 @@ write.csv(results.raxml,file=paste("output/new/",args$output,"-raxml.csv",sep=""
 ####################BEGIN ANALYSIS ################################
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
 results.raxml <- read.csv(file=paste("output/new/",args$output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
-pdf(paste("output/new/",args$output,".pdf",sep=""))
-for (h in unique(as.character(results.raxml$height))){
-  for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
-    
-    j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
-    subset <- which(results.raxml$simulation == i & results.raxml$height == h & results.raxml$noref == "REF")
-    if (length(subset) != 0) {
-      trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
-    } else {
-      print(paste("no trees for sim",i," for height ",h)) 
-      next
-    }
-    rf_matrix <- multiRF(trees.subset)
-    
-    ####PcOA of RF distance matrix for plotting trees in tree space
-    rf_pcoa <- pcoa(rf_matrix)
-    
-    rf_df <- data.frame(axis1=rf_pcoa$vectors[,1],axis2=rf_pcoa$vectors[,2])
-    biplot <- ggplot(rf_df,aes(axis1,axis2))
-    plot <- biplot +
-      geom_jitter(aes(color=as.factor(c(results.raxml$int[subset],3)),shape=as.factor(c(results.raxml$method[subset],3))),alpha=0.5,size=5,height=2,width=2)+
-      theme_bw()+
-      theme(legend.text = element_text(size=rel(1.5)),
-            legend.title = element_blank(),
-            plot.margin = unit(c(6,5.5,20,10),"points"),
-            line = element_line(size=1),
-            axis.title = element_text(size=rel(1.5)),
-            axis.text = element_text(size=rel(1)),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank())+
-      ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
-      xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
-      ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
-      #geom_label_repel(label=c(paste("MAF",results.raxml$maf[subset],"MISS",results.raxml$missing[subset],sep=" "),"truth"),size=rel(1))+
-      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
-    print(plot)
-   
-    plot2 <- biplot +
-      geom_jitter(aes(color=as.factor(c(results.raxml$maf[subset],6)),shape=as.factor(c(results.raxml$miss[subset],"true"))),alpha=0.5,size=5,height=2,width=2)+
-      theme_bw()+
-      theme(legend.text = element_text(size=rel(1.5)),
-            legend.title = element_blank(),
-            plot.margin = unit(c(6,5.5,20,10),"points"),
-            line = element_line(size=1),
-            axis.title = element_text(size=rel(1.5)),
-            axis.text = element_text(size=rel(1)),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank())+
-      ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
-      xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
-      ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
-      #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black","pink","turquoise"))+
-      scale_shape_manual(values=c(0,1,2,3,16,17))
-    print(plot2)
-   
-    #heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$miss,results.raxml[subset,]$int,sep=","),cex.lab=0.5)
-  }
-}
-dev.off()
+ 
+rf_df_list <- list()
 
 write.csv(results.raxml,file=paste("output/new/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,col.names=TRUE,na="NA")

@@ -24,7 +24,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## gamma
 # short
 
-m.gam.short <- lmer(std.ingroup.gamma ~ int + maf + missing +
+m.gam.short <- lmer(ingroup.gamma ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
 sum.gam.short <- summary(m.gam.short)
@@ -166,17 +166,18 @@ xlab("")+
 vars.gam.long.bars
 
 # put them all together
-ggarrange(vars.gam.short.bars,
+vars.plot.gam <- ggarrange(vars.gam.short.bars,
           vars.gam.med.bars,
           vars.gam.long.bars,
-          labels=c("A","B","C"),
+          #labels=c("A","B","C"),
           ncol=3)
+print(vars.plot.gam)
 
 ## ridgeline plots
-plot1 <- ggplot(data = results.raxml[results.raxml$noref == "REF",], 
-                aes(y=as.factor(results.raxml[results.raxml$noref == "REF",]$maf),
-                    x=results.raxml[results.raxml$noref == "REF",][,"ingroup.gamma"],
-                    fill=results.raxml[results.raxml$noref == "REF",]$int))
+plot1 <- ggplot(data = results.raxml, 
+                aes(y=as.factor(maf),
+                    x=ingroup.gamma,
+                    fill=int))
 
 plot2 <- plot1 +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
@@ -193,10 +194,12 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  #scale_x_continuous(name="Ingroup Gamma",limits = c(-5,15))+
+  scale_x_continuous(name="Ingroup Gamma",limits = c(-100,100))+
   scale_y_discrete(name="MAF")+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
   theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
 
 print(plot2)
+
+ggarrange(vars.plot.gam,plot2,ncol=1)
