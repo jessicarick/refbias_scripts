@@ -41,11 +41,21 @@ vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
 #######################################
 
     sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.phy | head -n 1 | awk '{print $2}'`
+    if [ "$sites_ref" -eq "$maxSNP" ]; then
+    for rep in `seq 10`
+	do Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv $sites_ref $maxSNP
+   	sites_samp=`head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy | awk '{print $2}'`
+	echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}_rep${rep},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
 
-    Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv $sites_ref $maxSNP
-    sites_samp=`head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy | awk '{print $2}'`
-    echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
+	echo "running raxml on subsampled phylip for rep $rep"
+    	raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+     done
+     else
+	rep=1
+	Rscript ${REF_PATH}/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv $sites_ref $maxSNP
+        sites_samp=`head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy | awk '{print $2}'`
+        echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_maf${maf}_${int}_rep${rep},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
 
-    echo "running raxml on subsampled phylip"
-    raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
-
+        echo "running raxml on subsampled phylip for rep $rep"
+        raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+     fi

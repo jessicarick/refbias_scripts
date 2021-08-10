@@ -37,7 +37,7 @@ export error
 export int
 export day
 
-seq -w $genes | parallel --delay 5 --jobs 16  'snps=`head -n 1 ${REF_PATH}/output/new/${day}-varSites-${tree_height}-sim${sim}-${int} | tr " " "\n" | head -n {} | tail -n 1` && python ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo "$snps"` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa'
+seq -w $genes | parallel --delay 5 --jobs 16  'snps=`head -n 1 ${REF_PATH}/output/new/${day}-varSites-${tree_height}-sim${sim}-${int} | tr " " "\n" | head -n {} | tail -n 1` && python2 ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo "$snps"` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python2 /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa'
 
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
 
