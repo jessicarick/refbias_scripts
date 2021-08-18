@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #SBATCH --account=phylogenref
-#SBATCH --time=1-00:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --ntasks-per-node=16
 #SBATCH --nodes=1
-#SBATCH --array=1-2
+#SBATCH --array=1-10
 #SBATCH --mem=124G
 #SBATCH --no-requeue
 
@@ -30,7 +30,7 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 source /project/phylogenref/scripts/refbias_config_emp.txt
 tree_height="lates"
 int=EXT
-day=080721
+day=081221
 sim=${SLURM_ARRAY_TASK_ID}
 
 cd /gscratch/jrick/phylogenref/emp_tmp
@@ -63,13 +63,13 @@ declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 b
 #sims=1
 #for sim in `seq $sims`; do
 	
-	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]]; then
-	ls /project/phylogenref/data/lates/*.sorted.bam | grep -v 'SRR' | shuf -n 30 > rand_ind_sim${sim}.txt
+	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]] && [[ ! -s OUTFILE.s${sim}_q${QUAL}.vcf ]]; then
+	ls /project/phylogenref/data/lates/*.sorted.bam | grep -v 'SRR' | shuf -n 50 > rand_ind_sim${sim}.txt
 	echo "/project/phylogenref/data/lates/aln_SRR3140997.sorted.bam" >> rand_ind_sim${sim}.txt
 	fi
 	
 	QUAL=40	
-	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]]; then
+	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]] && [[ ! -s OUTFILE.s${sim}_q${QUAL}.vcf ]]; then
 		samtools mpileup -g -t DP,AD \
 			--skip-indels \
     	 	-P ILLUMINA \
@@ -97,6 +97,7 @@ declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 b
 #### FOR EACH GENOME #########################
 ##############################################
 #if false; then
+	if [[ ! -s OUTFILE.s${sim}_q${QUAL}.vcf ]]; then
 		bcftools call -m \
                 --variants-only \
                 --format-fields GQ \
@@ -110,11 +111,13 @@ declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 b
                                 --apply-filter "PASS" \
                                 --output-type v \
                                 --output-file OUTFILE.s${sim}_q${QUAL}.vcf
+	fi
+
 #fi                
 #                if [[ "$QUAL" -eq 40 ]]; then
-#                    echo "Calculating Dxy from calc_dxy script."
-#                    ${REF_PATH}/calc_dxy.sh OUTFILE.q${QUAL}.vcf $sim $tree_height $int $taxa_ref
-#                    echo "done calculating Dxy"
+                    echo "Calculating Dxy from calc_dxy_emp script."
+                    ${REF_PATH}/calc_dxy_emp.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref $day
+                    echo "done calculating Dxy"
 #                else
 #		    		echo "QUAL is $QUAL; not calculating Dxy this time"
 #                fi
