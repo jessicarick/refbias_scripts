@@ -22,19 +22,20 @@ suppressMessages(
     # library(car)
     library(ggrepel),
     library(ggsci)))
+source("analysis/theme_custom.R")
 
 ############################################
 ## Specifying file names ########
 ############################################
 
-raxml.trees <- "072821-all-raxml.trees"
-raxml.tree.names <- "072821-all-raxml.names"
+raxml.trees <- "080421-all-raxml.trees"
+raxml.tree.names <- "080421-all-raxml.names"
 astral.trees <- "101819-all-astral.trees"
 astral.tree.names <- "101819-all-astral.names"
 ml.trees <- "072221-s_tree.tree"
 ml.tree.names <- "072221-s_tree.names"
-output <- "072821-subsamp-output"
-refdist <- "072821-refdist.txt"
+output <- "080421-subsamp-output"
+refdist <- "080421-refdist.txt"
 args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
 ############################################
@@ -74,11 +75,12 @@ ml.tree.names <- read.table(paste("output/new/",args$ml.tree.names,sep=""),strin
 
 ###Pull info about ml species trees
 ## and calculate tree statistics
-ml.tree.info <- tibble(simulation = numeric(nrow(ml.tree.names)),
-                           height=character(nrow(ml.tree.names))) %>%
+ml.tree.info <- tibble(simulation = numeric(length(ml.tree.names)),
+                           height = character(length(ml.tree.names))) %>%
   mutate(simulation = sapply(ml.tree.names, function(x) as.integer(regmatches(x, regexec('sim([0-9]+)', x))[[1]][2])),
          height = sapply(ml.tree.names, function(x) regmatches(x, regexec('height([A-Z]+)', x))[[1]][2]),
          tree.height = sapply(ml.tree,function(x) max(branching.times(x),na.rm=T)), 
+         ingroup.tree.height = sapply(ml.tree,function(x) max(branching.times(drop.tip(x,"sim_0_0_0")))),
          Avg.BLs = sapply(ml.tree,function(x) mean(x$edge.length,na.rm=T)),
          gamma = sapply(ml.tree,function(x) gammaStat(x)),
          ingroup.gamma = sapply(ml.tree,function(x) gammaStat(drop.tip(x,"sim_0_0_0"))),
@@ -86,7 +88,10 @@ ml.tree.info <- tibble(simulation = numeric(nrow(ml.tree.names)),
          ingroup.colless = sapply(ml.tree,function(x) colless(as.treeshape(drop.tip(x,"sim_0_0_0"),model="pda"),norm="pda"))
   )
 
-refdist <- read.table(paste("output/new/",args$refdist,sep=""),header=T,stringsAsFactors = FALSE)
+refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("simulation","height","int","taxa_ref","avg_dxy")) %>%
+  group_by(simulation,height,int,taxa_ref) %>%
+  slice(1) %>%
+  ungroup()
 
 ###################
 ## changing tip labels on ml trees to match the sim trees
@@ -118,7 +123,7 @@ plot2 <- ml.tree.info %>%
         axis.title.x = element_blank())
 
 plot3 <- ml.tree.info %>%
-  ggplot(aes(x=height,y=ingroup.gamma,fill=NULL)) +
+  ggplot(aes(x=height,y=ingroup.tree.height,fill=NULL)) +
   geom_boxplot(outlier.shape=NA) +
   geom_jitter(aes(col=height),width=0.1,height=0.1) +
   theme_custom() +
@@ -140,7 +145,7 @@ ggarrange(plot1,plot2,plot3,plot4,nrow=1)
 #####################
 
 ###Create empty data frame and with named, empty columns 
-num.trees <- nrow(raxml.tree.names)
+num.trees <- length(raxml.tree.names)
 results.raxml <- tibble(tree.num=seq(1:length(raxml.trees)))
 
 ## pull info from tree names, and calculate tree statistics
@@ -159,6 +164,7 @@ results.raxml <- results.raxml %>%
   ) %>%
   mutate(
     tree.height = sapply(raxml.trees, function(x) max(branching.times(root(x,"sim_0_0_0",resolve.root=TRUE)),na.rm=T)),
+    ingroup.tree.height = sapply(raxml.trees, function(x) max(branching.times(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0")),na.rm=T)),
     Avg.BLs = sapply(raxml.trees, function(x) mean(root(x,"sim_0_0_0",resolve.root=TRUE)$edge.length,na.rm=T)),
     SD.BLs = sapply(raxml.trees, function(x) sd(root(x,"sim_0_0_0",resolve.root=TRUE)$edge.length,na.rm=T)),
     mean.support = sapply(raxml.trees, function(x) mean(as.numeric(root(x,"sim_0_0_0",resolve.root=TRUE)$node.label[-1]),na.rm=T)),
@@ -171,7 +177,8 @@ results.raxml <- results.raxml %>%
     ingroup.colless = sapply(raxml.trees, function(x) colless(as.treeshape(chronopl(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0"),lambda=1),model="pda"),norm="pda")),
     sackin = sapply(raxml.trees, function(x) sackin(as.treeshape(chronopl(root(x,"sim_0_0_0",resolve.root=TRUE),lambda=1),model="pda"),norm="pda")),
     ingroup.sackin = sapply(raxml.trees, function(x) sackin(as.treeshape(chronopl(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0"),lambda=1),model="pda"),norm="pda"))
-  )
+  ) %>%
+  left_join(refdist)
 
 ###################
 ## statistics requiring separation by simulation number
@@ -265,7 +272,7 @@ plot2 <- ggplot(data = results.raxml,
 
 plot3 <- ggplot(data = results.raxml, 
                 aes(x=height,
-                    y=gamma,
+                    y=ingroup.tree.height,
                     fill=NULL)) +
   geom_boxplot(alpha=0.9,outlier.shape=NA) +
   geom_jitter(aes(col=height),width=0.1,height=0.1,alpha=0.4) +  theme_custom()  +
