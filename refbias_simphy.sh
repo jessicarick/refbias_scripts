@@ -5,6 +5,9 @@ module load miniconda3
 module load samtools/1.6
 module load htslib
 module load perl
+module load python/2.7.15
+module load py-numpy/1.14.3-py27
+module load py-scipy/1.1.0-py27
 
 #source activate new_env
 
@@ -35,11 +38,11 @@ for ils_level in $ils_level_list
 ### Random subsample of full ref, no overlap##
 ##############################################
 
-		source activate new_env
+		#source activate new_env
 
 #		reference_prefix=lmariae_${tree_height}_${sim}_
 
-		python ${REF_PATH}/rand_subsample.py -s 1 -e $max -n $(( genes + 20 )) -l $gene_length > ${reference_prefix}.random.txt;
+		python2 ${REF_PATH}/rand_subsample.py -s 1 -e $max -n $(( genes + 20 )) -l $gene_length > ${reference_prefix}.random.txt;
 
 		header=`grep '^>' $reference | sed 's/>//g'`
 		echo "header is $header"
@@ -97,6 +100,7 @@ for ils_level in $ils_level_list
 ##############################################
 ### For each gene, simulate MSC genealogy#####
 ##############################################
+source activate new_env
 	rand_num=`echo $RANDOM`
 	echo "random number seed: ${rand_num}"
 	

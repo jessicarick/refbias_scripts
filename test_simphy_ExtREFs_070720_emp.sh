@@ -4,7 +4,7 @@
 #SBATCH --time=7-00:00:00
 #SBATCH --ntasks-per-node=16
 #SBATCH --nodes=1
-#SBATCH --array=1-10
+#SBATCH --array=11-20
 #SBATCH --mem=124G
 #SBATCH --no-requeue
 
@@ -29,7 +29,7 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 
 source /project/phylogenref/scripts/refbias_config_emp.txt
 tree_height="lates"
-int=EXT
+int=INT
 day=081221
 sim=${SLURM_ARRAY_TASK_ID}
 
@@ -64,8 +64,8 @@ declare fastq_list=`ls /project/phylogenref/data/lates/*.fastq.gz | xargs -n 1 b
 #for sim in `seq $sims`; do
 	
 	if [[ ! -s OUTFILE_q${QUAL}_s${sim}_RN.bcf ]] && [[ ! -s OUTFILE.s${sim}_q${QUAL}.vcf ]]; then
-	ls /project/phylogenref/data/lates/*.sorted.bam | grep -v 'SRR' | shuf -n 50 > rand_ind_sim${sim}.txt
-	echo "/project/phylogenref/data/lates/aln_SRR3140997.sorted.bam" >> rand_ind_sim${sim}.txt
+		ls /project/phylogenref/data/lates/int_ref/*.sorted.bam | grep -v 'SRR' | shuf -n 50 > rand_ind_sim${sim}.txt
+		echo "/project/phylogenref/data/lates/int_ref/aln_SRR3140997.sorted.bam" >> rand_ind_sim${sim}.txt
 	fi
 	
 	QUAL=40	
