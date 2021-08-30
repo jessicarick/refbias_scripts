@@ -62,5 +62,5 @@ if [ ! -d s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files ]; then
 	mkdir s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files
 fi
 mv *OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files
-mv RAxML*s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.emp.filtered.out s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files
+mv RAxML*s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.${int}.emp.filtered.out s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files/
 
