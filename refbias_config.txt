@@ -1,7 +1,7 @@
 REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
 output_dir=/project/phylogenref/scripts/output/new
 #day=`date +%m%d%y`
-day=082221
+day=082921
 
 num_sims='1 2 3 4 5 6 7 8 9 10'
 reference=$REF_PATH/references/lcalcarifer_genome_v3_chromosomal_concat.fa
@@ -22,8 +22,8 @@ echo "1,1,1,1,1,1" > rat.matrix
 num_sp=50
 num_ind=1
 tree_height='NH'
-ils_level_list='MED'
-sp_rate='0.000025'
+ils_level_list='LONG'
+sp_rate='0.00005'
 	
 ##############################################
 ### Filtering parameters for sims ############

@@ -19,7 +19,7 @@ python3 /home/jrick/bin/genomics_general/VCF_processing/parseVCF.py -i ${input} 
 
 python3 /home/jrick/bin/genomics_general/distMat.py -g ${output}.geno.gz -f phased --windType cat -o ${output}.dist
 
-avg_dist=`grep SRR ${output}.dist | cut -f 2- -d' ' | sed 's/ /\n/g' | awk '{s+=$1} END {print s/NR}'`
+avg_dist=`grep $taxa_ref ${output}.dist | cut -f 2- -d' ' | sed 's/ /\n/g' | awk '{s+=$1} END {print s/NR}'`
 
 echo "$sim $tree_height $int $taxa_ref $avg_dist" >> ${output_dir}/${day}-emp-refdist.txt
 

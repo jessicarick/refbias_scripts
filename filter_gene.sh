@@ -17,14 +17,14 @@ if [ "$sites" -eq "0" ]; then
 	echo "no sites left"
 	cat gene${gene}_miss${miss}_maf${maf}.REF.phy > gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy
 else 
-	#printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}_miss${miss}_maf${maf}.REF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy',format='phylip')" > Rscript_${gene}_miss${miss}_maf${maf}.R
+	printf "library(ape)\nlibrary(phrynomics)\nReadSNP('gene${gene}_miss${miss}_maf${maf}.REF.phy',fileFormat='phy',extralinestoskip=1)->fullSNPs\nRemoveInvariantSites(fullSNPs, chatty=TRUE)->fullSNPs_only\nsnps <- RemoveNonBinary(fullSNPs_only, chatty=TRUE)\nWriteSNP(snps, file='gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy',format='phylip')" > Rscript_${gene}_miss${miss}_maf${maf}.R
 	
-	#R --vanilla --no-save < Rscript_${gene}_miss${miss}_maf${maf}.R
+	R --vanilla --no-save < Rscript_${gene}_miss${miss}_maf${maf}.R
 	#rm -f Rscript_${gene}_miss${miss}_maf${maf}.R
 
-	python /home/jrick/bin/raxml_ascbias/ascbias.py -p gene${gene}_miss${miss}_maf${maf}.REF.phy -o gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy
-	rm -f gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy.felsenstein
-	rm -f gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy.phy.stamatakis
+	#python /home/jrick/bin/raxml_ascbias/ascbias.py -p gene${gene}_miss${miss}_maf${maf}.REF.phy -o gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy
+	#rm -f gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy.felsenstein
+	#rm -f gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy.phy.stamatakis
 fi 
 
 nsnps=`cat gene${gene}_miss${miss}_maf${maf}.REF.noInv.phy | head -n 1 | awk '{print $2}'`
