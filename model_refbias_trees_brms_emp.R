@@ -1,5 +1,6 @@
 require(MuMIn)
 require(brms)
+require(lme4)
 require(tidybayes)
 
 cols <- c("#F2AD00","gray80","#00A08A")
@@ -11,22 +12,20 @@ results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.factor(results.mod$missing)
 results.mod$maf <- as.factor(results.mod$maf)
+results.mod$int <- as.factor(results.mod$int)
 
-for (height in c("MED","LONG")) {
-  results.sub <- results.mod[results.mod$height == height,]
-
-  for (param in c("RF.Dist.ML","CI.Dist.ML","Q.Dist.ML","ingroup.gamma","std.ingroup.gamma","ingroup.colless","std.ingroup.colless","ingroup.sackin","std.ingroup.sackin")) {
+for (param in c("gamma","colless","sackin","ingroup.gamma","ingroup.colless","ingroup.sackin")) {
     formula <- paste0(param," ~ int + maf + missing + int:maf + int:missing + (1|simulation)")
     m <- lmer(formula,
-                 data = results.sub)
+                 data = results.mod)
     m.sum <- summary(m)
     m.brms <- brms::brm(formula,
-                           data = results.sub,
-                           iter = 12000,
+                           data = results.mod,
+                           iter = 55000,
                            chains = 3,
                            cores = 3,
-                           thin = 2,
-                           warmup = 2000,
+                           thin = 5,
+                           warmup = 5000,
                            control = list(adapt_delta = 0.99, max_treedepth = 15))
     m.brms.sum <- summary(m.brms)
     #plot(m.brms)
@@ -40,7 +39,7 @@ for (height in c("MED","LONG")) {
       filter(var != "Intercept") %>%
       ggplot(aes(x = var, y = Estimate, col=sig)) +
       xlab("")+
-      ylab(paste0("Coefficient\n")) +
+      ylab(paste0("Effect Size, ",param)) +
       #scale_color_npg() +
       #scale_x_reverse() +
       scale_color_manual(values=cols)+
@@ -52,11 +51,10 @@ for (height in c("MED","LONG")) {
       theme(axis.text = element_text(size=15),legend.position="none",
             axis.title = element_text(size=18))
       
-    assign(paste0("plot.",param,".brms.",height),plot.brms)
-    assign(paste0("brms.",param,".mod.",height),m.brms)
-    assign(paste0("lmer.",param,".mod.",height),m)
+    assign(paste0("plot.",param,".brms.lates"),plot.brms)
+    assign(paste0("brms.",param,".mod.lates"),m.brms)
+    assign(paste0("lmer.",param,".mod.lates"),m)
   }
-}
 
 posterior <- as.array(brms.RF.Dist.ML.mod.LONG)
 dim(posterior)

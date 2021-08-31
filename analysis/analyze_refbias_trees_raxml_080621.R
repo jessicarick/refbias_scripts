@@ -21,7 +21,8 @@ suppressMessages(
     # library(MuMIn)
     # library(car)
     library(ggrepel),
-    library(ggsci)))
+    library(ggsci),
+    library(TreeDist)))
 source("analysis/theme_custom.R")
 
 ############################################
@@ -34,7 +35,7 @@ astral.trees <- "101819-all-astral.trees"
 astral.tree.names <- "101819-all-astral.names"
 ml.trees <- "072221-s_tree.tree"
 ml.tree.names <- "072221-s_tree.names"
-output <- "080421-subsamp-output"
+output <- "080421-output"
 refdist <- "080421-refdist.txt"
 args <- mget(c("raxml.trees","raxml.tree.names","astral.trees","astral.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
