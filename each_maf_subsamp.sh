@@ -49,6 +49,9 @@ vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
 
 	echo "running raxml on subsampled phylip for rep $rep"
     	raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+
+	ls RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-${tree_height}-subsamp-tree.names
+        cat RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-${tree_height}-subsamp-tree.trees
      done
      else
 	rep=1
@@ -58,4 +61,7 @@ vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
 
         echo "running raxml on subsampled phylip for rep $rep"
         raxmlHPC-PTHREADS-AVX -T 8 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.REF.all.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+
+	ls RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-subsamp-tree.names
+	cat RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-subsamp-tree.trees
      fi

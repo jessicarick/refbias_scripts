@@ -7,7 +7,7 @@ vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}.recode.vcf \
 	--recode \
 	--out gene${gene}_miss${miss}_maf${maf}.REF
 
-python ${REF_PATH}/vcf2phylip.py \
+python2 ${REF_PATH}/vcf2phylip.py \
 	-i gene${gene}_miss${miss}_maf${maf}.REF.recode.vcf \
 	-o gene${gene}_miss${miss}_maf${maf}.REF.phy  
 

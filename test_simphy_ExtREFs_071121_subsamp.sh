@@ -312,8 +312,8 @@ mv *_config sim${sim}/config_files
 mv *.fa sim${sim}/ref.fasta_files
 				
 ####Create a batch file with all normal trees in order by file type, and create a name file
-cat s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
-ls s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
+#cat s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
+#ls s${sim}*q*miss*/*bipartitions.*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-tree.names
 
 ## ###Create a batch file with all subsampled trees in order by file type, and create a name file
 ## cat s${sim}*q*miss*/*bipartitions*subsamp* >> ${output_dir}/${day}-${tree_height}-subsamp-batch.trees
