@@ -2,21 +2,33 @@ require(MuMIn)
 require(brms)
 require(tidybayes)
 
-for (height in c("MED","LONG")) {
+output <- "082921-output"
+results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+
+## preparing data object
+results.mod <- results.raxml
+results.mod$simulation <- as.factor(results.mod$simulation)
+results.mod$height <- as.factor(results.mod$height)
+results.mod$quality <- as.factor(results.mod$quality)
+results.mod$missing <- as.factor(results.mod$missing)
+results.mod$maf <- as.factor(results.mod$maf)
+results.mod$int <- as.factor(results.mod$int)
+
+for (height in c("SHORT","MED","LONG")) {
   results.sub <- results.mod[results.mod$height == height,]
 
   for (param in c("RF.Dist.ML","CI.Dist.ML","Q.Dist.ML","ingroup.gamma","std.ingroup.gamma","ingroup.colless","std.ingroup.colless")) {
-    formula <- paste0(param," ~ avg_dxy + maf + avg_dxy:maf + (1|simulation)")
+    formula <- paste0(param," ~ int + maf + missing + int:maf + int:missing + (1|simulation)")
     m <- lmer(formula,
                  data = results.sub)
     m.sum <- summary(m)
     m.brms <- brms::brm(formula,
                            data = results.sub,
-                           iter = 12000,
+                           iter = 22000,
                            chains = 3,
                            cores = 3,
-                           warmup = 2000,
-                           control = list(adapt_delta = 0.99))
+                           warmup = 7000,
+                           control = list(adapt_delta = 0.99,max_treedepth = 20))
     m.brms.sum <- summary(m.brms)
     #plot(m.gam.med.brms)
     #brms::marginal_effects(m.gam.med.brms)
