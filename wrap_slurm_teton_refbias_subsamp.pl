@@ -20,7 +20,7 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-my $runtime = '02-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+my $runtime = '04-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
 #my $runtime = '12:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater
@@ -54,7 +54,7 @@ push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_071121_subsamp
 ### UNLIKELY you need to change anything beyond here (except maybe module loading)
 ### automatically configured or infrequently changed variables
 my $emailaddress = $ENV{USER}.'\@uwyo.edu'; ### mail address for notification that a job has completed 
-my $jobname = 'slurm.refbias.'.$ENV{USER};
+my $jobname = 'slurm.refbias.subsamp';
 
 ### modules to load:
 my @modules =();
