@@ -143,7 +143,7 @@ rm -f OUTFILE_q${QUAL}_RN.bcf
 #### AND INFERRING PHYLOGENY ####
 #################################
 
-echo "beginning parallel jobs per maf and miss"
+echo "beginning parallel jobs per mac and miss"
 
 export QUAL
 export sim
@@ -155,13 +155,13 @@ export int
 export miss_list
 export genes
 
-# the "each_maf.sh" script uses 8 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_maf.sh {}" ::: $maf_list ::: $miss_list
+# the "each_mac.sh" script uses 8 threads for each job
+parallel --delay 2 --jobs 4  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_mac.sh {}" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
-#mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
-#mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
-#mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
+#mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
+#mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}*.phy s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
+#mv RAxML* s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
 
 mkdir -p sim${sim}/config_files
 mkdir -p sim${sim}/ref.fasta_files

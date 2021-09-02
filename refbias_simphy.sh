@@ -113,11 +113,12 @@ source activate new_env
         	        -sb f:$sp_rate \
                 	-si f:$num_ind \
 	                -sp f:50000 \
-        	        -so f:20 \
+        	        -so f:10 \
+			-st f:$tree_height \
                 	-cs $rand_num \
         	        -o species_tree${sim}
 		
-		tree_height=${ils_level}
+#		tree_height=${ils_level}
 #	else
 #		echo "simulation WITH specifying tree height"
 #		simphy_lnx64 -rl f:$genes \
