@@ -1,9 +1,9 @@
 REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
 output_dir=/project/phylogenref/scripts/output/new
 #day=`date +%m%d%y`
-day=082921
+day=090221
 
-num_sims='1 2 3 4 5 6 7 8 9 10'
+num_sims='17 18'
 reference=$REF_PATH/references/lcalcarifer_genome_v3_chromosomal_concat.fa
 error=$REF_PATH/latesGBS.txt
 starttree=newlates
@@ -21,9 +21,9 @@ echo "1,1,1,1,1,1" > rat.matrix
 ###Added variable for number of species and individuals for simulation - Values can be changed
 num_sp=50
 num_ind=1
-tree_height='NH'
-ils_level_list='LONG'
-sp_rate='0.00005'
+tree_height='5000000'
+ils_level_list='LONGTEST'
+sp_rate='0.000001'
 	
 ##############################################
 ### Filtering parameters for sims ############
@@ -35,8 +35,8 @@ qual_list='40'
 #miss_list='0.75 1.0'
 
 #qual_list='0 20 40 60'
-maf_list='0 0.01 0.02 0.03 0.04 0.05 0.10'
-miss_list='0 0.25 0.50 0.75 0.90'
+mac_list='0 1'
+miss_list='0 10'
 
 # set max sites for subsampling
 maxSNP=10000
