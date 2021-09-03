@@ -1,7 +1,10 @@
 #!/bin/sh
 
-source activate new_env
-PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
+cp ${REF_PATH}/sim_scripts .
+
+source refbias_config.txt
+source activate $conda_env
+PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
 
 #####################################
@@ -9,13 +12,10 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 ####################################
 #####################################
 
-source /project/phylogenref/scripts/refbias_config.txt
 sim=$1
 tree_height=$2
 taxa_ref=0_0_0
 int=EXT
-
-#reference_prefix=lmariae_${tree_height}_${sim}_
     
 ##############################################
 ### Simulate reads for each gene w/ TTR ######
@@ -23,25 +23,19 @@ int=EXT
 echo "starting analysis for $tree_height, sim $sim, $int"
 
 nloci=$(($genes + 1))
-var_sites=(`Rscript ${REF_PATH}/var_sites.R $nloci $varsites`)
-echo ${var_sites[*]} >> ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}
+var_sites=(`Rscript var_sites.R $nloci $varsites`)
+echo ${var_sites[*]} > ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}
 
 #if false; then # DEBUGGING
 
-export REF_PATH
-export tree_height
 export sim
-export var_sites
 export taxa_ref
-export reference_prefix
-export error
 export int
-export day
 
-seq -w $genes | parallel --delay 2 --jobs 16  'snps=`head -n 1 ${REF_PATH}/output/new/${day}-varSites-${tree_height}-sim${sim}-${int} | tr " " "\n" | head -n {} | tail -n 1` && python2 ${REF_PATH}/write_config.py -treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees{}.trees -v `echo "$snps"` -ref $taxa_ref -path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa -o gene{}_sim${sim} -rate rat.matrix -g 5 -r 150 -f 500 -s 50 -c 20 -pre sim_ -errorfile $error > gene{}_sim${sim}_config && python2 /project/phylogenref/programs/TreeToReads/treetoreads.py gene{}_sim${sim}_config && grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_{}.fa > ${reference_prefix}_gene{}.fa'
+seq -w $genes | parallel --delay 2 --jobs 16 --env sim --env int --env taxa_ref "${REF_PATH}/run_treetoreads.sh {}"
 
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
-
+bwa index ${reference_prefix}_sim${sim}.fa
 
 ##############################################
 ### Concatenate reads into single file########
@@ -59,27 +53,20 @@ do
                 else
                         echo "File present, well done"
                         declare fastq_list=`ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1\.fq\.gz//'`
-                        #export "$fastq_list"
         fi
-        ##export $fastq_list
-        ##echo $fastq_list
 done
 
 
-for fastq in $fastq_list
-		
+for fastq in $fastq_list		
     do mkdir -p fastq_reads/sim${sim}/fastq/${fastq}
 	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
 	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz
-
 done
 
 ##############################################
 ### Align to reference  ######################
 ### Make sure everything in indexed! #########
 ##############################################
-
-bwa index ${reference_prefix}_sim${sim}.fa
 
 export reference_prefix
 export sim
@@ -90,7 +77,6 @@ rm -f *.sam
 rm -f *[0-9].bam
 
 #fi #DEBUGGING
-QUAL=40
 samtools mpileup -g -t DP,AD \
 		--skip-indels \
     	 	-P ILLUMINA \
@@ -101,7 +87,8 @@ samtools mpileup -g -t DP,AD \
     
 if [[ -s OUTFILE_q${QUAL}.bcf ]]
         then 
-          	echo "OUTFILE_q${QUAL}.bcf not empty; moving on"
+          	echo "OUTFILE_q${QUAL}.bcf not empty; moving on and removing bam files"
+                rm -f *.sorted.bam 
         else
           	echo "OUTFILE_q${QUAL}.bcf empty; something went wrong"
           	exit 1
@@ -110,7 +97,7 @@ if [[ -s OUTFILE_q${QUAL}.bcf ]]
 ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//' > names     
 bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
 
-rm -f gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz
+rm -f gene*_sim${sim}/fastq/sim*/*.fq.gz
 
 ##############################################
 #### CREATING RAW VARIANTS FILE FROM BAMs ####
@@ -130,9 +117,10 @@ bcftools call -m \
                         --output-type v \
                         --output-file OUTFILE.s${sim}_q${QUAL}.vcf
                 
-        
+cp OUTFILE.s${sim}_q${QUAL}.vcf ${output_dir}/${day}-${tree_height}-OUTFILE.s${sim}_q${QUAL}.${int}.vcf
+
 echo "Calculating Dxy from calc_dxy script."
-        ${REF_PATH}/calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref $day
+        calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref $day
 echo "done calculating Dxy"
 
 rm -f OUTFILE_q${QUAL}.bcf
@@ -145,18 +133,11 @@ rm -f OUTFILE_q${QUAL}_RN.bcf
 
 echo "beginning parallel jobs per mac and miss"
 
-export QUAL
 export sim
-export REF_PATH
-export output_dir
-export day
-export tree_height
 export int
-export miss_list
-export genes
 
-# the "each_mac.sh" script uses 8 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env genes --env sim --env QUAL --env miss_list --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/each_mac.sh {}" ::: $mac_list ::: $miss_list
+# the "each_maf.sh" script uses 8 threads for each job
+parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash ${REF_PATH}/each_maf.sh {} $sim $int" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
