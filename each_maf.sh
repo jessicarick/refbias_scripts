@@ -29,7 +29,7 @@ export mac
 export sim
 export int
 
-seq -w ${genes} | parallel --delay 1 --jobs 4 --env sim --env QUAL --env miss --env mac --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/filter_gene.sh {}"
+seq -w ${genes} | parallel --delay 1 --jobs 4 --env sim --env miss --env mac --env int "bash ${REF_PATH}/filter_gene.sh {}"
 
 ## combine into one supermatrix
 Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF $miss $mac
