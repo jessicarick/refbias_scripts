@@ -1,6 +1,11 @@
 #!/bin/bash
+
+source refbias_config.txt
+
 mac=$1
 miss=$2
+sim=$3
+int=$4
 
 echo "working with mac $mac, miss $miss"
 vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
@@ -8,33 +13,27 @@ vcftools --vcf OUTFILE.s${sim}_q${QUAL}.vcf \
          --remove-filtered-all \
          --mac $(printf "$mac") \
          --max-missing-count $(printf "$miss") \
-	 --min-alleles 2 \
-	 --max-alleles 2 \
+	 	 --min-alleles 2 \
+		 --max-alleles 2 \
          --recode \
          --recode-INFO-all \
          --minDP 5 # keep the same?
 
-	#######################################
-	#### CONVERTING VCF TO PHYLIP FILE ####
-	#### and removing invariant sites #####
-	#### making one phylip per gene #######
-	#######################################
-	export miss
-	export mac
-	export QUAL
-	export sim
-	export REF_PATH
-	export output_dir
-	export day
-	export tree_height
-	export int
+#######################################
+#### CONVERTING VCF TO PHYLIP FILE ####
+#### and removing invariant sites #####
+#### making one phylip per gene #######
+#######################################
+export miss
+export mac
+export sim
+export int
 
-	seq -w ${genes} | parallel --delay 1 --jobs 4 --env sim --env QUAL --env miss --env mac --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/filter_gene.sh {}"
+seq -w ${genes} | parallel --delay 1 --jobs 4 --env sim --env QUAL --env miss --env mac --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/filter_gene.sh {}"
 
-	## combine into one supermatrix
-
-	Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF $miss $mac
-	#rm -f gene*.REF.noInv.phy
+## combine into one supermatrix
+Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF $miss $mac
+#rm -f gene*.REF.noInv.phy
 
 #######################################
 #### Running RaxML w/ Ref #############
