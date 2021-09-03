@@ -776,3 +776,6 @@ s7_q40_miss0.25_maf0.10.REF.cichlids.EXT.noInv,48851
 s7_q40_miss0_maf0.10.REF.cichlids.EXT.noInv,341217
 s9_q40_miss0_maf0.05.REF.cichlids.INT.noInv,400905
 s4_q40_miss0.50_maf0.05.REF.cichlids.INT.noInv,106135
+s2_q40_miss0.25_maf0.04.REF.cichlids.INT.noInv,133579
+s7_q40_miss0.50_maf0.10.REF.cichlids.EXT.noInv,40373
+s4_q40_miss0.75_maf0.05.REF.cichlids.INT.noInv,58996
