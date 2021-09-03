@@ -125,7 +125,18 @@ echo "done calculating Dxy"
 
 rm -f OUTFILE_q${QUAL}.bcf
 rm -f OUTFILE_q${QUAL}_RN.bcf
-                
+ 
+###############################################
+## STARTING SUBSAMPLING SCRIPT WITH THIS VCF ##
+###############################################
+## note: not tested yet!!
+if false; then #debugging
+if [ "$subsample" = true ]; then
+        echo "spawning subsampling script for $sim $tree_height $int for the $day data"
+        sbatch subsample_script.sh $sim $tree_height $int $taxa_ref $day
+fi
+fi # debugging
+
 #################################
 #### FILTERING WITH VCFTOOLS ####
 #### AND INFERRING PHYLOGENY ####
@@ -136,8 +147,8 @@ echo "beginning parallel jobs per mac and miss"
 export sim
 export int
 
-# the "each_maf.sh" script uses 8 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash ${REF_PATH}/each_maf.sh {} $sim $int" ::: $mac_list ::: $miss_list
+# the "each_mac.sh" script uses 8 threads for each job
+parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash ${REF_PATH}/each_mac.sh {} $sim $int" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files

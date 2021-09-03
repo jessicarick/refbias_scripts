@@ -194,7 +194,7 @@ plot2 <- plot1 +
         line = element_line(size=1),
         panel.border = element_rect(color = "black", fill=NA, size=1),
         strip.text.x = element_text(size = 16))+
-  scale_x_continuous(name="Ingroup Gamma",limits = c(-100,100))+
+  scale_x_continuous(name="Ingroup Gamma")+
   scale_y_discrete(name="MAF")+
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
