@@ -2,6 +2,8 @@ require(MuMIn)
 require(brms)
 require(tidybayes)
 
+cols <- c("#F2AD00","gray80","#00A08A")
+
 output <- "082921-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
@@ -59,130 +61,146 @@ for (height in c("SHORT","MED","LONG")) {
   }
 }
 
-posterior <- as.array(brms.RF.Dist.ML.mod.LONG)
-dim(posterior)
-dimnames(posterior)
+plot.RF.Dist.ML.brms.SHORT
+plot.RF.Dist.ML.brms.MED + scale_color_manual(values=cols)
+plot.RF.Dist.ML.brms.LONG + scale_color_manual(values=cols)
 
-bayesplot::mcmc_pairs(posterior,pars=dimnames(posterior)$parameters[2:10])
+plot.Q.Dist.ML.brms.SHORT + scale_color_manual(values=cols)
+plot.Q.Dist.ML.brms.MED + scale_color_manual(values=cols)
+plot.Q.Dist.ML.brms.LONG + scale_color_manual(values=cols)
 
-brms.ingroup.gamma.mod.LONG %>%
-  recover_types(results.sub) %>%
-  tidybayes::spread_draws(b_Intercept,b_intINT,b_maf0.01,b_maf0.02,b_maf0.03,b_maf0.04,b_maf0.05,b_maf0.1) %>%
-  pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
-  ggplot(aes(y = variable, x = value)) +
-  stat_slab(position=position_nudge(y=0.1),height=0.8) +
-  geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
-  geom_vline(xintercept = 0, lty=2, alpha=0.5) +
-  theme_custom()
+plot.ingroup.gamma.brms.SHORT + scale_color_manual(values=cols)
+plot.ingroup.gamma.brms.MED + scale_color_manual(values=cols)
+plot.ingroup.gamma.brms.LONG + scale_color_manual(values=cols)
 
-model_refbias_brms <- function(data,height,param,iter=12000,burnin=2000,chains=3) {
-  results.sub <- data[data$height == height,]
-  formula <- paste0(param," ~ avg_dxy + maf + missing + avg_dxy:maf + avg_dxy:missing + (1|simulation)")
-  # m <- lmer(formula,
-  #           data = results.sub)
-  # m.sum <- summary(m)
-  
-  m.brms <- brms::brm(formula,
-                      data = results.sub,
-                      iter = iter,
-                      chains = chains,
-                      cores = chains,
-                      warmup = burnin,
-                      control = list(adapt_delta = 0.99))
-  m.brms.sum <- summary(m.brms)
-  #plot(m.gam.med.brms)
-  #brms::marginal_effects(m.gam.med.brms)
-  
-  plot.brms <- as_tibble(m.brms.sum$fixed,rownames="var")%>%
-    rename(minCI = `l-95% CI`, maxCI = `u-95% CI`) %>%
-    mutate(sig = case_when(minCI > 0 ~ "pos",
-                           maxCI < 0 ~ "neg",
-                           TRUE ~ "ns")) %>%
-    filter(var != "Intercept") %>%
-    ggplot(aes(x = var, y = Estimate, col=sig)) +
-    xlab("")+
-    ylab(paste0("Coefficient\n",height," Trees")) +
-    #scale_color_npg() +
-    #scale_x_reverse() +
-    scale_color_manual(values=cols)+
-    geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
-    #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
-    geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=16) +
-    coord_flip() +
-    theme_custom() +
-    theme(axis.text = element_text(size=15),legend.position="none",
-          axis.title = element_text(size=18))
-  print(plot.brms)
-  
-  results <- list(m.brms,m.brms.sum)
-  names(results) <- c(paste0("m.brms.",height,".","param_model"),paste0("m.brms.",height,".","param_summary"))
-  return(results)
-}
+plot.ingroup.colless.brms.SHORT + scale_color_manual(values=cols)
+plot.ingroup.colless.brms.MED + scale_color_manual(values=cols)
+plot.ingroup.colless.brms.LONG + scale_color_manual(values=cols)
 
-plot_refbias_brms <- function(model) {
-  plot <- m.brms %>%
-    tidybayes::gather_draws(b_Intercept,b_avg_dxy,b_maf,b_missing) %>%
-    #pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
-    ggplot(aes(y = .variable, x = .value)) +
-    stat_slab(position=position_nudge(y=0.1),height=0.8) +
-    geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
-    geom_vline(xintercept = 0, lty=2, alpha=0.5) +
-    theme_custom()
-  return(plot)
-}
-
-##############
-d=dredge(m.gam.med, beta="sd")
-print(d)
-coefficients(d)
-
-sum <- summary(model.avg(d))
-
-confint.avg.med <- as_tibble(confint(model.avg(d))[-c(1),],rownames="var") %>%
-  rename(minCI = `2.5 %`, maxCI = `97.5 %`) %>%
-  mutate(est = t(sum$coefficients)[-1,1],
-         pval = sum$coefmat.full[-1,5],
-         sig = case_when(minCI > 0 ~ "pos",
-                         maxCI < 0 ~ "neg",
-                         TRUE ~ "ns")) 
-  
-
-
-vars.gam.med <- confint.avg.med %>%
-  arrange(pval) %>%
-  filter(pval < 0.2) %>%
-  ggplot(aes(x = var, y = est, color=sig))
-vars.gam.med.bars <- vars.gam.med + geom_blank() +
-  #color = "cyl",                                # Color by groups
-  #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
-  #sorting = "descending",                       # Sort value in descending order
-  #add = "segments",                             # Add segments from y = 0 to dots
-  #add.params = list(color = "lightgray", size = 2), # Change segment color and size
-  #group = "cyl",                                # Order by groups
-  #dot.size = 4,                                 # Large dot size
-  #label = round(dfm$mpg_z,1),                        # Add mpg values as dot labels
-  #font.label = list(color = "white", size = 9, 
-  #                   vjust = 0.5),               # Adjust label parameters
-  #ggtheme = theme_pubr(),                        # ggplot2 theme
-xlab("")+
-  ylab("Coefficient\nMED Trees (Med ILS)")+
-  #scale_color_npg() +
-  #scale_x_reverse() +
-  scale_color_manual(values=cols)+
-  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
-  #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
-  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=16) +
-  coord_flip() +
-  theme_custom() +
-  theme(axis.text = element_text(size=15),legend.position="none",
-        axis.title = element_text(size=18)) 
-vars.gam.med.bars
-
-
-as_tibble(sum$coefmat.full, col_names=c("Estimate","StdErr","AdjSE","zvalue","pvalue")) %>%
-  mutate(Parameter = row.names(sum$coefmat.full)) %>%
-  filter(Parameter != "(Intercept)") %>%
-  ggplot(aes(x=Parameter,y=Estimate)) +
-    geom_point() +
-    coord_flip() +
-    theme_custom()
+# posterior <- as.array(brms.RF.Dist.ML.mod.LONG)
+# dim(posterior)
+# dimnames(posterior)
+# 
+# bayesplot::mcmc_pairs(posterior,pars=dimnames(posterior)$parameters[2:10])
+# 
+# brms.ingroup.gamma.mod.LONG %>%
+#   recover_types(results.sub) %>%
+#   tidybayes::spread_draws(b_Intercept,b_intINT,b_maf0.01,b_maf0.02,b_maf0.03,b_maf0.04,b_maf0.05,b_maf0.1) %>%
+#   pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
+#   ggplot(aes(y = variable, x = value)) +
+#   stat_slab(position=position_nudge(y=0.1),height=0.8) +
+#   geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
+#   geom_vline(xintercept = 0, lty=2, alpha=0.5) +
+#   theme_custom()
+# 
+# model_refbias_brms <- function(data,height,param,iter=12000,burnin=2000,chains=3) {
+#   results.sub <- data[data$height == height,]
+#   formula <- paste0(param," ~ avg_dxy + maf + missing + avg_dxy:maf + avg_dxy:missing + (1|simulation)")
+#   # m <- lmer(formula,
+#   #           data = results.sub)
+#   # m.sum <- summary(m)
+#   
+#   m.brms <- brms::brm(formula,
+#                       data = results.sub,
+#                       iter = iter,
+#                       chains = chains,
+#                       cores = chains,
+#                       warmup = burnin,
+#                       control = list(adapt_delta = 0.99))
+#   m.brms.sum <- summary(m.brms)
+#   #plot(m.gam.med.brms)
+#   #brms::marginal_effects(m.gam.med.brms)
+#   
+#   plot.brms <- as_tibble(m.brms.sum$fixed,rownames="var")%>%
+#     rename(minCI = `l-95% CI`, maxCI = `u-95% CI`) %>%
+#     mutate(sig = case_when(minCI > 0 ~ "pos",
+#                            maxCI < 0 ~ "neg",
+#                            TRUE ~ "ns")) %>%
+#     filter(var != "Intercept") %>%
+#     ggplot(aes(x = var, y = Estimate, col=sig)) +
+#     xlab("")+
+#     ylab(paste0("Coefficient\n",height," Trees")) +
+#     #scale_color_npg() +
+#     #scale_x_reverse() +
+#     scale_color_manual(values=cols)+
+#     geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+#     #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+#     geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=16) +
+#     coord_flip() +
+#     theme_custom() +
+#     theme(axis.text = element_text(size=15),legend.position="none",
+#           axis.title = element_text(size=18))
+#   print(plot.brms)
+#   
+#   results <- list(m.brms,m.brms.sum)
+#   names(results) <- c(paste0("m.brms.",height,".","param_model"),paste0("m.brms.",height,".","param_summary"))
+#   return(results)
+# }
+# 
+# plot_refbias_brms <- function(model) {
+#   plot <- m.brms %>%
+#     tidybayes::gather_draws(b_Intercept,b_avg_dxy,b_maf,b_missing) %>%
+#     #pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
+#     ggplot(aes(y = .variable, x = .value)) +
+#     stat_slab(position=position_nudge(y=0.1),height=0.8) +
+#     geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
+#     geom_vline(xintercept = 0, lty=2, alpha=0.5) +
+#     theme_custom()
+#   return(plot)
+# }
+# 
+# ##############
+# d=dredge(m.gam.med, beta="sd")
+# print(d)
+# coefficients(d)
+# 
+# sum <- summary(model.avg(d))
+# 
+# confint.avg.med <- as_tibble(confint(model.avg(d))[-c(1),],rownames="var") %>%
+#   rename(minCI = `2.5 %`, maxCI = `97.5 %`) %>%
+#   mutate(est = t(sum$coefficients)[-1,1],
+#          pval = sum$coefmat.full[-1,5],
+#          sig = case_when(minCI > 0 ~ "pos",
+#                          maxCI < 0 ~ "neg",
+#                          TRUE ~ "ns")) 
+#   
+# 
+# 
+# vars.gam.med <- confint.avg.med %>%
+#   arrange(pval) %>%
+#   filter(pval < 0.2) %>%
+#   ggplot(aes(x = var, y = est, color=sig))
+# vars.gam.med.bars <- vars.gam.med + geom_blank() +
+#   #color = "cyl",                                # Color by groups
+#   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
+#   #sorting = "descending",                       # Sort value in descending order
+#   #add = "segments",                             # Add segments from y = 0 to dots
+#   #add.params = list(color = "lightgray", size = 2), # Change segment color and size
+#   #group = "cyl",                                # Order by groups
+#   #dot.size = 4,                                 # Large dot size
+#   #label = round(dfm$mpg_z,1),                        # Add mpg values as dot labels
+#   #font.label = list(color = "white", size = 9, 
+#   #                   vjust = 0.5),               # Adjust label parameters
+#   #ggtheme = theme_pubr(),                        # ggplot2 theme
+# xlab("")+
+#   ylab("Coefficient\nMED Trees (Med ILS)")+
+#   #scale_color_npg() +
+#   #scale_x_reverse() +
+#   scale_color_manual(values=cols)+
+#   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+#   #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+#   geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=16) +
+#   coord_flip() +
+#   theme_custom() +
+#   theme(axis.text = element_text(size=15),legend.position="none",
+#         axis.title = element_text(size=18)) 
+# vars.gam.med.bars
+# 
+# 
+# as_tibble(sum$coefmat.full, col_names=c("Estimate","StdErr","AdjSE","zvalue","pvalue")) %>%
+#   mutate(Parameter = row.names(sum$coefmat.full)) %>%
+#   filter(Parameter != "(Intercept)") %>%
+#   ggplot(aes(x=Parameter,y=Estimate)) +
+#     geom_point() +
+#     coord_flip() +
+#     theme_custom()

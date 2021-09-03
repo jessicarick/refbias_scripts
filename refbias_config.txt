@@ -1,8 +1,12 @@
 REF_PATH=/project/phylogenref/scripts
+PROGRAM_DIR=/project/phylogenref/programs
 output_dir=/project/phylogenref/scripts/output/new
-conda_env=new_env
+conda_env=new_env # name of conda environment with everything installed
 #day=`date +%m%d%y`
 day=090221
+
+## should subsampling script be run as well?
+subsample=false
 
 num_sims='17 18'
 
@@ -40,7 +44,7 @@ echo "1,1,1,1,1,1" > rat.matrix
 ## for testing
 QUAL=40
 mac_list='0 1 2 3 4 5 10'
-miss_list='0 10'
+miss_list='50 40 30 20 10 5'
 
 
 ##############################################

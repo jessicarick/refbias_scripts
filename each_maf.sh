@@ -29,23 +29,35 @@ export mac
 export sim
 export int
 
-seq -w ${genes} | parallel --delay 1 --jobs 4 --env sim --env miss --env mac --env int "bash ${REF_PATH}/filter_gene.sh {}"
+seq -w ${genes} | parallel --jobs 4 --env sim --env miss --env mac --env int "bash ${REF_PATH}/filter_gene.sh {}"
 
 ## combine into one supermatrix
-Rscript ${REF_PATH}/make_supermat.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF $miss $mac
-#rm -f gene*.REF.noInv.phy
+mkdir miss${miss}_mac${mac}_gene_phylips/
+mv gene*miss${miss}_mac${mac}.REF.noInv.phy miss${miss}_mac${mac}_gene_phylips/
+cd miss${miss}_mac${mac}_gene_phylips/
+find . -type f -size -617w -name "gene*.noInv.phy" -delete #delete files with no sites
+python ${REF_PATH}/make_supermat.py ../OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy
+cd ../
+
+rm -rf gene*/
 
 #######################################
 #### Running RaxML w/ Ref #############
 #######################################
 
-    sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy | head -n 1 | awk '{print $2}'`
+sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy | head -n 1 | awk '{print $2}'`
 
-    echo "running raxml on concatenated SNPs"
-    raxmlHPC-PTHREADS-AVX -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_ref}.REF.${int}.filtered.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+echo "running raxml on concatenated SNPs"
+raxmlHPC-PTHREADS-AVX -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy \
+	-n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_ref}.REF.${int}.filtered.out \
+	-m ASC_GTRCAT -V \
+	--asc-corr=lewis \
+	-f a \
+	-x 223 \
+	-N 100 \
+	-p 466
 
 echo "OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac},${sites_ref}" >> ${output_dir}/${day}-filteredSites-${tree_height}-${int}
-	fi
 
 # move phylogenies
 if [ ! -d  s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files ]; then
