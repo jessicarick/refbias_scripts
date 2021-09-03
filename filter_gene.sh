@@ -14,7 +14,7 @@ python2 ${REF_PATH}/vcf2phylip.py \
 	-i gene${gene}_miss${miss}_mac${mac}.REF.recode.vcf \
 	-o gene${gene}_miss${miss}_mac${mac}.REF.phy  
 
-#sites=`head -n 1 gene${gene}_miss${miss}_mac${mac}.REF.phy | awk '{print $2}'` # doesn't work for some reason
+sites=`head -n 1 gene${gene}_miss${miss}_mac${mac}.REF.phy | awk '{print $2}'` 
 
 if [ "$sites" -eq "0" ]; then 
 	echo "no sites left"
@@ -32,4 +32,4 @@ fi
 
 nsnps=`cat gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy | head -n 1 | awk '{print $2}'`
 
-echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.noInv,${nsnps}" >> ${output_dir}/${day}-SNPs-${tree_height}-${int}
+echo "gene${gene},s${sim}_q${QUAL}_miss${miss}_mac${mac}.${tree_height}.REF.noInv,${nsnps}" >> ${output_dir}/${day}-SNPs-${int}
