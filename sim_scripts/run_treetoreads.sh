@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source refbias_config.txt
+source sim_scripts/refbias_config.txt
 
 gene=$1
 

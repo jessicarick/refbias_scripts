@@ -2,10 +2,8 @@
 
 cp -r ${REF_PATH}/sim_scripts .
 
-source refbias_config.txt
+source sim_scripts/refbias_config.txt
 source activate $conda_env
-PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
-
 
 #####################################
 ########Simulate (START)#############
@@ -32,7 +30,7 @@ export sim
 export taxa_ref
 export int
 
-seq -w $genes | parallel --delay 2 --jobs 16 --env sim --env int --env taxa_ref "sim_scripts/run_treetoreads.sh {}"
+seq -w $genes | parallel --delay 2 --jobs 4 --env sim --env int --env taxa_ref "sim_scripts/run_treetoreads.sh {}"
 
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
 bwa index ${reference_prefix}_sim${sim}.fa
@@ -58,8 +56,8 @@ done
 
 
 for fastq in $fastq_list		
-    do mkdir -p fastq_reads/sim${sim}/fastq/${fastq}
-	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
+        do mkdir -p fastq_reads/sim${sim}/fastq/${fastq}
+        zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_1.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read1.fq.gz
 	zcat gene*_sim${sim}/fastq/${fastq}/${fastq}_2.fq.gz | gzip > fastq_reads/sim${sim}/fastq/${fastq}/${fastq}_${sim}_read2.fq.gz
 done
 
@@ -71,7 +69,7 @@ done
 export reference_prefix
 export sim
 
-parallel --env reference_prefix --env sim -j 16 --delay 2 "echo 'Mapping reads for {}' && bwa mem ${reference_prefix}_sim${sim}.fa fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read1.fq.gz fastq_reads/sim${sim}/fastq/{}/{}_${sim}_read2.fq.gz > aln_{}.sam && echo 'Converting sam to bam for {}' && samtools view -b -S -o aln_{}.bam aln_{}.sam && echo 'Sorting and indexing bam files for {}' && samtools sort aln_{}.bam -o aln_{}.sorted.bam && samtools index -c aln_{}.sorted.bam" ::: $fastq_list
+parallel --env reference_prefix --env sim -j 4 --delay 1 "bash sim_scripts/run_bwa.sh {}" ::: $fastq_list
 	
 rm -f *.sam
 rm -f *[0-9].bam
