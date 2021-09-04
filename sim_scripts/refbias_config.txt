@@ -1,0 +1,57 @@
+REF_PATH=/project/phylogenref/scripts
+PROGRAM_DIR=/project/phylogenref/programs
+RESULTS_DIR=/gscratch/jrick/phylogenref/slurm_results
+output_dir=/project/phylogenref/scripts/output/new
+conda_env=new_env # name of conda environment with everything installed
+#day=`date +%m%d%y`
+day=090221
+
+## should subsampling script be run as well?
+subsample=false
+
+num_sims='17 18'
+
+##############################################
+### Simulation parameters ####################
+##############################################
+
+## Parameters for starting genome and number of loci
+reference=$REF_PATH/references/lcalcarifer_genome_v3_chromosomal_concat.fa
+ref_length=5000000
+gene_length=5000
+genes=$(expr $ref_length / $gene_length)
+#max=`grep -v '^>' $reference | wc -m`
+
+## SimPhy parameters
+### Added variable for number of species and individuals for simulation - Values can be changed
+num_sp=50
+num_ind=1
+tree_height='5000000'
+ils_level_list='LONGTEST'
+sp_rate='0.000001'
+
+## TreeToReads parameters
+error=$REF_PATH/latesGBS.txt
+starttree=newlates
+reference_prefix=lcal_5000000
+varsites=150 #also need to change in randomization script (doesn't work from here for some reason)
+
+echo "1,1,1,1,1,1" > rat.matrix
+
+##############################################
+### Filtering parameters #####################
+##############################################
+
+## for testing
+QUAL=40
+#mac_list='0 1 2 3 4 5 10'
+mac_list='0 1'
+#miss_list='50 40 30 20 10 5'
+miss_list='50 40'
+
+##############################################
+### Subsampling parameters ###################
+##############################################
+
+# set max sites for subsampling
+maxSNP=6000
