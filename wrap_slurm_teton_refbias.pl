@@ -46,7 +46,7 @@ my $tree_height = $ARGV[1];
 #	exit;
 #}
 
-push @jobarray, "/project/phylogenref/scripts/test_simphy_ExtREFs_071121.sh $sim $tree_height \n";
+push @jobarray, "/project/phylogenref/scripts/sim_scripts/test_simphy_ExtREFs_090421.sh $sim $tree_height \n";
 #push @jobarray, "/project/phylogenref/scripts/test_simphy_IntREFs_071121.sh $sim $tree_height \n";
 
 
