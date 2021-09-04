@@ -1,5 +1,6 @@
 REF_PATH=/project/phylogenref/scripts
 PROGRAM_DIR=/project/phylogenref/programs
+RESULTS_DIR=/gscratch/jrick/phylogenref/slurm_results
 output_dir=/project/phylogenref/scripts/output/new
 conda_env=new_env # name of conda environment with everything installed
 #day=`date +%m%d%y`
@@ -43,9 +44,10 @@ echo "1,1,1,1,1,1" > rat.matrix
 
 ## for testing
 QUAL=40
-mac_list='0 1 2 3 4 5 10'
-miss_list='50 40 30 20 10 5'
-
+#mac_list='0 1 2 3 4 5 10'
+mac_list='0 1'
+#miss_list='50 40 30 20 10 5'
+miss_list='50 40'
 
 ##############################################
 ### Subsampling parameters ###################
