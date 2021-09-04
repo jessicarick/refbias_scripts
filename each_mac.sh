@@ -32,9 +32,9 @@ export int
 seq -w ${genes} | parallel --jobs 4 --env sim --env miss --env mac --env int "bash ${REF_PATH}/filter_gene.sh {}"
 
 ## combine into one supermatrix
-mkdir miss${miss}_maf${maf}_gene_phylips/
-mv gene*miss${miss}_mac${mac}.REF.noInv.phy miss${miss}_maf${maf}_gene_phylips/
-cd miss${miss}_maf${maf}_gene_phylips/
+mkdir miss${miss}_mac${mac}_gene_phylips/
+mv gene*miss${miss}_mac${mac}.REF.noInv.phy miss${miss}_mac${mac}_gene_phylips/
+cd miss${miss}_mac${mac}_gene_phylips/
 find . -type f -size -617w -name "gene*.noInv.phy" -delete #delete files with no sites
 python ${REF_PATH}/make_supermat.py ../OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.all.noInv.phy
 cd ../
