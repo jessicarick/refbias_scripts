@@ -1,19 +1,19 @@
 #!/bin/sh
 
-module load gcc
-module load miniconda3
-module load samtools/1.6
-module load htslib
-module load perl
+# module load gcc
+# module load miniconda3
+# module load samtools/1.6
+# module load htslib
+# module load perl
 module load python/2.7.15
 module load py-numpy/1.14.3-py27
 module load py-scipy/1.1.0-py27
 
 #source activate new_env
 
-PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
+#PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/phylogenref/programs/TreeToReads:/project/phylogenref/programs/ASTRAL:/project/phylogenref/programs/SimPhy_1.0.2/bin:/project/phylogenref/programs/Seq-Gen-1.3.4/source
 
-source refbias_config.txt
+source sim_scripts/refbias_config.txt
 #max=1000000000
 max=586924072
 
@@ -42,7 +42,7 @@ for ils_level in $ils_level_list
 
 #		reference_prefix=lmariae_${tree_height}_${sim}_
 
-		python2 ${REF_PATH}/rand_subsample.py -s 1 -e $max -n $(( genes + 20 )) -l $gene_length > ${reference_prefix}.random.txt;
+		python2 ${REF_PATH}/sim_scripts/rand_subsample.py -s 1 -e $max -n $(( genes + 20 )) -l $gene_length > ${reference_prefix}.random.txt;
 
 		header=`grep '^>' $reference | sed 's/>//g'`
 		echo "header is $header"
@@ -114,7 +114,6 @@ source activate new_env
                 	-si f:$num_ind \
 	                -sp f:50000 \
         	        -so f:10 \
-			-st f:$tree_height \
                 	-cs $rand_num \
         	        -o species_tree${sim}
 		

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source refbias_config.txt
+source sim_scripts/refbias_config.txt
+source activate $conda_env
 
 gene=$1
 
@@ -10,7 +11,7 @@ vcftools --vcf OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.recode.vcf \
 	--recode \
 	--out gene${gene}_miss${miss}_mac${mac}.REF
 
-python2 ${REF_PATH}/vcf2phylip.py \
+python2 sim_scripts/vcf2phylip.py \
 	-i gene${gene}_miss${miss}_mac${mac}.REF.recode.vcf \
 	-o gene${gene}_miss${miss}_mac${mac}.REF.phy  
 
@@ -20,7 +21,7 @@ if [ "$sites" -eq "0" ]; then
 	echo "no sites left"
 	#cat gene${gene}_miss${miss}_mac${mac}.REF.phy > gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy
 else 
-	python ${REF_PATH}/ascbias.py -p gene${gene}_miss${miss}_mac${mac}.REF.phy -o gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy
+	python sim_scripts/ascbias.py -p gene${gene}_miss${miss}_mac${mac}.REF.phy -o gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy
 	rm -f gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy.felsenstein
 	rm -f gene${gene}_miss${miss}_mac${mac}.REF.noInv.phy.stamatakis
 fi 
