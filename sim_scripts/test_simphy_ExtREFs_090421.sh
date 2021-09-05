@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cp -r ${REF_PATH}/sim_scripts .
+cp -r /project/phylogenref/scripts/sim_scripts .
 
 source sim_scripts/refbias_config.txt
 source activate $conda_env
@@ -29,8 +29,9 @@ echo ${var_sites[*]} > ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${
 export sim
 export taxa_ref
 export int
+export tree_height
 
-seq -w $genes | parallel --delay 2 --jobs 4 --env sim --env int --env taxa_ref "sim_scripts/run_treetoreads.sh {}"
+seq -w $genes | parallel --jobs 16 --env sim --env int --env taxa_ref --env tree_height "sim_scripts/run_treetoreads.sh {}"
 
 cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
 bwa index ${reference_prefix}_sim${sim}.fa
@@ -69,7 +70,7 @@ done
 export reference_prefix
 export sim
 
-parallel --env reference_prefix --env sim -j 4 --delay 1 "bash sim_scripts/run_bwa.sh {}" ::: $fastq_list
+parallel --env reference_prefix --env sim -j 16 "bash sim_scripts/run_bwa.sh {}" ::: $fastq_list
 	
 rm -f *.sam
 rm -f *[0-9].bam
@@ -95,7 +96,7 @@ if [[ -s OUTFILE_q${QUAL}.bcf ]]
 ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//' > names     
 bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
 
-rm -f gene*_sim${sim}/
+rm -rf gene*_sim${sim}/
 
 ##############################################
 #### CREATING RAW VARIANTS FILE FROM BAMs ####
@@ -145,8 +146,8 @@ echo "beginning parallel jobs per mac and miss"
 export sim
 export int
 
-# the "each_mac.sh" script uses 8 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash ${REF_PATH}/each_mac.sh {} $sim $int" ::: $mac_list ::: $miss_list
+# the "each_mac.sh" script uses 4 threads for each job
+parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash sim_scripts/each_mac.sh {} $sim $int" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files

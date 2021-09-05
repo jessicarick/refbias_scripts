@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source /project/phylogenref/scripts/refbias_config.txt
+source sim_scripts/refbias_config.txt
 
 module load python/3.6.3
 module load py-numpy/1.14.3-py36
