@@ -11,10 +11,10 @@ import sys, getpass, re, argparse
 
 # Function to extract header info: extractHeaderInfo
 # takes a vcf file from line 1, goes through header, returns:
-# 0[string]             header
-# 1[list[string]]       individual IDs
-# 2[int]                number of individuals in vcf file
-# 3[int]                length of header
+# 0[string]	 header
+# 1[list[string]]	 individual IDs
+# 2[int]		number of individuals in vcf file
+# 3[int]		length of header
 
 def extractHeaderInfo(input):
 	linecounter = 0
@@ -22,41 +22,41 @@ def extractHeaderInfo(input):
 	for line in input:
 		linecounter += 1
 		if re.match("^\#\#", line):
-                        header+=line
-                else:
-                        header+=line
-                        n_individuals = len(str(line.strip('\n')).split('\t'))-9
-                        id_individuals = str(line.strip('\n')).split('\t')[9:]
-                        break
-        return header, id_individuals, n_individuals, linecounter
+			header+=line
+		else:
+			header+=line
+			n_individuals = len(str(line.strip('\n')).split('\t'))-9
+			id_individuals = str(line.strip('\n')).split('\t')[9:]
+			break
+	return header, id_individuals, n_individuals, linecounter
 
 # Function to make all sample names of equal length (could be simplified)
 # FillUp: accepts list, fills up list with optional character (default is " ") until they are of equal length
-def fillUp(list, fill = " "):           # Checks length of entries in a list, fills up with specified fill string.
-        returnlist = []
-        for entry in list:
-                if len(entry) < len(max(list, key=len)):
-                        returnlist.append(entry+(len(max(list, key=len))-len(entry))*fill)
-                else:
-                        returnlist.append(entry)
-        return returnlist
+def fillUp(list, fill = " "):		 # Checks length of entries in a list, fills up with specified fill string.
+	returnlist = []
+	for entry in list:
+		if len(entry) < len(max(list, key=len)):
+	returnlist.append(entry+(len(max(list, key=len))-len(entry))*fill)
+		else:
+	returnlist.append(entry)
+	return returnlist
 
 	
 # Function to write the the lines in phylip format	
 def writePhylipSequences(samplenames, sequences, outputdestination, writeref):
-        if writeref:
-                beginning = 0
-                nsamples = str(len(samplenames))
-        else:
-                beginning = 1
-                nsamples = str(len(samplenames)-1)
-        nbases = str(len(sequences[0]))
-        outputdestination.write(nsamples +"\t"+nbases+"\n")
-        outstring = ""
-        for i in range(beginning, len(samplenames)):
-                outstring += samplenames[i]+"".join(sequences[i])
-                outstring +="\n"
-        outputdestination.write(outstring.strip("\n"))
+	if writeref:
+		beginning = 0
+		nsamples = str(len(samplenames))
+	else:
+		beginning = 1
+		nsamples = str(len(samplenames)-1)
+	nbases = str(len(sequences[0]))
+	outputdestination.write(nsamples +"\t"+nbases+"\n")
+	outstring = ""
+	for i in range(beginning, len(samplenames)):
+		outstring += samplenames[i]+"".join(sequences[i])
+		outstring +="\n"
+	outputdestination.write(outstring.strip("\n"))
 	
 
 # Parse the arguments provided
@@ -106,28 +106,28 @@ print("\ngenerating phylip file with ",len(samplenames)-1," individuals")
 
 # Go through the lines to get the genotypes
 for line in input:
-        site = line.strip('\n').split('\t')
-        indel = False
+	site = line.strip('\n').split('\t')
+	indel = False
 	pos = int(site[1])
 	
 	# If missing positions should be filled up with Ns (-f specified, e.g. sites of low quality that were filtered out)
 	if pos > (prev + 1) and fill:
 		addLine=pos-(prev+1)
-                individualcounter = 1
-                for individual in site[9:]:
-                        resultsequences[individualcounter]+= "N" * addLine
-                        individualcounter += 1
+		individualcounter = 1
+		for individual in site[9:]:
+			resultsequences[individualcounter]+= "N" * addLine
+			individualcounter += 1
 		linecounter += addLine
-                resultsequences[0] += "N" * addLine
+		resultsequences[0] += "N" * addLine
 
 	# site contains a deletion, replace by missing data
 	if len(site[3])>1:
 		indel=True
 
 	else:
-		alleles = site[4].split(",")  # if there are more than 1 alternative alleles, they are separated by commas
-       	        for alt in alleles:
-                	if len(alt)>1 or '*' in alt:  # in case of an insertion
+		alleles = site[4].split(",") # if there are more than 1 alternative alleles, they are separated by commas
+	 		for alt in alleles:
+			if len(alt)>1 or '*' in alt: # in case of an insertion
 				indel=True
 				break
 
@@ -136,7 +136,7 @@ for line in input:
 	if site[4] != ".":
 		for entry in site[4].split(","):
 			alternativeslist.append(entry)
-        individualcounter = 1
+	individualcounter = 1
 
 
 	if not indel:
@@ -145,7 +145,7 @@ for line in input:
 				resultsequences[individualcounter]+="N"
 			else:
 				resultsequences[individualcounter] += GetGenotype(individual[:3].split("/"), alternativeslist)
-                        individualcounter += 1
+	individualcounter += 1
 		linecounter += 1
 		resultsequences[0] += site[3]
 
@@ -153,8 +153,8 @@ for line in input:
 	# If the site is an indel and noIndels is not specified, print as missing data (else not printed)
 	elif not noIndels:
 		for individual in site[9:]:
-                        resultsequences[individualcounter]+= "N"
-                        individualcounter += 1
+			resultsequences[individualcounter]+= "N"
+			individualcounter += 1
 		linecounter += 1
 		resultsequences[0] += site[3][:1]
 
