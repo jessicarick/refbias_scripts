@@ -17,10 +17,16 @@ python2 sim_scripts/write_config.py \
 	-r 150 \
 	-f 500 \
 	-s 50 \
-	-c 20 \
+	-cl 5 \
+	-ch 20 \
+	-cs 1 \
+	-p HS25 \
 	-pre sim_ \
 	-errorfile $error > gene${gene}_sim${sim}_config 
 
-python2 ${PROGRAM_DIR}/TreeToReads/treetoreads.py gene${gene}_sim${sim}_config 
+python2 ${PROGRAM_DIR}/TTR2/TreeToReads/treetoreads.py gene${gene}_sim${sim}_config 
 
-grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${gene}.fa > ${reference_prefix}_gene${gene}.fa
+#echo ">gene${gene}" >> ${reference_prefix}_sim${sim}.fa
+#grep '^[ACGTN]' gene${gene}_sim${sim}/fasta_files/sim_${taxa_ref}.fasta >> ${reference_prefix}_sim${sim}.fa
+
+#grep -v "^>" ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${gene}.fa > ${reference_prefix}_gene${gene}.fa

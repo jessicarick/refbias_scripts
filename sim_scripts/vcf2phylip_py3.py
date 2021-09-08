@@ -36,10 +36,10 @@ def fillUp(list, fill = " "):		 # Checks length of entries in a list, fills up w
 	returnlist = []
 	for entry in list:
 		if len(entry) < len(max(list, key=len)):
-	returnlist.append(entry+(len(max(list, key=len))-len(entry))*fill)
+			returnlist.append(entry+(len(max(list, key=len))-len(entry))*fill)
 		else:
-	returnlist.append(entry)
-	return returnlist
+			returnlist.append(entry)
+		return returnlist
 
 	
 # Function to write the the lines in phylip format	
@@ -126,7 +126,7 @@ for line in input:
 
 	else:
 		alleles = site[4].split(",") # if there are more than 1 alternative alleles, they are separated by commas
-	 		for alt in alleles:
+		for alt in alleles:
 			if len(alt)>1 or '*' in alt: # in case of an insertion
 				indel=True
 				break
@@ -145,7 +145,7 @@ for line in input:
 				resultsequences[individualcounter]+="N"
 			else:
 				resultsequences[individualcounter] += GetGenotype(individual[:3].split("/"), alternativeslist)
-	individualcounter += 1
+		individualcounter += 1
 		linecounter += 1
 		resultsequences[0] += site[3]
 

@@ -113,7 +113,7 @@ source activate new_env
         	        -sb f:$sp_rate \
                 	-si f:$num_ind \
 	                -sp f:50000 \
-        	        -so f:10 \
+			-so f:5 \
                 	-cs $rand_num \
         	        -o species_tree${sim}
 		
