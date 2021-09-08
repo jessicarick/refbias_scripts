@@ -24,8 +24,6 @@ nloci=$(($genes + 1))
 var_sites=(`Rscript sim_scripts/var_sites.R $nloci $varsites`)
 echo ${var_sites[*]} > ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}
 
-#if false; then # DEBUGGING
-
 export sim
 export taxa_ref
 export int
@@ -33,14 +31,24 @@ export tree_height
 
 seq -w $genes | parallel --jobs 16 --env sim --env int --env taxa_ref --env tree_height "sim_scripts/run_treetoreads.sh {}"
 
-cat ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_sim${sim}.fa > ${reference_prefix}_sim${sim}.fa 
-bwa index ${reference_prefix}_sim${sim}.fa
+for gene in `seq -w $genes`
+	do if [ "$gene" -eq "0001" ]; then
+		echo ">gene${gene}" > ${reference_prefix}_sim${sim}_${int}.fa
+		grep '^[ACGTN]' gene${gene}_sim${sim}/fasta_files/sim_${taxa_ref}.fasta >> ${reference_prefix}_sim${sim}_${int}.fa
+	else
+		echo ">gene$gene" >> ${reference_prefix}_sim${sim}_${int}.fa
+		grep '^[ATGCN]' gene${gene}_sim${sim}/fasta_files/sim_${taxa_ref}.fasta >> ${reference_prefix}_sim${sim}_${int}.fa
+	fi
+done
+
+echo "indexing simulated genome"
+bwa index ${reference_prefix}_sim${sim}_${int}.fa
 
 ##############################################
 ### Concatenate reads into single file########
 ########### for each species #################
 ##############################################
-echo "beginning RAxML analyses"
+echo "beginning alignment of fastq reads"
 fastq_list=0
 
 while [ $(echo "$(expr length "$fastq_list")") -lt 2 ]
@@ -66,11 +74,12 @@ done
 ### Align to reference  ######################
 ### Make sure everything in indexed! #########
 ##############################################
-
+#fi #debugging
 export reference_prefix
 export sim
+export int
 
-parallel --env reference_prefix --env sim -j 16 "bash sim_scripts/run_bwa.sh {}" ::: $fastq_list
+parallel --env int --env reference_prefix --env sim -j 16 "bash sim_scripts/run_bwa.sh {}" ::: $fastq_list
 	
 rm -f *.sam
 rm -f *[0-9].bam
@@ -80,21 +89,21 @@ samtools mpileup -g -t DP,AD \
 		--skip-indels \
     	 	-P ILLUMINA \
         	-q $QUAL \
-    	 	-f ${reference_prefix}_sim${sim}.fa \
+    	 	-f ${reference_prefix}_sim${sim}_${int}.fa \
    	    	*.sorted.bam \
-     	  	-o OUTFILE_q${QUAL}.bcf 
+     	  	-o OUTFILE_q${QUAL}_${int}.bcf 
     
-if [[ -s OUTFILE_q${QUAL}.bcf ]]
+if [[ -s OUTFILE_q${QUAL}_${int}.bcf ]]
         then 
-          	echo "OUTFILE_q${QUAL}.bcf not empty; moving on and removing bam files"
+          	echo "OUTFILE_q${QUAL}_${int}.bcf not empty; moving on and removing bam files"
                 rm -f *.sorted.bam 
         else
-          	echo "OUTFILE_q${QUAL}.bcf empty; something went wrong"
+          	echo "OUTFILE_q${QUAL}_${int}.bcf empty; something went wrong"
           	exit 1
    	fi
 
 ls gene${i}_sim${sim}/fastq/sim*/*_1.fq.gz | xargs -n 1 basename | sed 's/_1.fq.gz//' > names     
-bcftools reheader -s names OUTFILE_q${QUAL}.bcf > OUTFILE_q${QUAL}_RN.bcf
+bcftools reheader -s names OUTFILE_q${QUAL}_${int}.bcf > OUTFILE_q${QUAL}_${int}_RN.bcf
 
 rm -rf gene*_sim${sim}/
 
@@ -106,7 +115,7 @@ bcftools call -m \
         --variants-only \
         --format-fields GQ \
         --skip-variants indels \
-        OUTFILE_q${QUAL}_RN.bcf | bcftools filter \
+        OUTFILE_q${QUAL}_${int}_RN.bcf | bcftools filter \
                 --set-GTs . \
                 --include $(printf "QUAL>$QUAL")$(printf "&&")$(printf "FMT/GQ>10") | bcftools view \
                         --min-alleles 2 \
@@ -114,12 +123,12 @@ bcftools call -m \
                         --types snps \
                         --apply-filter "PASS" \
                         --output-type v \
-                        --output-file OUTFILE.s${sim}_q${QUAL}.vcf
+                        --output-file OUTFILE_s${sim}_q${QUAL}_${int}.vcf
                 
-cp OUTFILE.s${sim}_q${QUAL}.vcf ${output_dir}/${day}-${tree_height}-OUTFILE.s${sim}_q${QUAL}.${int}.vcf
+cp OUTFILE_s${sim}_q${QUAL}_${int}.vcf ${output_dir}/${day}-${tree_height}-OUTFILE_s${sim}_q${QUAL}.${int}.vcf
 
 echo "Calculating Dxy from calc_dxy script."
-        ./sim_scripts/calc_dxy.sh OUTFILE.s${sim}_q${QUAL}.vcf $sim $tree_height $int $taxa_ref $day
+        ./sim_scripts/calc_dxy.sh OUTFILE_s${sim}_q${QUAL}_${int}.vcf $sim $tree_height $int $taxa_ref $day
 echo "done calculating Dxy"
 
 rm -f OUTFILE_q${QUAL}.bcf
@@ -136,6 +145,8 @@ if [ "$subsample" = true ]; then
 fi
 fi # debugging
 
+#cp ${output_dir}/${day}-${tree_height}-OUTFILE_s${sim}_q${QUAL}.${int}.vcf OUTFILE_s${sim}_q${QUAL}.vcf 
+
 #################################
 #### FILTERING WITH VCFTOOLS ####
 #### AND INFERRING PHYLOGENY ####
@@ -145,9 +156,10 @@ echo "beginning parallel jobs per mac and miss"
 
 export sim
 export int
+export taxa_ref
 
 # the "each_mac.sh" script uses 4 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env sim --env int "bash sim_scripts/each_mac.sh {} $sim $int" ::: $mac_list ::: $miss_list
+parallel --delay 2 --jobs 4  --line-buffer --env taxa_ref --env sim --env int "bash sim_scripts/each_mac.sh {}" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
