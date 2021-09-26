@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# module load gcc
-# module load miniconda3
-# module load samtools/1.6
-# module load htslib
-# module load perl
+module load gcc
+module load miniconda3
+module load samtools/1.6
+module load htslib
+module load perl
 module load python/2.7.15
 module load py-numpy/1.14.3-py27
 module load py-scipy/1.1.0-py27
@@ -110,11 +110,12 @@ source activate new_env
         	        -rg 1 \
                 	-rs 1 \
 	                -sl f:$num_sp \
-        	        -sb f:$sp_rate \
                 	-si f:$num_ind \
-	                -sp f:50000 \
-			-so f:5 \
+	                -sp f:100000 \
+			-so f:10 \
+			-sb f:$sp_rate \
                 	-cs $rand_num \
+			-su f:0.000000003 \
         	        -o species_tree${sim}
 		
 #		tree_height=${ils_level}

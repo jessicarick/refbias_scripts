@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source sim_scripts/refbias_config.txt
+
 ind=$1
 
 echo "Mapping reads for ${ind}"
