@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# #SBATCH --account=phylogenref
-# #SBATCH --nodes=1
-# #SBATCH --time=0-01:00:00
-# #SBATCH --mem=124G
-# #SBATCH --mail-type=all
+##SBATCH --account=phylogenref
+##SBATCH --nodes=1
+##SBATCH --time=0-01:00:00
+##SBATCH --mem=124G
+##SBATCH --mail-type=all
 
 module load gcc
 module load r
