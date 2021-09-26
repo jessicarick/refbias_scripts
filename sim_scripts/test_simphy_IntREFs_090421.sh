@@ -13,9 +13,8 @@ module load jdk
 
 sim=$1
 tree_height=$2
-taxa_ref=0_0_0
-int=EXT
-subsample=true
+taxa_ref=$(($(($RANDOM%$num_sp))+1))_0_0
+int=INT
     
 ##############################################
 ### Simulate reads for each gene w/ TTR ######

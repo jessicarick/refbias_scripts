@@ -9,13 +9,13 @@ snps=`head -n 1 ${REF_PATH}/output/new/${day}-varSites-${tree_height}-sim${sim}-
 python2 sim_scripts/write_config.py \
 	-treefile ${REF_PATH}/sims_${tree_height}/sim${sim}/species_tree${sim}/1/g_trees${gene}.trees \
 	-v `echo "$snps"` \
-	-ref $taxa_ref \
+	-ref 0_0_0 \
 	-path ${REF_PATH}/sims_${tree_height}/sim${sim}/${reference_prefix}.random_${gene}.fa \
 	-o gene${gene}_sim${sim} \
 	-rate rat.matrix \
 	-g 5 \
 	-r 150 \
-	-f 500 \
+	-f 400 \
 	-s 50 \
 	-cl 5 \
 	-ch 20 \

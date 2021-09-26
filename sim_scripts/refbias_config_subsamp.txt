@@ -1,0 +1,23 @@
+REF_PATH=/project/phylogenref/scripts # reference genome should be stored as "*.fa" in this folder
+RESULTDIR=/gscratch/jrick/phylogenref/slurm_results
+output_dir=/project/phylogenref/scripts/output/new
+
+reference=$REF_PATH/references/lcalcarifer_genome_v3_chromosomal_concat.fa
+error=$REF_PATH/latesGBS.txt
+starttree=newlates
+reference_prefix=lcal_5000000
+
+##############################################
+
+## for testing
+#qual_list='40'
+#maf_list='0.05 0.1'
+#miss_list='0.75 1.0'
+
+QUAL=40
+#qual_list='0 20 40 60'
+mac_list='0 1 2 3 4 5 10'
+miss_list='0.25 0.50 0.75 0.90'
+
+# set max sites for subsampling
+maxSNP=6000

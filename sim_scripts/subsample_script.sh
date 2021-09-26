@@ -1,14 +1,16 @@
 #!/bin/sh
 
 #SBATCH --account=phylogenref
-#SBATCH --jobname=slurm.refbias.subsample
-#SBATCH --time=3-00:00:00
+#SBATCH --job-name=slurm.refbias.subsample
+#SBATCH --time=1:00:00
 #SBATCH --ntasks-per-node=16
 #SBATCH --no-requeue
 
+module load gcc miniconda3 raxml parallel vcftools r
+
 mkdir /lscratch/SLURM_$SLURM_JOB_ID
 cd /lscratch/SLURM_$SLURM_JOB_ID
-cp -r /project/phylogenref/scripts/sim_scripts .
+cp -r /project/phylogenref/scripts/sim_scripts/ .
 
 source sim_scripts/refbias_config_subsamp.txt
 
@@ -17,35 +19,26 @@ tree_height=$2
 int=$3
 taxa_ref=$4
 day=$5
-vcf=${output_dir}/${day}-${tree_height}-OUTFILE.s${sim}_q${QUAL}.${int}.vcf
+vcf=${output_dir}/${day}-${tree_height}-OUTFILE_s${sim}_q${QUAL}_rawvar.${int}.vcf.gz
 
 source activate new_env
 
 cp $vcf .
 
-echo "beginning parallel jobs per maf"
+echo "beginning parallel jobs per mac"
 export sim
 export day
 export tree_height
 export int
+export QUAL
 
-parallel --delay 1 --jobs 2  --line-buffer --env sim --env day --env tree_height --env int "bash sim_scripts/each_maf_subsamp.sh {}" ::: $maf_list ::: $miss_list
+parallel --delay 1 --jobs 4  --line-buffer --env QUAL --env sim --env day --env tree_height --env int "bash sim_scripts/each_mac_subsamp.sh {}" ::: $mac_list ::: $miss_list
 
-mkdir s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
-mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_maf${maf}*.phy s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
-mv RAxML* s${sim}_q${QUAL}_miss${miss}_maf${maf}.${int}-${taxa_ref}.phylip_tree_files
+mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.subsamp.phylip_tree_files
+mv OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}*.phy s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.subsamp.phylip_tree_files
+mv RAxML* s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.subsamp.phylip_tree_files
 
-
-mkdir -p sim${sim}/config_files
-mkdir -p sim${sim}/ref.fasta_files
-		
-mv *_config sim${sim}/config_files
-mv *.fa sim${sim}/ref.fasta_files
-				
-rm -f gene*.phy
-rm -f gene*/fasta_files/*.fasta
-
-echo "done with all processes for $tree_height sim${sim} ${int}; transferring files"
+echo "done with all subsampling processes for $tree_height sim${sim} ${int}; transferring files"
 
 ## transfer files to results directory
 cd ..  ## to lscratch
@@ -63,3 +56,4 @@ fi
 echo "done transferring files; exiting now"
 
 date
+
