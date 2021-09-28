@@ -12,7 +12,7 @@ phy <- paste0(args[1],".phy")
 #nsnp <- as.numeric(args[2])
 nsnp <- as.numeric(scan(phy,nlines=1,what="character")[2])
 #max <- args[3]
-max <- 20000
+max <- 6000
 
 print(paste("nsnp is ",nsnp," and max is ",max))
 
