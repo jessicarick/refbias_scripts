@@ -12,7 +12,7 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 ## should subsampling script be run as well?
 subsample=false
 
-num_sims='16 17 18'
+num_sims='19 20 21 22 23 24 25'
 
 ##############################################
 ### Simulation parameters ####################
@@ -30,9 +30,9 @@ genes=$(expr $ref_length / $gene_length)
 num_sp=50
 num_ind=1
 sim_tree_height='500000'
-tree_height='LONG'
-ils_level_list='LONG'
-sp_rate='0.000001'
+tree_height='SHORT'
+ils_level_list='SHORT'
+sp_rate='0.00001'
 
 ## TreeToReads parameters
 error=sim_scripts/latesGBS.txt

@@ -2,7 +2,7 @@
 
 #SBATCH --account=phylogenref
 #SBATCH --job-name=slurm.refbias.subsample
-#SBATCH --time=1:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --ntasks-per-node=16
 #SBATCH --no-requeue
 
