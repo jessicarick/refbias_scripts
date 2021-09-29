@@ -8,7 +8,6 @@ cols <- c("#F2AD00","gray80","#00A08A")
 ## preparing data object
 results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
-results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.factor(results.mod$missing)
 results.mod$maf <- as.factor(results.mod$maf)
@@ -21,12 +20,12 @@ for (param in c("gamma","colless","sackin","ingroup.gamma","ingroup.colless","in
     m.sum <- summary(m)
     m.brms <- brms::brm(formula,
                            data = results.mod,
-                           iter = 55000,
+                           iter = 35000,
                            chains = 3,
                            cores = 3,
                            thin = 5,
                            warmup = 5000,
-                           control = list(adapt_delta = 0.99, max_treedepth = 15))
+                           control = list(adapt_delta = 0.9, max_treedepth = 15))
     m.brms.sum <- summary(m.brms)
     #plot(m.brms)
     #brms::marginal_effects(m.brms)
@@ -56,7 +55,7 @@ for (param in c("gamma","colless","sackin","ingroup.gamma","ingroup.colless","in
     assign(paste0("lmer.",param,".mod.lates"),m)
   }
 
-posterior <- as.array(brms.RF.Dist.ML.mod.LONG)
+posterior <- as.array(m.brms)
 dim(posterior)
 dimnames(posterior)
 
@@ -66,8 +65,11 @@ pdf("brms_plots_082021.pdf")
 for (mod in mget(ls(pattern="brms.*.mod*"))) {
   p <- mod %>%
     #recover_types(results.sub) %>%
-    tidybayes::spread_draws(b_intINT,b_maf0.01,b_maf0.02,b_maf0.03,b_maf0.04,b_maf0.05,b_maf0.1,
-                            `b_intINT:maf0.01`,`b_intINT:maf0.02`,`b_intINT:maf0.03`,`b_intINT:maf0.04`,`b_intINT:maf0.05`,`b_intINT:maf0.1`) %>%
+    tidybayes::spread_draws(b_intINT,
+                            b_maf0.01,b_maf0.02,b_maf0.03,b_maf0.04,b_maf0.05,b_maf0.1,
+                            b_missing0.25,b_missing0.50,b_missing0.75,b_missing0.90,
+                            `b_intINT:maf0.01`,`b_intINT:maf0.02`,`b_intINT:maf0.03`,`b_intINT:maf0.04`,`b_intINT:maf0.05`,`b_intINT:maf0.1`,
+                            `b_intINT:missing0.25`,`b_intINT:missing0.50`,`b_intINT:missing0.75`,`b_intINT:missing0.90`) %>%
     pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
     ggplot(aes(y = variable, x = value)) +
     stat_slab(position=position_nudge(y=0.1),height=0.8,aes(fill=stat(x))) +

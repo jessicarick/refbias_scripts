@@ -1,36 +1,38 @@
+require(tidyverse)
 require(MuMIn)
 require(brms)
 require(tidybayes)
+require(lme4)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "082921-output"
-results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+#output <- "082921-output"
+#results.raxml <- read_csv(paste("output/new/",output,"-raxml.csv",sep=""),col_names=TRUE)[,-1]
 
 ## preparing data object
 results.mod <- results.raxml
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.factor(results.mod$missing)
-results.mod$maf <- as.factor(results.mod$maf)
+results.mod$missing <- as.numeric(as.character(results.mod$missing))
+results.mod$maf <- as.numeric(as.character(results.mod$maf))
 results.mod$int <- as.factor(results.mod$int)
 
 for (height in c("SHORT","MED","LONG")) {
-  results.sub <- results.mod[results.mod$height == height,]
+  results.sub <- results.mod[results.mod$height == height & as.numeric(as.character(results.mod$simulation)) > 15,]
 
   for (param in c("RF.Dist.ML","CI.Dist.ML","Q.Dist.ML","ingroup.gamma","std.ingroup.gamma","ingroup.colless","std.ingroup.colless")) {
-    formula <- paste0(param," ~ int + maf + missing + int:maf + int:missing + (1|simulation)")
+    formula <- paste0(param," ~ avg_dxy + maf + missing + avg_dxy:maf + avg_dxy:missing + (1|simulation)")
     m <- lmer(formula,
-                 data = results.sub)
+              data = results.sub)
     m.sum <- summary(m)
     m.brms <- brms::brm(formula,
                            data = results.sub,
                            iter = 22000,
                            chains = 3,
-                           cores = 3,
+                           cores = 1,
                            warmup = 7000,
-                           control = list(adapt_delta = 0.99,max_treedepth = 20))
+                           control = list(adapt_delta = 0.9))
     m.brms.sum <- summary(m.brms)
     #plot(m.gam.med.brms)
     #brms::marginal_effects(m.gam.med.brms)
@@ -83,15 +85,15 @@ plot.ingroup.colless.brms.LONG + scale_color_manual(values=cols)
 # 
 # bayesplot::mcmc_pairs(posterior,pars=dimnames(posterior)$parameters[2:10])
 # 
-# brms.ingroup.gamma.mod.LONG %>%
-#   recover_types(results.sub) %>%
-#   tidybayes::spread_draws(b_Intercept,b_intINT,b_maf0.01,b_maf0.02,b_maf0.03,b_maf0.04,b_maf0.05,b_maf0.1) %>%
-#   pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
-#   ggplot(aes(y = variable, x = value)) +
-#   stat_slab(position=position_nudge(y=0.1),height=0.8) +
-#   geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
-#   geom_vline(xintercept = 0, lty=2, alpha=0.5) +
-#   theme_custom()
+m.brms %>%
+  recover_types(results.sub) %>%
+  tidybayes::spread_draws(b_Intercept,b_intINT,b_maf,b_missing,`b_intINT:maf`,`b_intINT:missing`) %>%
+  pivot_longer(cols=starts_with("b_"),names_to="variable") %>%
+  ggplot(aes(y = variable, x = value)) +
+  stat_slab(position=position_nudge(y=0.1),height=0.8) +
+  geom_boxplot(position=position_nudge(y=-0.1),width=0.2,outlier.shape=NA) +
+  geom_vline(xintercept = 0, lty=2, alpha=0.5) +
+  theme_custom()
 # 
 # model_refbias_brms <- function(data,height,param,iter=12000,burnin=2000,chains=3) {
 #   results.sub <- data[data$height == height,]

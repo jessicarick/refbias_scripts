@@ -27,7 +27,7 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## imbalance
 # short
 
-m.imb.short <- lmer(ingroup.colless ~ int + maf + missing +
+m.imb.short <- lmer(std.ingroup.colless ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
                     data = results.mod[results.mod$height == "SHORT" & results.mod$noref == "REF",])
 sum.imb.short <- summary(m.imb.short)
@@ -77,7 +77,7 @@ print(vars.imb.short.bars)
 
 # med
 
-m.imb.med <- lmer(ingroup.colless ~ int + maf + missing +
+m.imb.med <- lmer(std.ingroup.colless ~ int + maf + missing +
                     int:maf + int:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "MED" & results.mod$noref == "REF",])
 sum.imb.med <- summary(m.imb.med)
@@ -127,7 +127,7 @@ vars.imb.med.bars
 
 # long
 
-m.imb.long <- lmer(ingroup.colless ~ int + maf + missing +
+m.imb.long <- lmer(std.ingroup.colless ~ int + maf + missing +
                      int:maf + int:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "LONG" & results.mod$noref == "REF",])
 sum.imb.long <- summary(m.imb.long)
@@ -165,7 +165,7 @@ xlab("")+
   #ylim(-200,1200)+
   #scale_color_npg() +
   #scale_x_reverse() +
-  scale_color_manual(values=cols[c(2,1)])+
+  scale_color_manual(values=cols)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
   #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
   geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
@@ -188,7 +188,10 @@ plot1 <- ggplot(data = results.mod,
                     x=ingroup.colless,
                     fill=int))
 
-plot2 <- plot1 +
+plot2 <- ggplot(data = results.mod, 
+                aes(y=as.factor(maf),
+                    x=ingroup.colless,
+                    fill=int)) +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
   scale_fill_manual(values=cols[c(1,3)],name="",aesthetics = "fill")+
   #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
@@ -209,5 +212,30 @@ plot2 <- plot1 +
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
   theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
-
+plot3 <- ggplot(data = results.mod, 
+                aes(y=as.factor(missing),
+                    x=ingroup.colless,
+                    fill=int)) +
+  geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
+  scale_fill_manual(values=cols[c(1,3)],name="",aesthetics = "fill")+
+  #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
+  theme_classic()+
+  theme(axis.title.y = element_text(angle=90, size=rel(2), face="plain"),
+        axis.text.y = element_text(size=rel(2)),
+        axis.title.x = element_text(size=rel(2),vjust=-2, face="plain"),
+        axis.text.x = element_text(size=rel(2)),
+        legend.text = element_text(size=rel(2)),
+        legend.title = element_text(size=rel(2)),
+        #plot.margin = unit(c(6,5.5,20,10),"points"),
+        line = element_line(size=1),
+        panel.border = element_rect(color = "black", fill=NA, size=1),
+        strip.text.x = element_text(size = 16))+
+  scale_x_continuous(name=" Ingroup Colless Imbalance", limits = c(0,1))+
+  scale_y_discrete(name="Missing Data")+
+  #xlim(-50,10)+
+  facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
+  geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
+  theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
 print(plot2)
+
+ggarrange(plot2,plot3,ncol=1)

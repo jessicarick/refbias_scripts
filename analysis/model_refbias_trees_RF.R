@@ -13,19 +13,19 @@ output <- "072221-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml
+results.mod <- results.raxml[results.raxml$simulation > 10,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.numeric(as.character(results.mod$missing))
-results.mod$maf <- as.numeric(results.mod$maf)
+results.mod$maf <- as.numeric(as.character(results.mod$maf))
 results.mod$int <- as.factor(results.mod$int)
 
 ## rf distance
 # short
 
-m.rf.short <- lmer(RF.Dist.ML ~ maf + missing + int +
-                     int:maf + int:missing + (1 | simulation),
+m.rf.short <- lmer(RF.Dist.ML ~ maf + missing + avg_dxy +
+                     avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
 sum.rf.short <- summary(m.rf.short)
 r.squaredGLMM(m.rf.short)
@@ -73,8 +73,8 @@ vars.rf.short.bars
 
 # med
 
-m.rf.med <- lmer(RF.Dist.ML ~ int + maf + missing +
-                   int:maf + int:missing + (1 | simulation),
+m.rf.med <- lmer(RF.Dist.ML ~ maf + missing + avg_dxy +
+                   avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                  data = results.mod[results.mod$height == "MED",])
 sum.rf.med <- summary(m.rf.med)
 r.squaredGLMM(m.rf.med)
@@ -122,8 +122,8 @@ xlab("")+
 vars.rf.med.bars
 
 # long
-m.rf.long <- lmer(RF.Dist.ML ~ int + maf + missing +
-                    int:maf + int:missing + (1 | simulation),
+m.rf.long <- lmer(RF.Dist.ML ~ maf + missing + avg_dxy +
+                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "LONG",])
 sum.rf.long <- summary(m.rf.long)
 r.squaredGLMM(m.rf.long)
@@ -184,7 +184,10 @@ plot1 <- ggplot(data = results.mod,
                     x=RF.Dist.ML,
                     fill=int))
 
-plot2 <- plot1 +
+plot2 <- ggplot(data = results.mod, 
+                aes(y=as.factor(maf),
+                    x=RF.Dist.ML,
+                    fill=int)) +
   geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
   scale_fill_manual(values=cols[c(1,3)],name="",aesthetics = "fill")+
   #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
@@ -205,7 +208,32 @@ plot2 <- plot1 +
   facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
   geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
   theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
+plot3 <- ggplot(data = results.mod, 
+                aes(y=as.factor(missing),
+                    x=RF.Dist.ML,
+                    fill=int)) +
+  geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
+  scale_fill_manual(values=cols[c(1,3)],name="",aesthetics = "fill")+
+  #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
+  theme_classic()+
+  theme(axis.title.y = element_text(angle=90, size=rel(2), face="plain"),
+        axis.text.y = element_text(size=rel(2)),
+        axis.title.x = element_text(size=rel(2),vjust=-2, face="plain"),
+        axis.text.x = element_text(size=rel(2)),
+        legend.text = element_text(size=rel(2)),
+        legend.title = element_text(size=rel(2)),
+        #plot.margin = unit(c(6,5.5,20,10),"points"),
+        line = element_line(size=1),
+        panel.border = element_rect(color = "black", fill=NA, size=1),
+        strip.text.x = element_text(size = 16))+
+  scale_x_continuous(name="RF Distance to True Tree")+
+  scale_y_discrete(name="Missing Data")+
+  #xlim(-50,10)+
+  facet_wrap(vars(height),nrow=1,strip.position = "bottom")+
+  geom_hline(yintercept=0,cex=2,lty=2,col="gray")+
+  theme_ridges(line_size = 1, grid = TRUE, center_axis_labels=TRUE)
+
 
 print(plot2)
 
-ggarrange(vars.plots, plot2, ncol=1)
+ggarrange(plot2, plot3, ncol=1)
