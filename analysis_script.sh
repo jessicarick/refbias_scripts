@@ -22,9 +22,9 @@ if [ ! -f output/new/${day}-all-raxml.trees ]; then
 		for name in `cat $names`;
 			do echo "${height}-${name}" >> output/new/${day}-all-raxml.names;
 		done;
-		if [ -f output/new/${day}-${height}-subsamp-batch.trees ]; then
+		if [ -f output/new/${day}-${height}-subsamp-tree.trees ]; then
 			echo "concatenating subsampled trees..."
-			sub_trees=output/new/${day}-${height}-subsamp-batch.trees
+			sub_trees=output/new/${day}-${height}-subsamp-tree.trees
 			sub_names=output/new/${day}-${height}-subsamp-tree.names
 			cat $sub_trees >> output/new/${day}-all-subsamp-raxml.trees
 			for name in `cat $sub_names`
