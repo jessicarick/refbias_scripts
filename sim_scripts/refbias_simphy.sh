@@ -112,7 +112,7 @@ source activate new_env
 	                -sl f:$num_sp \
                 	-si f:$num_ind \
 	                -sp f:100000 \
-			-so f:10 \
+			-so f:$og_ratio \
 			-sb f:$sp_rate \
                 	-cs $rand_num \
 			-su f:0.000000003 \
