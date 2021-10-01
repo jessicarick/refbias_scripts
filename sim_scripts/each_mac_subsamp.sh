@@ -57,7 +57,7 @@ sed -i 's/\t/ /g' OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.phy
 
     sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.phy | head -n 1 | awk '{print $2}'`
     if [ "$sites_ref" -gt "$maxSNP" ]; then
-    for rep in `seq 10`
+    for rep in `seq 3`
 	do Rscript sim_scripts/subsample.R OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv
    	sites_samp=`head -n 1 OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.subsamp.phy | awk '{print $2}'`
 	echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_mac${mac}_${int}_rep${rep},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
