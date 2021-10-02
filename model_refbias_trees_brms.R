@@ -30,7 +30,7 @@ for (height in c("SHORT","MED","LONG")) {
                            data = results.sub,
                            iter = 22000,
                            chains = 3,
-                           cores = 1,
+                           #cores = 3,
                            warmup = 7000,
                            control = list(adapt_delta = 0.9))
     m.brms.sum <- summary(m.brms)

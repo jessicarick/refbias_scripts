@@ -29,13 +29,13 @@ source("analysis/theme_custom.R")
 ## Specifying file names ########
 ############################################
 
-raxml.trees <- "092321-all-raxml.trees"
-raxml.tree.names <- "092321-all-raxml.names"
+raxml.trees <- "092321-all-subsamp-raxml.trees"
+raxml.tree.names <- "092321-all-subsamp-raxml.names"
 # astral.trees <- "101819-all-astral.trees"
 # astral.tree.names <- "101819-all-astral.names"
 ml.trees <- "092321-s_tree.tree"
 ml.tree.names <- "092321-s_tree.names"
-output <- "092321-output"
+output <- "092321-subsamp-output"
 refdist <- "092321-refdist.txt"
 args <- mget(c("raxml.trees","raxml.tree.names","ml.trees","ml.tree.names","refdist","output"))
 
@@ -105,6 +105,16 @@ refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("si
   slice(1) %>%
   ungroup()
 
+gt.rf <- read_table2("output/new/092321-LONG-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+  mutate(height = "LONG",
+         simulation = gsub("sim","",sim)) %>%
+  add_row(read_table2("output/new/092321-MED-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+             mutate(height = "MED"),
+          simulation = gsub("sim","",sim)) %>%
+  add_row(read_table2("output/new/092321-SHORT-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+            mutate(height = "SHORT"),
+          simulation = gsub("sim","",sim))
+
 #################
 ## plots of ml tree characteristics
 #################
@@ -161,18 +171,19 @@ results.raxml <- tibble(tree.num=seq(1:length(raxml.trees)))
 ## pull info from tree names, and calculate tree statistics
 results.raxml <- results.raxml %>%
   mutate(
-    simulation = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('-s([0-9]+)\\_q', x))[[1]][2])),
-    height = sapply(raxml.tree.names,function(x) as.character(regmatches(x, regexec('([A-Z]+)-s[0-9]', x))[[1]][2])),
-    method = "raxml",
-    quality = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('q(.*?)\\_m', x))[[1]][2])),
+    simulation = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('_s([0-9]+)\\_q', x))[[1]][2])),
+    height = sapply(raxml.tree.names,function(x) as.character(regmatches(x, regexec('([A-Z]+)-RAxML', x))[[1]][2])),
+    rep = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('\\.rep([0-9]+)\\.subsamp', x))[[1]][2])),
+    method = "subsamp",
+    quality = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('_q(.*?)\\_m', x))[[1]][2])),
     missing = sapply(raxml.tree.names,function(x) as.numeric(regmatches(x, regexec('miss([0-9]?\\.?[0-9]+)\\_mac', x))[[1]][2])),
     maf = sapply(raxml.tree.names, function(x) as.numeric(regmatches(x, regexec('_mac(0?.?[0-9]+)_sites', x))[[1]][2])),
     sites = sapply(raxml.tree.names, function(x) as.integer(regmatches(x, regexec('sites([0-9]*?)\\.', x))[[1]][2])),
-    taxa_ref = sapply(raxml.tree.names, function(x) regmatches(x,regexec('[A-Z]-([0-9]+_0_0)\\.phylip', x))[[1]][[2]]),
+    #taxa_ref = sapply(raxml.tree.names, function(x) regmatches(x,regexec('[A-Z]-([0-9]+_0_0)\\.phylip', x))[[1]][[2]]),
     int = sapply(raxml.tree.names, function(x) regmatches(x, regexec('REF.([A-Z]+)\\.', x))[[1]][2]),
     noref = "REF"
   ) %>%
-  left_join(refdist,by=c("simulation","height","int","taxa_ref"),copy=TRUE) %>%
+  left_join(refdist,by=c("simulation","height","int")) %>%
   mutate(
     tree.height = sapply(raxml.trees, function(x) max(branching.times(root(x,"sim_0_0_0",resolve.root=TRUE)),na.rm=T)),
     ingroup.tree.height = sapply(raxml.trees, function(x) max(branching.times(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0")),na.rm=T)),
@@ -364,65 +375,65 @@ ggarrange(plot1,plot2,plot3,plot4,plot5,plot6,plot7,nrow=1)
 
 ####################BEGIN ANALYSIS ################################
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
-#results.raxml <- read.csv(file=paste("output/new/",args$output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
-pdf(paste("output/new/",args$output,".pdf",sep=""))
-for (h in unique(as.character(results.raxml$height))){
-  for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
-  #for (i in seq(16,18,by=1)){
-    j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
-    subset <- which(results.raxml$simulation == i & results.raxml$height == h & results.raxml$noref == "REF")
-    if (length(subset) != 0) {
-      trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
-    } else {
-      print(paste("no trees for sim",i," for height ",h)) 
-      next
-    }
-    rf_matrix <- multiRF(trees.subset)
-    
-    ####PcOA of RF distance matrix for plotting trees in tree space
-    rf_pcoa <- pcoa(rf_matrix)
-    
-    rf_df <- data.frame(axis1=rf_pcoa$vectors[,1],axis2=rf_pcoa$vectors[,2])
-    biplot <- ggplot(rf_df,aes(axis1,axis2))
-    plot <- biplot +
-      geom_jitter(aes(color=as.factor(c(results.raxml$int[subset],"ML_tree")),shape=as.factor(c(results.raxml$method[subset],"ML_tree"))),alpha=0.5,size=5,height=2,width=2)+
-      theme_bw()+
-      theme(legend.text = element_text(size=rel(1.5)),
-            legend.title = element_blank(),
-            plot.margin = unit(c(6,5.5,20,10),"points"),
-            line = element_line(size=1),
-            axis.title = element_text(size=rel(1.5)),
-            axis.text = element_text(size=rel(1)),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank())+
-      ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
-      xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
-      ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
-      #geom_label_repel(label=c(paste("MAF",results.raxml$maf[subset],"MISS",results.raxml$missing[subset],sep=" "),"truth"),size=rel(1))+
-      scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
-      scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
-    print(plot)
-    
-    plot2 <- biplot +
-      geom_jitter(aes(color=as.factor(c(results.raxml$maf[subset],6)),shape=as.factor(c(results.raxml$missing[subset],"true"))),alpha=0.5,size=5,height=2,width=2)+
-      theme_bw()+
-      theme(legend.text = element_text(size=rel(1.5)),
-            legend.title = element_blank(),
-            plot.margin = unit(c(6,5.5,20,10),"points"),
-            line = element_line(size=1),
-            axis.title = element_text(size=rel(1.5)),
-            axis.text = element_text(size=rel(1)),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank())+
-      ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
-      xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
-      ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
-      #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
-      scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black","pink","turquoise"))+
-      scale_shape_manual(values=c(0,1,2,3,16,17))
-    print(plot2)
-    
-    #heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$missing,results.raxml[subset,]$int,sep=","),cex.lab=0.5)
-  }
-}
-dev.off()
+# results.raxml <- read.csv(file=paste("output/new/",args$output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
+# pdf(paste("output/new/",args$output,".pdf",sep=""))
+# for (h in unique(as.character(results.raxml$height))){
+#   for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
+#   #for (i in seq(16,30,by=1)){
+#     j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
+#     subset <- which(results.raxml$simulation == i & results.raxml$height == h & results.raxml$noref == "REF")
+#     if (length(subset) != 0) {
+#       trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
+#     } else {
+#       print(paste("no trees for sim",i," for height ",h)) 
+#       next
+#     }
+#     rf_matrix <- multiRF(trees.subset)
+#     
+#     ####PcOA of RF distance matrix for plotting trees in tree space
+#     rf_pcoa <- pcoa(rf_matrix)
+#     
+#     rf_df <- data.frame(axis1=rf_pcoa$vectors[,1],axis2=rf_pcoa$vectors[,2])
+#     biplot <- ggplot(rf_df,aes(axis1,axis2))
+#     plot <- biplot +
+#       geom_jitter(aes(color=as.factor(c(results.raxml$int[subset],"ML_tree")),shape=as.factor(c(results.raxml$method[subset],"ML_tree"))),alpha=0.5,size=5,height=2,width=2)+
+#       theme_bw()+
+#       theme(legend.text = element_text(size=rel(1.5)),
+#             legend.title = element_blank(),
+#             plot.margin = unit(c(6,5.5,20,10),"points"),
+#             line = element_line(size=1),
+#             axis.title = element_text(size=rel(1.5)),
+#             axis.text = element_text(size=rel(1)),
+#             panel.grid.major = element_blank(), 
+#             panel.grid.minor = element_blank())+
+#       ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
+#       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
+#       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
+#       #geom_label_repel(label=c(paste("MAF",results.raxml$maf[subset],"MISS",results.raxml$missing[subset],sep=" "),"truth"),size=rel(1))+
+#       scale_color_manual(labels = c("EXT","INT","truth"),values=c("#009980", "#006699", "black"))+
+#       scale_shape_manual(labels = c("raxml","ml"),values=c(1,16,17))
+#     print(plot)
+#     
+#     plot2 <- biplot +
+#       geom_jitter(aes(color=as.factor(c(results.raxml$maf[subset],6)),shape=as.factor(c(results.raxml$missing[subset],"true"))),alpha=0.5,size=5,height=2,width=2)+
+#       theme_bw()+
+#       theme(legend.text = element_text(size=rel(1.5)),
+#             legend.title = element_blank(),
+#             plot.margin = unit(c(6,5.5,20,10),"points"),
+#             line = element_line(size=1),
+#             axis.title = element_text(size=rel(1.5)),
+#             axis.text = element_text(size=rel(1)),
+#             panel.grid.major = element_blank(), 
+#             panel.grid.minor = element_blank())+
+#       ggtitle(paste("PCoA on RF Distances, Sim",i,", height ",h, sep=""))+
+#       xlab(paste("PCoA Axis 1 (",round(rf_pcoa$values$Relative_eig[1]*100,1),"%)",sep=""))+
+#       ylab(paste("PCoA Axis 2 (",round(rf_pcoa$values$Relative_eig[2]*100,1),"%)",sep=""))+
+#       #geom_label_repel(label=c(paste("MISS",results.raxml[subset,3],"Q",results.raxml[subset,2],sep=","),"truth"),size=rel(1))+
+#       scale_color_manual(values=c("#009980", "#006699","magenta","lightblue","orange","green","black","pink","turquoise"))+
+#       scale_shape_manual(values=c(0,1,2,3,16,17))
+#     print(plot2)
+#     
+#     #heatmap(rf_matrix,labCol=FALSE,labRow=paste(results.raxml[subset,]$maf,results.raxml[subset,]$missing,results.raxml[subset,]$int,sep=","),cex.lab=0.5)
+#   }
+# }
+# dev.off()
