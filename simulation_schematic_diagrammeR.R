@@ -1,6 +1,6 @@
-devtools::install_github('rich-iannone/DiagrammeR')
+#devtools::install_github('rich-iannone/DiagrammeR')
 
-grViz("
+DiagrammeR::grViz("
 digraph boxes_and_circles {
 
   # a 'graph' statement
@@ -10,34 +10,30 @@ digraph boxes_and_circles {
   node [shape = box,
         fontname = Helvetica,
         #fixedsize=true,
-        width=3,
-        color=midnightblue,
+        width=4,
+        color='#0A9396',
         penwidth=3,
         style=filled,
-        fillcolor=midnightblue,
+        fillcolor='#0A9396',
         fontcolor=white]
-  a [label = 'Simulate species tree\n(100 individuals)',fontsize=16]; 
+  a [label = 'Simulate species tree\n(50 tips)',fontsize=18]; 
   
   node [shape = box,
         fontname = Helvetica,
         #fixedsize=true,
-        width=2.5,
+        width=3,
         nodesep=1,
-        color=midnightblue,
+        color='#0A9396',
         penwidth=3,
         fillcolor=white,
-        fontcolor=black]
-  b [label = 'Simulate 1000 gene\ngeneologies for 1000bp loci\nconstrained to species tree',width=3];
+        fontcolor=black,
+        fontsize=16]
+  b [label = 'Simulate 2000 gene\ngeneologies for 5000bp loci\nconstrained to species tree',width=3];
   c [label = 'Simulate 150bp fastq reads\nfor each individual at\neach locus with\nrandom mutation rate',width=3]; 
   
   e [label = 'Align fastq reads to\nreference genome'];
-  e2 [label = 'Align fastq reads to\nreference genome'];
-  f [label = 'Call variants'];
-  f2 [label = 'Call variants'];
-  g [label = 'Filter VCF\nQUAL=40,\nBiallelic SNPs only'];
-  g2 [label = 'Filter VCF\nQUAL=40,\nBialleleic SNPs only'];
+  f [label = 'Call variants\nand filter VCF for\nQUAL=40,\nbiallelic SNPs only'];
   h [label = 'Remove invariant sites,\nconvert to phylip'];
-  h2 [label = 'Remove invariant sites,\nconvert to phylip'];
   i [label = 'Maximum likelihood\ntree estimation (RAxML)'];
   j [label = 'Summary statistics\nand analysis']
 
@@ -46,22 +42,21 @@ digraph boxes_and_circles {
         nodesep=0.25,
         style=dashed,
         color=gray]
-  a1 [label = 'Tree height\n500,000\n2,000,000\n10,000,000'];
+  a1 [label = 'Speciation rate\n0.00001 (high ILS)\n0.000005 (med ILS)\n0.000001 (low ILS)'];
   d [label = 'Choose random ingroup\nindividual as reference'];
   d2 [label = 'Choose outgroup\nindividual as reference'];
 
-  g3 [label = 'Minor allele frequency\n0 / 0.01 / 0.02 / 0.03 / 0.04 / 0.05 / 0.10'];
-  g4 [label = 'Missing data\n0 / 0.25 / 0.50 / 0.75 / 1.0'];
+  g3 [label = 'Minor allele count\n0 / 1 / 2 / 3 / 4 / 5 / 10'];
+  g4 [label = 'Missing data\n0 / 0.25 / 0.50 / 0.75 / 0.90'];
 
   # several 'edge' statements
   edge [color = slategrey]
   b->c
-  c->d->e->f->g->{g3,g4}->h->i
-  c->d2->e2->f2->g2->{g3,g4}->h2->i
+  c->{d,d2}->e->f->g3->g4->h->i
   i->j
 
   edge [color = slategrey,arrowhead=none]
   a->a1 [len=0.5]
-  a1->b[minlen=2]
+  a1->b[minlen=1]
 }
 ")
