@@ -1,0 +1,27 @@
+2 lates INT Lmar 
+3 lates INT Lmar 
+4 lates INT Lmar 
+6 lates INT Lmar 
+7 lates INT Lmar 
+1 lates EXT Lcal 
+2 lates EXT Lcal 0.619638
+3 lates EXT Lcal 0.625888
+8 lates INT Lmar 
+10 lates INT Lmar 
+4 lates EXT Lcal 0.632329
+5 lates EXT Lcal 
+6 lates EXT Lcal 0.617931
+7 lates EXT Lcal 0.63144
+8 lates EXT Lcal 0.6206
+10 lates EXT Lcal 0.631688
+9 lates EXT Lcal 
+1 cichlids EXT Onil 
+2 cichlids EXT Onil 
+3 cichlids EXT Onil 
+4 cichlids EXT Onil 
+5 cichlids EXT Onil 
+6 cichlids EXT Onil 
+8 cichlids EXT Onil 
+7 cichlids EXT Onil 
+9 cichlids EXT Onil 
+10 cichlids EXT Onil 
