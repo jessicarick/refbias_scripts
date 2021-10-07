@@ -8,13 +8,13 @@ output <- "082921-cichlids-emp-output"
 
 #results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
-responses <- colnames(results.raxml[,c(8,12:34)])
+responses <- colnames(results.raxml[,c(8,12:35)])
 responses <- colnames(results.raxml[,c(9:20)])
 #responses <- colnames(results.raxml.cichlids[,c(9:22)])
 
 pdf(paste("output/new/",output,"-univariate-plots_refdist.pdf",sep=""),width=11,height=8)
 
-results <- as.data.frame(results.subsamp)
+results <- as.data.frame(results.mod)
 for (i in 1:length(responses)){
   plot1 <- ggplot(data = results, 
                   aes(x=as.factor(maf),
