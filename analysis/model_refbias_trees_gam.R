@@ -24,9 +24,15 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## gamma
 # all
 
-m.gam.all <- lmer(std.ingroup.gamma ~ int + maf + missing +
-                      int:maf + int:missing + (1 | simulation),
+m.gam.all <- lmer(std.ingroup.gamma ~ avg_dxy + maf + missing +
+                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                     data = results.mod)
+gam_gam <- gam(std.ingroup.gamma ~ avg_dxy + maf + missing +
+                avg_dxy:maf + avg_dxy:missing +
+                s(simulation, bs = 're'),
+              data = results.mod, method = 'REML')
+sum.gam.gam.all <- summary(gam_gam)
+
 sum.gam.all <- summary(m.gam.all)
 r.squaredGLMM(m.gam.all)
 
@@ -72,8 +78,8 @@ vars.gam.all.bars
 
 # short
 
-m.gam.short <- lmer(std.ingroup.gamma ~ int + maf + missing +
-                      int:maf + int:missing + (1 | simulation),
+m.gam.short <- lmer(std.ingroup.gamma ~ avg_dxy + maf + missing +
+                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
 sum.gam.short <- summary(m.gam.short)
 r.squaredGLMM(m.gam.short)
@@ -120,8 +126,8 @@ vars.gam.short.bars
 
 # med
 
-m.gam.med <- lmer(std.ingroup.gamma ~ int + maf + missing +
-                    int:maf + int:missing + (1 | simulation),
+m.gam.med <- lmer(std.ingroup.gamma ~ avg_dxy + maf + missing +
+                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                  data = results.mod[results.mod$height == "MED",])
 sum.gam.med <- summary(m.gam.med)
 r.squaredGLMM(m.gam.med)
@@ -169,8 +175,8 @@ vars.gam.med.bars
 
 # long
 
-m.gam.long <- lmer(std.ingroup.gamma ~ int + maf + missing +
-                     int:maf + int:missing + (1 | simulation),
+m.gam.long <- lmer(std.ingroup.gamma ~ avg_dxy + maf + missing +
+                     avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "LONG",])
 sum.gam.long <- summary(m.gam.long)
 r.squaredGLMM(m.gam.long)

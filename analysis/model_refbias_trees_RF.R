@@ -6,6 +6,7 @@ library(LMERConvenienceFunctions)
 library(ggsci)
 library(ggpubr)
 library(ggridges)
+library(mgcv)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
@@ -13,7 +14,7 @@ output <- "072221-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml[results.raxml$simulation > 15,]
+results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
@@ -24,9 +25,15 @@ results.mod$int <- as.factor(results.mod$int)
 ## rf distance
 # all
 
-m.rf.all <- lmer(RF.Dist.ML ~ int + maf + missing +
-                     int:maf + int:missing + (1 | simulation),
+m.rf.all <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+                   avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod)
+rf_gam <- gam(RF.Dist.ML ~ avg_dxy + maf + missing +
+                avg_dxy:maf + avg_dxy:missing +
+                s(simulation, bs = 're'),
+              data = results.mod, method = 'REML')
+sum.rf.gam.all <- summary(rf_gam)
+
 sum.rf.all <- summary(m.rf.all)
 r.squaredGLMM(m.rf.all)
 
@@ -74,8 +81,8 @@ vars.rf.all.bars
 
 # short
 
-m.rf.short <- lmer(RF.Dist.ML ~ int + maf + missing +
-                     int:maf + int:missing + (1 | simulation),
+m.rf.short <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+                     avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
 sum.rf.short <- summary(m.rf.short)
 r.squaredGLMM(m.rf.short)
@@ -124,8 +131,8 @@ vars.rf.short.bars
 
 # med
 
-m.rf.med <- lmer(RF.Dist.ML ~ int + maf + missing +
-                   int:maf + int:missing + (1 | simulation),
+m.rf.med <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+                   avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                  data = results.mod[results.mod$height == "MED",])
 sum.rf.med <- summary(m.rf.med)
 r.squaredGLMM(m.rf.med)
@@ -174,8 +181,8 @@ xlab("")+
 vars.rf.med.bars
 
 # long
-m.rf.long <- lmer(RF.Dist.ML ~ int + maf + missing +
-                    int:maf + int:missing + (1 | simulation),
+m.rf.long <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "LONG",])
 sum.rf.long <- summary(m.rf.long)
 r.squaredGLMM(m.rf.long)

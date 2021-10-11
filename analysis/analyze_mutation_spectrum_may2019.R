@@ -94,8 +94,12 @@ first_loss_df <- pre.post %>%
   group_by(height,sim,int,gene,variants) %>%
   summarise(first_loss = min(as.numeric(maf),na.rm=T))  %>%
   ungroup() %>%
+  group_by(first_loss,int) %>%
+  mutate(mean = mean(variants/5000),
+         median = median(variants/5000))%>%
+  ungroup() %>%
   group_by(first_loss) %>%
-  mutate(mean = mean(variants/5000))
+  mutate(mean_fl = mean(variants/5000))
   # left_join(mut.all, by=c(
   #   "sim" = "sim_num",
   #   "gene" = "gene_name",
@@ -105,13 +109,13 @@ fl_maf <- first_loss_df %>%
   mutate(first_loss = as.factor(first_loss),
          mut_rate = variants/5000) %>%
   ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5) +
-  geom_vline(aes(xintercept=mean,group=height,col=first_loss),lty=2) +
-  theme(axis.title = element_text(size=rel(1.5),family="Open Sans"),
-        axis.text = element_text(size=rel(1.2),family="Open Sans"),
-        strip.text = element_text(size=rel(1.5),family="Open Sans"),
-        legend.text = element_text(size=rel(1.2),family="Open Sans"),
-        legend.title = element_text(size=rel(1.5),family="Open Sans"),
-        legend.position="right") +
+  geom_vline(aes(xintercept=mean_fl,group=height,col=first_loss),lty=2)  +
+  theme_custom() +
+  theme(legend.position="right",
+        strip.background=element_rect(fill="white"),
+        strip.text = element_text(size=rel(1.2),family="Open Sans Light"),
+        legend.title = element_text(size=rel(1),family="Open Sans Light")) +
+  scale_color_viridis(discrete=TRUE, option="viridis",end=0.9) +
   ylab("Density") +
   xlab("Mutation Rate") +
   guides(col=guide_legend(title="Minor\nAllele\nCount"))
@@ -119,25 +123,28 @@ fl_maf_facet <- first_loss_df %>%
   mutate(first_loss = as.factor(first_loss),
          mut_rate = variants/5000) %>%
   ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5) +
-  geom_vline(aes(xintercept=mean,group=height,col=first_loss),lty=2) +
-  theme(axis.title = element_text(size=rel(1.5),family="Open Sans"),
-        axis.text = element_text(size=rel(1.2),family="Open Sans"),
-        strip.text = element_text(size=rel(1.5),family="Open Sans"),
-        legend.text = element_text(size=rel(1.2),family="Open Sans"),
-        legend.title = element_text(size=rel(1.5),family="Open Sans"),
-        legend.position="top") +
+  geom_vline(aes(xintercept=mean,group=int,col=first_loss),lty=2) +
+  theme_custom() +
+  theme(legend.position="right",
+        strip.background=element_rect(fill="white"),
+        strip.text = element_text(size=rel(1.2),family="Open Sans Light"),
+        legend.title = element_text(size=rel(1),family="Open Sans Light")) +
+  scale_color_viridis(discrete=TRUE, option="viridis",end=0.9) +
   ylab("Density") +
   xlab("Mutation Rate") +
-  facet_wrap(~height) +
-  guides(col=guide_legend(title="Minor Allele Count"))
+  facet_wrap(~int) +
+  guides(col=guide_legend(title="Minor\nAllele\nCount"))
 
 first_loss_miss_df <- pre.post %>%
   filter(nSNP == 0 & maf == "0") %>%
   group_by(height,sim,int,gene,variants) %>%
   summarise(first_loss = min(as.numeric(miss),na.rm=T))  %>%
   ungroup() %>%
+  group_by(first_loss,int) %>%
+  mutate(mean = mean(variants/5000)) %>%
+  ungroup() %>%
   group_by(first_loss) %>%
-  mutate(mean = mean(variants/5000)) 
+  mutate(mean_fl = mean(variants/5000))
 # left_join(mut.all, by=c(
 #   "sim" = "sim_num",
 #   "gene" = "gene_name",
@@ -148,13 +155,13 @@ fl_miss <- first_loss_miss_df %>%
          mut_rate = variants/5000) %>%
   filter(!first_loss %in% c(0.25,0.5)) %>%
   ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5) +
-  geom_vline(aes(xintercept=mean,group=height,col=first_loss),lty=2) +
-  theme(axis.title = element_text(size=rel(1.5),family="Open Sans"),
-        axis.text = element_text(size=rel(1.2),family="Open Sans"),
-        strip.text = element_text(size=rel(1.5),family="Open Sans"),
-        legend.text = element_text(size=rel(1.2),family="Open Sans"),
-        legend.title = element_text(size=rel(1.5),family="Open Sans"),
-        legend.position="right") +
+  geom_vline(aes(xintercept=mean_fl,col=first_loss),lty=2) +
+  theme_custom() +
+  theme(legend.position="right",
+        strip.background=element_rect(fill="white"),
+        strip.text = element_text(size=rel(1.2),family="Open Sans Light"),
+        legend.title = element_text(size=rel(1),family="Open Sans Light")) +
+  scale_color_viridis(discrete=TRUE, option="viridis",end=0.8) +
   ylab("Density") +
   xlab("Mutation Rate") +
   guides(col=guide_legend(title="Missing\nData\nThreshold"))
@@ -163,24 +170,25 @@ fl_miss_facet <- first_loss_miss_df %>%
          mut_rate = variants/5000)  %>%
   filter(!first_loss %in% c(0.25,0.5)) %>%
   ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5) +
-  geom_vline(aes(xintercept=mean,group=height,col=first_loss),lty=2) +
-  theme(axis.title = element_text(size=rel(1.5),family="Open Sans"),
-        axis.text = element_text(size=rel(1.2),family="Open Sans"),
-        strip.text = element_text(size=rel(1.5),family="Open Sans"),
-        legend.text = element_text(size=rel(1.2),family="Open Sans"),
-        legend.title = element_text(size=rel(1.5),family="Open Sans"),
-        legend.position="top") +
+  geom_vline(aes(xintercept=mean,group=int,col=first_loss),lty=2) +
+  theme_custom() +
+  theme(legend.position="right",
+        strip.background=element_rect(fill="white"),
+        strip.text = element_text(size=rel(1.2),family="Open Sans Light"),
+        legend.title = element_text(size=rel(1),family="Open Sans Light")) +
+  scale_color_viridis(discrete=TRUE, option="viridis",end=0.8) +
   ylab("Density") +
   xlab("Mutation Rate") +
-  facet_wrap(~height) +
-  guides(col=guide_legend(title="Missing Data Threshold"))
+  facet_wrap(~int) +
+  guides(col=guide_legend(title="Missing\nData\nThreshold"))
 
 ## plotting together!
 ## exported at 1200x1200px
-library(patchwork)
+#library(patchwork)
 (fl_maf | fl_miss) /
   fl_maf_facet /
-  fl_miss_facet + plot_annotation(tag_levels = 'A') & 
+  fl_miss_facet + plot_annotation(tag_levels = 'A') + 
+  plot_layout(heights = c(1.5, 1, 1)) & 
   theme(plot.tag = element_text(size = rel(2),family="Open Sans")) 
 
   
@@ -211,7 +219,7 @@ pre.post %>%
   mutate(lost = case_when(nSNP == 0 ~ "Y",
                           TRUE ~ "N")) %>%
   group_by(maf,lost) %>%
-  summarize(n = n())
+  #summarize(n = n())
   #t.test(.$variants ~ .$lost)
   filter(lost == "Y") %>%
   ggdensity(x="variants",fill="maf",alpha=0.3,color="maf",
@@ -226,3 +234,7 @@ pre.post %>%
   geom_density(aes(x=diff,fill=maf), alpha=0.2, trim=TRUE) +
   facet_wrap(~lost) +
   theme_custom()
+
+pre.post %>%
+  ggplot(aes(x=variants,y=diff)) +
+  stat_bin_hex(bins=100)

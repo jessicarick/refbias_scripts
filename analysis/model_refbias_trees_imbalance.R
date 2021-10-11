@@ -7,6 +7,7 @@ library(ggsci)
 library(ggpubr)
 library(wesanderson)
 library(ggridges)
+library(ggdist)
 
 cols.int <- c("#005F73","gray80","#5FB89D")
 cols.sig <- c("#E6B749","gray80","#6A8D4E")
@@ -28,9 +29,15 @@ results.mod$maf <- as.factor(results.mod$maf)
 ## imbalance
 # all
 
-m.imb.all <- lmer(std.ingroup.colless ~ int + maf + missing +
-                      int:maf + int:missing + (1 | simulation),
+m.imb.all <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
+                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                     data = results.mod)
+imb_gam <- gam(std.ingroup.colless ~ avg_dxy + maf + missing +
+                avg_dxy:maf + avg_dxy:missing +
+                s(simulation, bs = 're'),
+              data = results.mod, method = 'REML')
+sum.imb.gam.all <- summary(imb_gam)
+
 sum.imb.all <- summary(m.imb.all)
 r.squaredGLMM(m.imb.all)
 
@@ -78,8 +85,8 @@ print(vars.imb.all.bars)
 
 # short
 
-m.imb.short <- lmer(std.ingroup.colless ~ int + maf + missing +
-                      int:maf + int:missing + (1 | simulation),
+m.imb.short <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
+                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                     data = results.mod[results.mod$height == "SHORT" & results.mod$noref == "REF",])
 sum.imb.short <- summary(m.imb.short)
 r.squaredGLMM(m.imb.short)
@@ -128,8 +135,8 @@ print(vars.imb.short.bars)
 
 # med
 
-m.imb.med <- lmer(std.ingroup.colless ~ int + maf + missing +
-                    int:maf + int:missing + (1 | simulation),
+m.imb.med <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
+                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "MED" & results.mod$noref == "REF",])
 sum.imb.med <- summary(m.imb.med)
 r.squaredGLMM(m.imb.med)
@@ -166,7 +173,7 @@ vars.imb.med.bars <- vars.imb.med + geom_blank() +
   #ylim(-200,1200)+
   #scale_color_npg() +
   #scale_x_reverse() +
-  scale_color_manual(values=cols.sig[c(2,1)])+
+  scale_color_manual(values=cols.sig)+
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
   #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
   geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1) +
@@ -178,8 +185,8 @@ vars.imb.med.bars
 
 # long
 
-m.imb.long <- lmer(std.ingroup.colless ~ int + maf + missing +
-                     int:maf + int:missing + (1 | simulation),
+m.imb.long <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
+                     avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "LONG" & results.mod$noref == "REF",])
 sum.imb.long <- summary(m.imb.long)
 r.squaredGLMM(m.imb.long)

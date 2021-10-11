@@ -4,8 +4,15 @@
 ### 
 ### J. Rick, Sept 2021
 ########################
+library(ggplot2)
+library(viridis)
+library(ggpubr)
+library(ggdist)
+library(kableExtra)
+source(analysis/theme_custom.R)
 
 output <- "092321-output"
+output <- "092321-subsamp-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ########################
@@ -14,16 +21,18 @@ cols.int <- c("#005F73","gray80","#5FB89D")
 cols.sig <- c("#E6B749","gray80","#6A8D4E")
 
 results_mean <- results.mod %>%
-  select(int,height,maf,missing,RF.Dist.ML,std.ingroup.gamma,std.ingroup.colless,Q.Dist.ML,CI.Dist.ML) %>%
+  select(int,height,maf,missing,avg_dxy,RF.Dist.ML,std.ingroup.gamma,std.ingroup.colless,Q.Dist.ML,CI.Dist.ML,ingroup.tree.height) %>%
   #pivot_wider(id_cols="maf",names_from="missing",values_from="RF.Dist.ML",values_fn=mean) %>%
   group_by(maf,missing,int,height) %>%
-  mutate(mean_rf = mean(RF.Dist.ML),
+  mutate(mean_dxy = mean(avg_dxy),
+         mean_rf = mean(RF.Dist.ML),
          mean_gam = mean(std.ingroup.gamma),
          mean_colless = mean(std.ingroup.colless),
          mean_qdist = mean(Q.Dist.ML),
-         mean_cidist = mean(CI.Dist.ML)) %>%
-  select(maf,mean_rf:mean_cidist) %>%
-  pivot_longer(cols=mean_rf:mean_cidist,names_to="param",values_to="mean") 
+         mean_cidist = mean(CI.Dist.ML),
+         mean_height = mean(ingroup.tree.height)) %>%
+  select(maf,mean_dxy:mean_height) %>%
+  pivot_longer(cols=mean_rf:mean_height,names_to="param",values_to="mean") 
 
 # rf_interp <- interp::interp(x=results_mean$maf[results_mean$param == "mean_rf"], y=results_mean$missing[results_mean$param == "mean_rf"], z=results_mean$mean[results_mean$param == "mean_rf"],
 #               output="grid",duplicate = "mean")
@@ -31,9 +40,10 @@ results_mean <- results.mod %>%
 contour_rf <- results_mean %>%
   filter(param == "mean_rf") %>%
   ggplot() +
-    geom_contour_filled(aes(x=maf,y=missing,z=mean)) +
+    geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
     theme_custom() +
-  scale_fill_viridis(discrete=TRUE,option="C", name="RF Distance") +
+  scale_fill_viridis(discrete=TRUE,option="C", name="RF Distance",
+                     labels=c("Low",rep("",12),"High")) +
   theme(legend.title = element_text(size=rel(1.8)),
         axis.title = element_text(size=rel(1.8)),
         strip.text = element_text(size=rel(1.3)),
@@ -45,9 +55,10 @@ contour_rf <- results_mean %>%
 contour_gam <- results_mean %>%
   filter(param == "mean_gam") %>%
   ggplot() +
-  geom_contour_filled(aes(x=maf,y=missing,z=mean)) +
+  geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
   theme_custom() +
-  scale_fill_viridis(discrete=TRUE,option="C", name="Gamma") +
+  scale_fill_viridis(discrete=TRUE,option="C", name="Gamma",
+                     labels=c("Low",rep("",12),"High")) +
   theme(legend.title = element_text(size=rel(1.8)),
         axis.title = element_text(size=rel(1.8)),
         strip.text = element_text(size=rel(1.3)),
@@ -59,9 +70,10 @@ contour_gam <- results_mean %>%
 contour_imb <- results_mean %>%
   filter(param == "mean_colless") %>%
   ggplot() +
-  geom_contour_filled(aes(x=maf,y=missing,z=mean)) +
+  geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
   theme_custom() +
-  scale_fill_viridis(discrete=TRUE,option="C", name="Colless\nImbalance") +
+  scale_fill_viridis(discrete=TRUE,option="C", name="Colless\nImbalance",
+                     labels=c("Low",rep("",12),"High")) +
   theme(legend.title = element_text(size=rel(1.8)),
         axis.title = element_text(size=rel(1.8)),
         strip.text = element_text(size=rel(1.3)),
@@ -73,9 +85,10 @@ contour_imb <- results_mean %>%
 contour_qdist <- results_mean %>%
   filter(param == "mean_qdist") %>%
   ggplot() +
-  geom_contour_filled(aes(x=maf,y=missing,z=mean)) +
+  geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
   theme_custom() +
-  scale_fill_viridis(discrete=TRUE,option="C", name="Quartet\nDistance") +
+  scale_fill_viridis(discrete=TRUE,option="C", name="Quartet\nDistance",
+                     labels=c("Low",rep("",12),"High")) +
   theme(legend.title = element_text(size=rel(1.8)),
         axis.title = element_text(size=rel(1.8)),
         strip.text = element_text(size=rel(1.3)),
@@ -87,9 +100,25 @@ contour_qdist <- results_mean %>%
 contour_ci <- results_mean %>%
   filter(param == "mean_cidist") %>%
   ggplot() +
-  geom_contour_filled(aes(x=maf,y=missing,z=mean)) +
+  geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
   theme_custom() +
-  scale_fill_viridis(discrete=TRUE,option="C", name="CI Distance") +
+  scale_fill_viridis(discrete=TRUE,option="C", name="CI Distance",
+                     labels=c("Low",rep("",12),"High")) +
+  theme(legend.title = element_text(size=rel(1.8)),
+        axis.title = element_text(size=rel(1.8)),
+        strip.text = element_text(size=rel(1.3)),
+        strip.background = element_rect(fill="white")) +
+  ylab("Missing Data") +
+  xlab("Minor Allele Count") +
+  facet_grid(vars(int),vars(height))
+
+contour_height <- results_mean %>%
+  filter(param == "mean_cidist") %>%
+  ggplot() +
+  geom_contour_filled(aes(x=maf,y=missing,z=mean),bins=15) +
+  theme_custom() +
+  scale_fill_viridis(discrete=TRUE,option="C", name="Ingroup\nTree Height",
+                     labels=c("Low",rep("",12),"High")) +
   theme(legend.title = element_text(size=rel(1.8)),
         axis.title = element_text(size=rel(1.8)),
         strip.text = element_text(size=rel(1.3)),
@@ -100,7 +129,7 @@ contour_ci <- results_mean %>%
 
 # exported at 1800 x 800px
 ggarrange(contour_rf, contour_qdist, contour_ci,
-          contour_gam, contour_imb, nrow=2, ncol=3,
+          contour_gam, contour_imb, contour_height, nrow=2, ncol=3,
           labels="AUTO",font.label=list(size=24))
 
 ########################
@@ -181,7 +210,7 @@ confint.plot.bygroup <- all.confint  %>%
 confint.plot.all <- all.confint %>%
   filter(height == "all") %>%
   ggplot(aes(x=var,y=est,col=sig)) +
-  scale_color_manual(values=cols.sig) +
+  scale_color_manual(values=cols.sig[2:3]) +
   geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
   geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=5,lwd=1, 
                   position=position_nudge(x=all.confint$nudge), alpha=1, shape=4) +
@@ -199,8 +228,8 @@ confint.plot.all <- all.confint %>%
              ))
 
 ## saved at 1000 x 1000px
-ggarrange(confint.plot.all,confint.plot.bygroup,ncol=1,
-          heights=c(1,2),labels="AUTO",font.label=list(size=24,family="Open Sans"),
+p1 <- ggarrange(confint.plot.all,confint.plot.bygroup,ncol=1,
+          heights=c(1,1.5),labels="AUTO",font.label=list(size=24,family="Open Sans"),
           common.legend=TRUE,legend.grob=get_legend(confint.plot.bygroup),legend="right")
 
 ## table with param estimates
@@ -214,7 +243,8 @@ confint.table <- all.confint %>%
               names_sort=TRUE) %>%
   relocate(resp,var,starts_with("all"),starts_with("long"),starts_with("med"),starts_with("short")) %>%
   select(!resp) %>%
-  kbl(booktabs = T,digits=3,format="latex",
+  kbl(booktabs = T,digits=3,
+      format="latex",
       col.names=c("Variable","Est","Min CI","Max CI","Sig",
                   "Est","Min CI","Max CI","Sig",
                   "Est","Min CI","Max CI","Sig",
@@ -223,9 +253,8 @@ confint.table <- all.confint %>%
   kable_styling(latex_options = c("repeat_header")) %>%
   pack_rows("Standardized ingroup gamma", 1, 5) %>%
   pack_rows("Robinson-Foulds distance to true tree", 6, 10) %>%
-  pack_rows("Standardized ingroup Colless imbalance", 11, 15) %>%
-  landscape()
-writeLines(confint.table, '~/Dropbox/Apps/Overleaf/Reference Bias in SNP-based Phylogenetics/confint_table.tex')
+  pack_rows("Standardized ingroup Colless imbalance", 11, 15)
+writeLines(confint.table, '~/Dropbox/Apps/Overleaf/Reference Bias in SNP-based Phylogenetics/confint_table_subsamp.tex')
 
 
 ########################
@@ -239,7 +268,7 @@ rf.plot <- results.mod %>%
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
   ylab("Robinson-Foulds\nDistance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 25, b = 0, l = 0)))
 q.plot <- results.mod %>%
   ggplot(aes(x=maf,y=Q.Dist.ML,shape=int,col=height)) +
   stat_summary(alpha=0.8) +
@@ -260,7 +289,7 @@ ci.plot <- results.mod %>%
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 
 ## saved at 800px x 1000px
-ggarrange(rf.plot,q.plot,ci.plot,ncol=1,labels="AUTO",
+p2 <- ggarrange(rf.plot,q.plot,ci.plot,ncol=1,labels="AUTO",
           font.label=list(size=24,font.family="Open Sans"),
           common.legend=TRUE,legend="right",
           label.x=0.17,label.y=0.95)
@@ -273,7 +302,7 @@ gam.plot <- results.mod %>%
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
   ylab("Standardized\ningroup gamma") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 45, b = 0, l = 0))) +
   geom_hline(yintercept=0)
 ic.plot <- results.mod %>%
   ggplot(aes(x=maf,y=std.ingroup.colless,shape=int,col=height)) +
@@ -283,7 +312,7 @@ ic.plot <- results.mod %>%
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
   ylab("Standardized ingroup\nColless imbalance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
   geom_hline(yintercept=0)
 is.plot <- results.mod %>%
   ggplot(aes(x=maf,y=std.ingroup.sackin,shape=int,col=height)) +
@@ -295,8 +324,118 @@ is.plot <- results.mod %>%
   ylab("Standardized ingroup\nSackin imbalance") +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   geom_hline(yintercept=0)
+th.plot.maf <- results.mod %>%
+  ggplot(aes(x=maf,y=ingroup.tree.height,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Ingroup Tree Height") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 ## saved at 800px x 1000px
-ggarrange(gam.plot,ic.plot,is.plot,ncol=1,labels="AUTO",
+p3 <- ggarrange(gam.plot,ic.plot,is.plot,ncol=1,labels="AUTO",
           font.label=list(size=24,font.family="Open Sans"),
           common.legend=TRUE,legend="right",
           label.x=0.17,label.y=0.95)
+
+#library(patchwork)
+p4 <- ggarrange(rf.plot, ic.plot, gam.plot, ncol=1, labels=c("C","D","E"),font.label=list(size=24,font.family="Open Sans"),
+                common.legend=TRUE,legend="right",
+                label.x=0.3,label.y=0.95)
+p1 + p4 + 
+  plot_layout(widths = c(1.5, 1))
+
+########################
+## plot of distances to true tree by maf & int for empirical trees
+## 
+# across maf
+th.plot.maf <- results.mod %>%
+  ggplot(aes(x=maf,y=ingroup.tree.height,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Ingroup Tree Height") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
+gam.plot.maf <- results.mod %>%
+  ggplot(aes(x=maf,y=std.ingroup.gamma,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Standardized\ningroup gamma") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+ic.plot.maf <- results.mod %>%
+  ggplot(aes(x=maf,y=std.ingroup.colless,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Standardized ingroup\nColless imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+is.plot.maf <- results.mod %>%
+  ggplot(aes(x=maf,y=std.ingroup.sackin,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Standardized ingroup\nSackin imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+
+# across missing data
+th.plot.miss <- results.mod %>%
+  ggplot(aes(x=missing,y=ingroup.tree.height,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Missing Data") +
+  ylab("Ingroup Tree Height") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
+gam.plot.miss <- results.mod %>%
+  ggplot(aes(x=missing,y=std.ingroup.gamma,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Missing Data") +
+  ylab("Standardized\ningroup gamma") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+ic.plot.miss <- results.mod %>%
+  ggplot(aes(x=missing,y=std.ingroup.colless,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Missing Data") +
+  ylab("Standardized ingroup\nColless imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+is.plot.miss <- results.mod %>%
+  ggplot(aes(x=missing,y=std.ingroup.sackin,shape=int,col=height)) +
+  stat_summary(alpha=0.8) +
+  stat_summary(geom="line",lty=2) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Missing Data") +
+  ylab("Standardized ingroup\nSackin imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  geom_hline(yintercept=0)
+
+## saved at 1400 x 1400px
+p3.emp <- ggarrange(th.plot.maf,th.plot.miss,
+                    gam.plot.maf,gam.plot.miss,
+                    ic.plot.maf,ic.plot.miss,
+                    is.plot.maf,is.plot.miss,
+                    ncol=2,labels="AUTO",
+                    font.label=list(size=24,font.family="Open Sans"),
+                    label.x=0.17,label.y=0.95)

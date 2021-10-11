@@ -30,11 +30,11 @@ source("analysis/theme_custom.R")
 ## Specifying file names ########
 ############################################
 
-emp.trees <- "082921-cichlids-emp-batch.trees"
-emp.tree.names <- "082921-cichlids-emp-tree.names"
-output <- "082921-cichlids-emp-output"
-refdist <- "082921-emp-refdist.txt"
-sites <- "082921-SNPs-emp"
+emp.trees <- "100421-cichlids-emp-batch.trees"
+emp.tree.names <- "100421-cichlids-emp-tree.names"
+output <- "100421-cichlids-emp-output"
+refdist <- "100421-emp-refdist.txt"
+sites <- "100421-SNPs-emp"
 outgroup <- "SRR14041074.Onil"
 args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
 
@@ -42,7 +42,7 @@ args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output
 emp.trees<-read.tree(paste("output/new/",args$emp.trees,sep=""))
 
 ###Read in file of tree names
-emp.tree.names<-read.table(paste("output/new/",args$emp.tree.names,sep=""),stringsAsFactors=FALSE)[,1]
+emp.tree.names<-read.table(paste("output/new/",args$emp.tree.names,sep=""),stringsAsFactors=FALSE)[,1][-c(1:125)]
 
 ###Import reference distance data
 # refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("simulation","height","int","taxa_ref","avg_dxy")) %>%
@@ -53,7 +53,7 @@ emp.tree.names<-read.table(paste("output/new/",args$emp.tree.names,sep=""),strin
 sites <- read_csv(paste0("output/new/",args$sites),col_names=c("tree","snps")) %>% 
   mutate(simulation=as.integer(gsub(".*s([0-9]+)_q40.*","\\1",tree)),
          missing=as.numeric(gsub(".*miss([0-9]\\.?[0-9]*)\\_.*","\\1",tree)),
-         maf=as.numeric(gsub(".*maf([0-9]\\.?[0-9]*)\\.REF.*","\\1",tree)),
+         maf=as.numeric(gsub(".*mac([0-9]\\.?[0-9]*)\\.REF.*","\\1",tree)),
          int=gsub(".*cichlids\\.([A-Z]+)\\.noInv.*","\\1",tree))
 
 #####################
@@ -74,16 +74,14 @@ fix_labels <- function(x) {
 
 emp.trees <- lapply(emp.trees, function(x) fix_labels(x))
 
-
-
 ## pull info from tree names, and calculate tree statistics
 results.raxml <- results.raxml %>%
   mutate(
     simulation = sapply(emp.tree.names,function(x) as.integer(regmatches(x, regexec('_s([0-9]+)\\_q', x))[[1]][2])),
     method = "raxml",
     quality = sapply(emp.tree.names,function(x) as.integer(regmatches(x, regexec('q(.*?)\\_m', x))[[1]][2])),
-    missing = sapply(emp.tree.names,function(x) as.numeric(regmatches(x, regexec('miss(0.*?)\\_maf', x))[[1]][2])),
-    maf = sapply(emp.tree.names, function(x) as.numeric(regmatches(x, regexec('maf(0.*?)\\.REF', x))[[1]][2])),
+    missing = sapply(emp.tree.names,function(x) as.numeric(regmatches(x, regexec('miss(0.*?)\\_mac', x))[[1]][2])),
+    maf = sapply(emp.tree.names, function(x) as.numeric(regmatches(x, regexec('mac([0-9]+)\\.REF', x))[[1]][2])),
     int = sapply(emp.tree.names, function(x) regmatches(x, regexec('REF.([A-Z]+)\\.emp', x))[[1]][2]),
     noref = "REF"
   ) %>%
