@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #SBATCH --account=phylogenref
-#SBATCH --time=1-00:00:00
+#SBATCH --time=4-00:00:00
 #SBATCH --ntasks-per-node=16
 #SBATCH --nodes=1
 #SBATCH --array=1-10
@@ -28,9 +28,9 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 #####################################
 
 source /project/phylogenref/scripts/sim_scripts/refbias_config_emp.txt
-tree_height="cichlids"
+tree_height="lates"
 int=EXT
-day=100421
+day=100821
 sim=${SLURM_ARRAY_TASK_ID}
 
 cd /gscratch/jrick/phylogenref/emp_tmp/${tree_height}/
@@ -86,9 +86,9 @@ echo "starting empirical $tree_height analysis for $int, simulation $sim"
 	elif [ "$tree_height" == "lates" ]; then
                 sed -i "s/INT/${int}/g" rand_ind_sim${sim}.txt
                 sed -i "s/EXT/${int}/g" rand_ind_sim${sim}.txt
-        elif [ "$tree_height" == "cichlids" & "$int" == "EXT" ]; then
+        elif [ "$tree_height" == "cichlids" ] && [ "$int" == "EXT" ]; then
                 sed -i 's#INT_ref/bwa_assem_pundamilia#EXT_ref/bwa_assem_oreochromis#g' rand_ind_sim${sim}.txt
-        elif [ "$tree_height" == "cichlids" & "$int" == "INT" ]; then
+        elif [ "$tree_height" == "cichlids" ] && [ "$int" == "INT" ]; then
 		sed -i 's#EXT_ref/bwa_assem_oreochromis#INT_ref/bwa_assem_pundamilia#g' rand_ind_sim${sim}.txt
 	fi
 
