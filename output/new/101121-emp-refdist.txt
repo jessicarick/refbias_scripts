@@ -1,0 +1,20 @@
+2 lates EXT Lcal 0.602781
+1 lates EXT Lcal 0.611902
+3 lates EXT Lcal 0.619029
+4 lates EXT Lcal 0.613565
+5 lates EXT Lcal 0.605887
+8 lates EXT Lcal 0.669229
+7 lates EXT Lcal 0.625046
+10 lates EXT Lcal 0.697156
+9 lates EXT Lcal 0.625375
+1 lates INT Lmar 
+7 lates INT Lmar 
+4 lates INT Lmar 
+5 lates INT Lmar 
+3 lates INT Lmar 
+6 lates INT Lmar 
+2 lates INT Lmar 
+8 lates INT Lmar 
+10 lates INT Lmar 
+9 lates INT Lmar 
+6 lates EXT Lcal 0.63031
