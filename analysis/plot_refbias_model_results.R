@@ -347,95 +347,146 @@ p1 + p4 +
   plot_layout(widths = c(1.5, 1))
 
 ########################
-## plot of distances to true tree by maf & int for empirical trees
+## plots for empirical trees
 ## 
+all.confint <- confint.gam.all %>% 
+            as_tibble() %>% 
+            mutate(resp = "ingroup.gamma") %>% 
+            add_row(confint.height.all %>% 
+                      as_tibble() %>% 
+                      mutate(resp = "ingroup.height")) %>%
+            add_row(confint.imb.all %>% 
+                      as_tibble() %>% 
+                      mutate(resp = "ingroup.colless")) %>%
+            mutate(height = "all")
+
+confint.plot.all <- all.confint %>%
+  ggplot(aes(x=var,y=est,col=sig)) +
+  scale_color_manual(values=cols.sig) +
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=5,lwd=1,
+                  alpha=1, shape=4) +
+  coord_flip() +
+  theme_custom() +
+  theme(axis.text = element_text(size=15),
+        legend.position="right",
+        axis.title = element_blank(),
+        strip.text = element_text(size=15)) +
+  facet_grid(cols=vars(resp),scales="free_x",
+             labeller = labeller(
+               resp = c("ingroup.height" = "Ingroup Height",
+                        "ingroup.colless" = "Ingroup Imbalance",
+                        "ingroup.gamma" = "Ingroup Gamma")
+             ))
+confint.plot.all.lates <- confint.plot.all
+confint.plot.all.cich <- confint.plot.all
+
+p.confint <- ggarrange(confint.plot.all.cich,confint.plot.all.lates,ncol=1,
+          labels="AUTO",
+          font.label=list(size=24,font.family="Open Sans"),
+          label.x=0,label.y=1,
+          common.legend=TRUE,legend="right")
+
 # across maf
-th.plot.maf <- results.mod %>%
-  ggplot(aes(x=maf,y=ingroup.tree.height,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+th.plot.maf <- results.emp.cichlids %>%
+  ggplot(aes(x=maf,y=ingroup.tree.height,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.tree.height,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.tree.height,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
-  ylab("Ingroup Tree Height") +
+  ylab("Ingroup\nTree Height") +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
-gam.plot.maf <- results.mod %>%
-  ggplot(aes(x=maf,y=std.ingroup.gamma,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+gam.plot.maf <- results.emp.cichlids %>%
+  ggplot(aes(x=maf,y=ingroup.gamma,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.gamma,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.gamma,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
-  ylab("Standardized\ningroup gamma") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
-ic.plot.maf <- results.mod %>%
-  ggplot(aes(x=maf,y=std.ingroup.colless,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+  ylab("Ingroup gamma") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+ic.plot.maf <- results.emp.cichlids %>%
+  ggplot(aes(x=maf,y=ingroup.colless,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.colless,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.colless,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
-  ylab("Standardized ingroup\nColless imbalance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
-is.plot.maf <- results.mod %>%
-  ggplot(aes(x=maf,y=std.ingroup.sackin,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+  ylab("Ingroup\nColless imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) 
+is.plot.maf <- results.emp.cichlids %>%
+  ggplot(aes(x=maf,y=ingroup.sackin,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.sackin,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(maf)),y=ingroup.sackin,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
-  ylab("Standardized ingroup\nSackin imbalance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
+  ylab("Ingroup\nSackin imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 
 # across missing data
-th.plot.miss <- results.mod %>%
-  ggplot(aes(x=missing,y=ingroup.tree.height,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+th.plot.miss <- results.emp.cichlids %>%
+  ggplot(aes(x=missing,y=ingroup.tree.height,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.tree.height,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.tree.height,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
-  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  #scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Missing Data") +
-  ylab("Ingroup Tree Height") +
+  ylab("Ingroup\nTree Height") +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
-gam.plot.miss <- results.mod %>%
-  ggplot(aes(x=missing,y=std.ingroup.gamma,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+gam.plot.miss <- results.emp.cichlids %>%
+  ggplot(aes(x=missing,y=ingroup.gamma,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.gamma,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.gamma,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
-  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  #scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Missing Data") +
-  ylab("Standardized\ningroup gamma") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
-ic.plot.miss <- results.mod %>%
-  ggplot(aes(x=missing,y=std.ingroup.colless,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+  ylab("Ingroup gamma") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+ic.plot.miss <- results.emp.cichlids %>%
+  ggplot(aes(x=missing,y=ingroup.colless,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.colless,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.colless,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
-  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  #scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Missing Data") +
-  ylab("Standardized ingroup\nColless imbalance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
-is.plot.miss <- results.mod %>%
-  ggplot(aes(x=missing,y=std.ingroup.sackin,shape=int,col=height)) +
-  stat_summary(alpha=0.8) +
-  stat_summary(geom="line",lty=2) +
+  ylab("Ingroup\nColless imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0))) 
+is.plot.miss <- results.emp.cichlids %>%
+  ggplot(aes(x=missing,y=ingroup.sackin,shape=as.factor(int))) +
+  stat_summary(alpha=0.8,col="#2a9d8f") +
+  stat_summary(geom="line",lty=2,col="#2a9d8f") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.sackin,group=int),geom="line",lty=2,inherit.aes=FALSE,col="#e76f51") +
+  stat_summary(data=results.emp.lates,aes(x=as.numeric(as.character(missing)),y=ingroup.sackin,shape=int),alpha=0.8,inherit.aes=FALSE,col="#e76f51") +
   theme_custom() +
-  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  #scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Missing Data") +
-  ylab("Standardized ingroup\nSackin imbalance") +
-  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
-  geom_hline(yintercept=0)
+  ylab("Ingroup\nSackin imbalance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) 
 
 ## saved at 1400 x 1400px
 p3.emp <- ggarrange(th.plot.maf,th.plot.miss,
                     gam.plot.maf,gam.plot.miss,
                     ic.plot.maf,ic.plot.miss,
                     is.plot.maf,is.plot.miss,
-                    ncol=2,labels="AUTO",
+                    ncol=2,nrow=4,labels=c("C","D","E","F","G","H","I","J"),
                     font.label=list(size=24,font.family="Open Sans"),
-                    label.x=0.17,label.y=0.95)
+                    label.x=0.2,label.y=0.95,
+                    common.legend=TRUE,legend="bottom")
+
+p.confint + p3.emp
