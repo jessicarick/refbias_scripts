@@ -30,11 +30,11 @@ source("analysis/theme_custom.R")
 ## Specifying file names ########
 ############################################
 
-emp.trees <- "100421-cichlids-emp-batch.trees"
-emp.tree.names <- "100421-cichlids-emp-tree.names"
-output <- "100421-cichlids-emp-output"
-refdist <- "100421-emp-refdist.txt"
-sites <- "100421-SNPs-emp"
+emp.trees <- "101121-cichlids-emp-batch.trees"
+emp.tree.names <- "101121-cichlids-emp-tree.names"
+output <- "101121-cichlids-emp-output"
+refdist <- "101121-emp-refdist.txt"
+sites <- "101121-SNPs-emp"
 outgroup <- "SRR14041074.Onil"
 args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
 
@@ -42,7 +42,7 @@ args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output
 emp.trees<-read.tree(paste("output/new/",args$emp.trees,sep=""))
 
 ###Read in file of tree names
-emp.tree.names<-read.table(paste("output/new/",args$emp.tree.names,sep=""),stringsAsFactors=FALSE)[,1][-c(1:125)]
+emp.tree.names<-read.table(paste("output/new/",args$emp.tree.names,sep=""),stringsAsFactors=FALSE)[,1]
 
 ###Import reference distance data
 # refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("simulation","height","int","taxa_ref","avg_dxy")) %>%
@@ -62,7 +62,7 @@ sites <- read_csv(paste0("output/new/",args$sites),col_names=c("tree","snps")) %
 
 ###Create empty data frame and with named, empty columns 
 num.trees <- length(emp.tree.names)
-results.raxml <- tibble(tree.num=seq(1:num.trees))
+results.emp <- tibble(tree.num=seq(1:num.trees))
 
 ###Fix names in RAxML trees
 fix_labels <- function(x) {
@@ -75,11 +75,11 @@ fix_labels <- function(x) {
 emp.trees <- lapply(emp.trees, function(x) fix_labels(x))
 
 ## pull info from tree names, and calculate tree statistics
-results.raxml <- results.raxml %>%
+results.emp <- results.emp %>%
   mutate(
     simulation = sapply(emp.tree.names,function(x) as.integer(regmatches(x, regexec('_s([0-9]+)\\_q', x))[[1]][2])),
     method = "raxml",
-    quality = sapply(emp.tree.names,function(x) as.integer(regmatches(x, regexec('q(.*?)\\_m', x))[[1]][2])),
+    quality = sapply(emp.tree.names,function(x) as.integer(regmatches(x, regexec('_q(40)\\_miss0', x))[[1]][2])),
     missing = sapply(emp.tree.names,function(x) as.numeric(regmatches(x, regexec('miss(0.*?)\\_mac', x))[[1]][2])),
     maf = sapply(emp.tree.names, function(x) as.numeric(regmatches(x, regexec('mac([0-9]+)\\.REF', x))[[1]][2])),
     int = sapply(emp.tree.names, function(x) regmatches(x, regexec('REF.([A-Z]+)\\.emp', x))[[1]][2]),
@@ -102,20 +102,20 @@ results.raxml <- results.raxml %>%
     ingroup.sackin = sapply(emp.trees, function(x) sackin(as.treeshape(drop.tip(root(x,outgroup,resolve.root=TRUE),outgroup),model="pda"),norm="pda"))
   ) 
 
-results.raxml <- results.raxml %>%
+results.emp <- results.emp %>%
   left_join(sites)
 
-write.csv(results.raxml.cichlids,file=paste("output/new/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,na="NA")
+write.csv(results.emp.cichlids,file=paste("output/new/",args$output,"-raxml.csv",sep=""),quote=FALSE,row.names=TRUE,na="NA")
 
 ######################
 ## univariate plots
 #####################
-results.raxml$maf <- as.factor(results.raxml$maf)
-results.raxml$missing <- as.factor(results.raxml$missing)
+results.emp$maf <- as.factor(results.emp$maf)
+results.emp$missing <- as.factor(results.emp$missing)
   
-results.raxml$simulation <- as.factor(results.raxml$simulation)
+results.emp$simulation <- as.factor(results.emp$simulation)
 
-plot1 <- ggplot(data = results.raxml, 
+plot1 <- ggplot(data = results.emp, 
                 aes(x=maf,
                     y=tree.height,
                     fill=NULL)) +
@@ -126,7 +126,7 @@ plot1 <- ggplot(data = results.raxml,
         axis.title.x = element_blank()) +
   facet_wrap(~int)
 
-plot2 <- ggplot(data = results.raxml, 
+plot2 <- ggplot(data = results.emp, 
                 aes(x=maf,
                     y=Avg.BLs,
                     fill=NULL)) +
@@ -136,7 +136,7 @@ plot2 <- ggplot(data = results.raxml,
         axis.title.x = element_blank()) +
   facet_wrap(~int)
 
-plot3 <- ggplot(data = results.raxml, 
+plot3 <- ggplot(data = results.emp, 
                 aes(x=maf,
                     y=ingroup.tree.height,
                     fill=NULL)) +
@@ -146,7 +146,7 @@ plot3 <- ggplot(data = results.raxml,
         axis.title.x = element_blank()) +
   facet_wrap(~int)
 
-plot4 <- ggplot(data = results.raxml, 
+plot4 <- ggplot(data = results.emp, 
                 aes(x=maf,
                     y=colless,
                     fill=NULL)) +
@@ -156,7 +156,7 @@ plot4 <- ggplot(data = results.raxml,
         axis.title.x = element_blank()) +
   facet_wrap(~int)
 
-plot5 <- ggplot(data = results.raxml, 
+plot5 <- ggplot(data = results.emp, 
                 aes(x=maf,
                     y=gamma,
                     fill=NULL)) +
@@ -168,16 +168,16 @@ plot5 <- ggplot(data = results.raxml,
 
 ggarrange(plot1,plot2,plot3,plot4,plot5,ncol=1) 
 
-results.raxml %>% 
-  filter(missing != 0) %>%
-  ggplot(aes(x=as.numeric(as.character(maf)),y=ingroup.sackin)) + 
+results.emp %>% 
+  #filter(missing != 0) %>%
+  ggplot(aes(x=as.numeric(as.character(maf)),y=ingroup.gamma)) + 
     geom_point(aes(col=as.factor(missing))) + 
     geom_smooth(aes(group=missing,col=missing),span=2) + 
     facet_wrap(~int) +
     xlab("MAF") +
     theme_custom()
 
-results.raxml %>%
+results.emp %>%
   ggplot(aes(x=maf,y=ingroup.gamma,fill=missing)) +
   geom_jitter(aes(x=maf,col=missing),width=0.1) +
   ggdist::stat_halfeye(adjust = 0.6, # this changes the intervals used for calculating the density plot (bigger=smoother)
@@ -197,8 +197,8 @@ results.raxml %>%
 
 ## Plot trees in PCoA space by simulation
 pdf("cichlid_emp_trees_pcoa.pdf")
-for (s in 1:10){
-  trees.subset <- emp.trees[results.raxml$simulation == s]
+for (s in unique(results.emp$simulation)){
+  trees.subset <- emp.trees[results.emp$simulation == s]
   class(trees.subset) <- "multiPhylo"
   #trees.subset <- sapply(trees.subset,function(x) root(x,outgroup,resolve.root=TRUE))
   trees.subset.root <- root(trees.subset,outgroup,resolve.root=TRUE)
@@ -207,10 +207,10 @@ for (s in 1:10){
   rf.pcoa.plot <- rf.pcoa$vectors %>%
     as_tibble() %>%
     ggplot(aes(x=Axis.1,y=Axis.2)) +
-    geom_point(aes(col=factor(results.raxml$maf[results.raxml$simulation == s]),
-                              #text=results.raxml$missing[results.raxml$simulation == s],
-                   shape=factor(results.raxml$missing[results.raxml$simulation == s]),
-                   size=factor(results.raxml$int[results.raxml$simulation == s])),
+    geom_point(aes(col=factor(results.emp$maf[results.emp$simulation == s]),
+                              #text=results.emp$missing[results.emp$simulation == s],
+                   shape=factor(results.emp$missing[results.emp$simulation == s]),
+                   size=factor(results.emp$int[results.emp$simulation == s])),
                alpha=0.6) +
     theme_bw(base_size=12, base_family="Open Sans Light") +
     theme(
@@ -231,8 +231,8 @@ for (s in 1:10){
     # biplot arrows for MAF
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.character(results.raxml$maf[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-      yend = cor(as.numeric(as.character(results.raxml$maf[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1),
+      xend = cor(as.numeric(as.character(results.emp$maf[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+      yend = cor(as.numeric(as.character(results.emp$maf[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1),
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1, 
@@ -240,16 +240,16 @@ for (s in 1:10){
       colour = "black" # Also accepts "red", "blue' etc
     ) + 
     annotate(geom = "text",
-             x = cor(as.numeric(as.character(results.raxml$maf[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-             y = cor(as.numeric(as.character(results.raxml$maf[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
+             x = cor(as.numeric(as.character(results.emp$maf[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+             y = cor(as.numeric(as.character(results.emp$maf[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1), 
              label = "MAF",
              hjust=0,vjust=0
     ) +
     # biplot arrows for Missing
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.character(results.raxml$missing[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-      yend = cor(as.numeric(as.character(results.raxml$missing[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1),
+      xend = cor(as.numeric(as.character(results.emp$missing[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+      yend = cor(as.numeric(as.character(results.emp$missing[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1),
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1, 
@@ -257,16 +257,16 @@ for (s in 1:10){
       colour = "black" # Also accepts "red", "blue' etc
     ) + 
     annotate(geom = "text",
-             x = cor(as.numeric(as.character(results.raxml$missing[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-             y = cor(as.numeric(as.character(results.raxml$missing[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
+             x = cor(as.numeric(as.character(results.emp$missing[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+             y = cor(as.numeric(as.character(results.emp$missing[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1), 
              label = "Missing",
              hjust=1,vjust=1
     ) +
     # biplot arrows for INT
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.factor(results.raxml$int[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-      yend = cor(as.numeric(as.factor(results.raxml$int[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1),
+      xend = cor(as.numeric(as.factor(results.emp$int[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+      yend = cor(as.numeric(as.factor(results.emp$int[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1),
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1, 
@@ -274,8 +274,8 @@ for (s in 1:10){
       colour = "black" # Also accepts "red", "blue' etc
     ) + 
     annotate(geom = "text",
-             x = cor(as.numeric(as.factor(results.raxml$int[results.raxml$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
-             y = cor(as.numeric(as.factor(results.raxml$int[results.raxml$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.raxml) - 1), 
+             x = cor(as.numeric(as.factor(results.emp$int[results.emp$simulation == s])), rf.pcoa$vectors[,1]) * 0.8 * sqrt(nrow(results.emp) - 1), 
+             y = cor(as.numeric(as.factor(results.emp$int[results.emp$simulation == s])), rf.pcoa$vectors[,2]) * 0.8 * sqrt(nrow(results.emp) - 1), 
              label = "INT",
              hjust=0,vjust=0
     )
@@ -289,11 +289,11 @@ dev.off()
 rf.pcoa$vectors %>%
   as_tibble() %>%
   plot_ly(x = ~Axis.1, y = ~Axis.2, z = ~Axis.3, 
-  color = factor(results.raxml$int[results.raxml$simulation == s]),
+  color = factor(results.emp$int[results.emp$simulation == s]),
                  hoverinfo = "text",
-                 hovertext = paste("MAF :", results.raxml$maf[results.raxml$simulation == s],
-                                   "<br> Missing :", results.raxml$missing[results.raxml$simulation == s],
-                                   "<br> INT :", results.raxml$int[results.raxml$simulation == s])
+                 hovertext = paste("MAF :", results.emp$maf[results.emp$simulation == s],
+                                   "<br> Missing :", results.emp$missing[results.emp$simulation == s],
+                                   "<br> INT :", results.emp$int[results.emp$simulation == s])
 ) %>%
   add_markers() %>%
   layout(

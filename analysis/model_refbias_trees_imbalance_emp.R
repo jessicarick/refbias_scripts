@@ -91,8 +91,8 @@ plot2 <- ggplot(data = results.mod,
                adjust=1, side="bottom", slab_color = "black",slab_size=0.2,
                interval_alpha=0.7, point_alpha=0.8, position=position_nudge(y=-0.03),
                justification=1.1, point_interval="median_qi", scale=0.9) +
-  scale_fill_manual(values=cols[c(1,3)],name="", aesthetics = "fill")+
-  scale_color_manual(values=cols[c(1,3)],name="", aesthetics = "color")+
+  scale_fill_manual(values=cols.int[c(1,3)],name="", aesthetics = "fill")+
+  scale_color_manual(values=cols.int[c(1,3)],name="", aesthetics = "color")+
   #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
   theme_classic(base_size=12, base_family="Open Sans Light")+
   theme(axis.title.y = element_text(angle=90, size=rel(1.5), face="plain"),
@@ -123,8 +123,8 @@ plot3 <- ggplot(data = results.mod,
                adjust=1, side="bottom", slab_color = "black",slab_size=0.2,
                interval_alpha=0.7, point_alpha=0.8, position=position_nudge(y=-0.03),
                justification=1.1, point_interval="median_qi", scale=0.9) +
-  scale_fill_manual(values=cols[c(1,3)],name="", aesthetics = "fill")+
-  scale_color_manual(values=cols[c(1,3)],name="", aesthetics = "color")+
+  scale_fill_manual(values=cols.int[c(1,3)],name="", aesthetics = "fill")+
+  scale_color_manual(values=cols.int[c(1,3)],name="", aesthetics = "color")+
   #scale_fill_viridis_d(begin=0.2,end=0.8,alpha=0.5,name="",aesthetics = "fill")+
   theme_classic(base_size=12, base_family="Open Sans Light")+
   theme(axis.title.y = element_text(angle=90, size=rel(1.5), face="plain"),

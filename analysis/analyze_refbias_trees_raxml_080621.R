@@ -192,18 +192,18 @@ results.raxml <- tibble(tree.num=seq(1:length(raxml.trees)))
 
 ## pull info from tree names, and calculate tree statistics
 results.raxml <- results.raxml %>%
-  # mutate(
-  #   simulation = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('-s([0-9]+)\\_q', x))[[1]][2])),
-  #   height = sapply(raxml.tree.names,function(x) as.character(regmatches(x, regexec('([A-Z]+)-s[0-9]', x))[[1]][2])),
-  #   method = "raxml",
-  #   quality = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('q(.*?)\\_m', x))[[1]][2])),
-  #   missing = sapply(raxml.tree.names,function(x) as.numeric(regmatches(x, regexec('miss([0-9]?\\.?[0-9]+)\\_mac', x))[[1]][2])),
-  #   maf = sapply(raxml.tree.names, function(x) as.numeric(regmatches(x, regexec('_mac(0?.?[0-9]+)_sites', x))[[1]][2])),
-  #   sites = sapply(raxml.tree.names, function(x) as.integer(regmatches(x, regexec('sites([0-9]*?)\\.', x))[[1]][2])),
-  #   taxa_ref = sapply(raxml.tree.names, function(x) regmatches(x,regexec('[A-Z]-([0-9]+_0_0)\\.phylip', x))[[1]][[2]]),
-  #   int = sapply(raxml.tree.names, function(x) regmatches(x, regexec('REF.([A-Z]+)\\.', x))[[1]][2]),
-  #   noref = "REF"
-  # ) %>%
+  mutate(
+    simulation = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('-s([0-9]+)\\_q', x))[[1]][2])),
+    height = sapply(raxml.tree.names,function(x) as.character(regmatches(x, regexec('([A-Z]+)-s[0-9]', x))[[1]][2])),
+    method = "raxml",
+    quality = sapply(raxml.tree.names,function(x) as.integer(regmatches(x, regexec('q(.*?)\\_m', x))[[1]][2])),
+    missing = sapply(raxml.tree.names,function(x) as.numeric(regmatches(x, regexec('miss([0-9]?\\.?[0-9]+)\\_mac', x))[[1]][2])),
+    maf = sapply(raxml.tree.names, function(x) as.numeric(regmatches(x, regexec('_mac(0?.?[0-9]+)_sites', x))[[1]][2])),
+    sites = sapply(raxml.tree.names, function(x) as.integer(regmatches(x, regexec('sites([0-9]*?)\\.', x))[[1]][2])),
+    taxa_ref = sapply(raxml.tree.names, function(x) regmatches(x,regexec('[A-Z]-([0-9]+_0_0)\\.phylip', x))[[1]][[2]]),
+    int = sapply(raxml.tree.names, function(x) regmatches(x, regexec('REF.([A-Z]+)\\.', x))[[1]][2]),
+    noref = "REF"
+  ) %>%
   left_join(refdist,by=c("simulation","height","int","taxa_ref"),copy=TRUE) %>%
   left_join(select(gt.rf,gt_rf:simulation),by=c("simulation","height")) %>%
   mutate(

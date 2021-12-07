@@ -8,42 +8,41 @@ library(ggsci)
 cols <- c("#F2AD00","gray80","#00A08A")
 
 output <- "072820-output"
-results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+results.emp <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml
+results.mod <- results.emp
 results.mod$simulation <- as.factor(results.mod$simulation)
-results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.factor(results.mod$missing)
-results.mod$maf <- as.factor(results.mod$maf)
+results.mod$missing <- as.numeric(as.character(results.mod$missing))
+results.mod$maf <- as.numeric(as.character(results.mod$maf))
 
 #results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
 #                          nrow=5760,ncol=2,byrow=TRUE)[,2])
 
-## gamma
+## Height
 # all
 
-m.gam.all <- lmer(ingroup.gamma ~ int + maf + missing +
+m.height.all <- lmer(ingroup.tree.height ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
                     data = results.mod)
-sum.gam.all <- summary(m.gam.all)
-r.squaredGLMM(m.gam.all)
+sum.height.all <- summary(m.height.all)
+r.squaredGLMM(m.height.all)
 
-confint.gam.all<-data.frame(confint(m.gam.all))[-c(1:3),]
-colnames(confint.gam.all) <- c("minCI","maxCI")
-confint.gam.all$var <- rownames(confint.gam.all)
-confint.gam.all$est <- sum.gam.all$coefficients[-1,1]
-#confint.gam$cond.est <- sum.gam$coefficients[2,]
-confint.gam.all$sig <- sum.gam.all$coefmat.full[-1,5]
-confint.gam.all$sig <- case_when(confint.gam.all$minCI > 0 ~ "pos",
-                                   confint.gam.all$maxCI < 0 ~ "neg",
+confint.height.all<-data.frame(confint(m.height.all))[-c(1:3),]
+colnames(confint.height.all) <- c("minCI","maxCI")
+confint.height.all$var <- rownames(confint.height.all)
+confint.height.all$est <- sum.height.all$coefficients[-1,1]
+#confint.height$cond.est <- sum.height$coefficients[2,]
+confint.height.all$sig <- sum.height.all$coefmat.full[-1,5]
+confint.height.all$sig <- case_when(confint.height.all$minCI > 0 ~ "pos",
+                                   confint.height.all$maxCI < 0 ~ "neg",
                                    TRUE ~ "ns")
-confint.gam.all$sig <- factor(confint.gam.all$sig, levels=c("pos","ns","neg"))
+confint.height.all$sig <- factor(confint.height.all$sig, levels=c("pos","ns","neg"))
 
 
-vars.gam.all <- ggplot(confint.gam.all, aes(x = var, y = est, color=sig))
-vars.gam.all.bars <- vars.gam.all + geom_blank() +
+vars.height.all <- ggplot(confint.height.all, aes(x = var, y = est, color=sig))
+vars.height.all.bars <- vars.height.all + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -68,18 +67,18 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.gam.all.bars
+vars.height.all.bars
 
 
 ## ridgeline plots
 plot1 <- ggplot(data = results.raxml, 
                 aes(y=as.factor(maf),
-                    x=ingroup.gamma,
+                    x=ingroup.tree.height,
                     fill=int))
 
 plot2 <- ggplot(data = results.mod, 
                 aes(y=as.factor(maf),
-                    x=ingroup.gamma,
+                    x=ingroup.tree.height,
                     fill=int)) +
   #geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
   stat_halfeye(data= . %>% filter(int == "EXT"), aes(col=int), alpha=0.7, 
@@ -106,7 +105,7 @@ plot2 <- ggplot(data = results.mod,
         axis.line = element_line(size=0.5),
         strip.text.x = element_text(size = 16),
         panel.grid.major = element_line(size=0.5,linetype="dashed")) +
-  scale_x_continuous(name="Ingroup Gamma")+
+  scale_x_continuous(name="Ingroup Height")+
   scale_y_discrete(name="Minor Allele Count") +
   #xlim(-50,10)+
   #facet_wrap(vars(height),nrow=1,strip.position = "bottom") +
@@ -114,7 +113,7 @@ plot2 <- ggplot(data = results.mod,
 #theme_ridges(line_size = 0.5, grid = FALSE, center_axis_labels=TRUE)
 plot3 <- ggplot(data = results.mod, 
                 aes(y=as.factor(missing),
-                    x=ingroup.gamma,
+                    x=ingroup.tree.height,
                     fill=int)) +
   #geom_density_ridges(scale = 0.95, rel_min_height = 0.1, alpha = 0.5)+
   stat_halfeye(data= . %>% filter(int == "EXT"), aes(col=int), alpha=0.7, 
@@ -141,7 +140,7 @@ plot3 <- ggplot(data = results.mod,
         axis.line = element_line(size=0.5),
         strip.text.x = element_text(size = 16),
         panel.grid.major = element_line(size=0.5,linetype="dashed")) +
-  scale_x_continuous(name="Ingroup Gamma")+
+  scale_x_continuous(name="Ingroup Height")+
   scale_y_discrete(name="Missing Data") +
   #xlim(-50,10)+
   #facet_wrap(vars(height),nrow=1,strip.position = "bottom") +
@@ -150,6 +149,6 @@ plot3 <- ggplot(data = results.mod,
 
 print(plot2)
 
-gam.plot <- ggarrange(plot2, plot3, ncol=1,labels="AUTO",font.label=list(size=24))
-ggarrange(vars.plots.gam,plot2,plot3,ncol=1,labels="AUTO")
+height.plot <- ggarrange(plot2, plot3, ncol=1,labels="AUTO",font.label=list(size=24))
+ggarrange(vars.plots.height,plot2,plot3,ncol=1,labels="AUTO")
 
