@@ -71,9 +71,9 @@ ls RAxML*bipartitions.*s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.${int}.emp.fil
 
 ####Move RAxML results to a single directory
 if [ ! -d s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files ]; then
-	mkdir s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files
+	mkdir s${sim}_q${QUAL}.${int}-${tree_height}-emp.phylip_tree_files
 fi
 
-mv *OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}*.phy s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files
-mv RAxML*s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.${int}.emp.filtered.out s${sim}_q${QUAL}.${int}-lates-emp.phylip_tree_files/
+mv *OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}*.phy s${sim}_q${QUAL}.${int}-${tree_height}-emp.phylip_tree_files
+mv RAxML*s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.${int}.emp.filtered.out s${sim}_q${QUAL}.${int}-${tree_height}-emp.phylip_tree_files/
 

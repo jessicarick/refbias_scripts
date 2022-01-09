@@ -6,5 +6,6 @@ library(phangorn)
 args <- commandArgs(trailingOnly=TRUE)
 
 trees <- read.tree(args[1])
+# trees.root <- root.multiPhylo(trees,"SRR3140997",resolve.root=TRUE)
 rf <- RF.dist(trees,normalize=TRUE,rooted=FALSE)
 cat(paste0("sim",args[2]," ",round(mean(rf)[1],5),"\n"))

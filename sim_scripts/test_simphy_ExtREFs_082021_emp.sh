@@ -28,9 +28,9 @@ PATH=$PATH:/project/phylogenref/programs/art_bin_GreatSmokyMountains:/project/ph
 #####################################
 
 source /project/phylogenref/scripts/sim_scripts/refbias_config_emp.txt
-tree_height="lates"
+tree_height="cichlids"
 int=EXT
-day=100821
+day=010722
 sim=${SLURM_ARRAY_TASK_ID}
 
 cd /gscratch/jrick/phylogenref/emp_tmp/${tree_height}/
@@ -77,8 +77,8 @@ echo "starting empirical $tree_height analysis for $int, simulation $sim"
 	
 	if [[ ! -s rand_ind_sim${sim}.txt ]]; then
 		if [ "$tree_height" == "lates" ]; then
-			ls /project/phylogenref/data/${tree_height}/${int}_ref/*.sorted.bam | grep -v 'SRR' | shuf -n 50 > rand_ind_sim${sim}.txt
-			echo "/project/phylogenref/data/${tree_height}/${int}_ref/aln_SRR3140997.Lcal.sorted.bam" >> rand_ind_sim${sim}.txt
+			ls /project/phylogenref/data/${tree_height}/${int}_ref/*.sorted.bam | grep -v 'L' | shuf -n 49 > rand_ind_sim${sim}.txt
+			ls /project/phylogenref/data/${tree_height}/${int}_ref/aln_*.L*.sorted.bam >> rand_ind_sim${sim}.txt
 		elif [ "$tree_height" == "cichlids" ]; then
 			cat /project/phylogenref/data/${tree_height}/tropheine_bamfiles_highpct_100kReads | grep $int | grep -v 'SRR' | shuf -n 49 > rand_ind_sim${sim}.txt
 			ls /project/phylogenref/data/${tree_height}/${int}_ref/bwa_assem*/aln_SRR*.sorted.bam >> rand_ind_sim${sim}.txt
@@ -139,9 +139,9 @@ echo "starting empirical $tree_height analysis for $int, simulation $sim"
 
 #fi                
 #                if [[ "$QUAL" -eq 40 ]]; then
-                    echo "Calculating Dxy from calc_dxy_emp script."
-                    ${REF_PATH}/sim_scripts/calc_dxy_emp.sh OUTFILE.q${QUAL}_s${sim}.${int}.vcf $sim $tree_height $int $taxa_ref $day
-                    echo "done calculating Dxy"
+                    #echo "Calculating Dxy from calc_dxy_emp script."
+                    #${REF_PATH}/sim_scripts/calc_dxy_emp.sh OUTFILE.q${QUAL}_s${sim}.${int}.vcf $sim $tree_height $int $taxa_ref $day
+                    #echo "done calculating Dxy"
 #                else
 #		    		echo "QUAL is $QUAL; not calculating Dxy this time"
 #                fi
