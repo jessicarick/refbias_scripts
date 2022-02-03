@@ -32,7 +32,7 @@ if false; then
 	export tree_height
 	export int
 
-	seq -w ${genes} | parallel --delay 5 --jobs 4 --env sim --env QUAL --env miss --env mac --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/filter_gene_subsamp.sh {}"
+	seq -w ${genes} | parallel --delay 5 --jobs 4 --env sim --env QUAL --env miss --env mac --env REF_PATH --env output_dir --env day --env tree_height --env int "bash ${REF_PATH}/sim_scripts/filter_gene_subsamp.sh {}"
 
 	## combine into one supermatrix
 
