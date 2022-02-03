@@ -141,7 +141,7 @@ source activate new_env
 
 	conda deactivate
 
-	perl /project/phylogenref/scripts/wrap_slurm_teton_refbias.pl $sim $ils_level
+	perl /project/phylogenref/scripts/sim_scripts/wrap_slurm_teton_refbias.pl $sim $ils_level
 	
 	cd ../
 	done
