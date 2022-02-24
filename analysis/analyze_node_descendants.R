@@ -214,7 +214,7 @@ null.node.plot <- null_lostnodes %>%
   geom_vline(xintercept=c(2,-2),linetype="dashed") +
   xlab("Node Descendants z-score") +
   ylab("Minor Allele Count") +
-  facet_grid(~int,scales="free_x") +
+  #facet_grid(~int,scales="free_x") +
   scale_fill_manual(values=c("#0A9396","#9B2226","gray80"),aesthetics = c("color","fill"),
                     labels=c("Retained","Lost")) +
   theme(legend.position=c(0.5,0.9),
@@ -229,7 +229,7 @@ null.bs.plot <- null_lostnodes %>%
   geom_vline(xintercept=c(2,-2),linetype="dashed") +
   xlab("Nodal Bootstrap Support z-score") +
   ylab("Minor Allele Count") +
-  facet_grid(~int,scales="free_x")  +
+  #facet_grid(~int,scales="free_x")  +
   scale_fill_manual(values=c("#0A9396","#9B2226","gray80"),aesthetics = c("color","fill"),
                     labels=c("Retained","Lost")) +
   theme(legend.position=c(0.5,0.9),
@@ -246,7 +246,7 @@ null.node.plot.miss <- null_lostnodes %>%
   geom_vline(xintercept=c(2,-2),linetype="dashed") +
   xlab("Node Descendants z-score") +
   ylab("Missing Data") +
-  facet_grid(~int,scales="free_x") +
+  #facet_grid(~int,scales="free_x") +
   scale_fill_manual(values=c("#0A9396","#9B2226","gray80"),aesthetics = c("color","fill"),
                     labels=c("Retained","Lost")) +
   theme(legend.position=c(0.2,0.9),
@@ -261,7 +261,7 @@ null.bs.plot.miss <- null_lostnodes %>%
   geom_vline(xintercept=c(2,-2),linetype="dashed") +
   xlab("Nodal Bootstrap Support z-score") +
   ylab("Missing Data") +
-  facet_grid(~int,scales="free_x")  +
+  #facet_grid(~int,scales="free_x")  +
   scale_fill_manual(values=c("#0A9396","#9B2226","gray80"),aesthetics = c("color","fill"),
                     labels=c("Retained","Lost")) +
   theme(legend.position=c(0.2,0.9),
@@ -275,175 +275,6 @@ ggarrange(null.node.plot.miss,null.bs.plot.miss,
           font.label = list(family="Open Sans",size=25))
 
 
-# lostnode_ci <- lostnode.info2 %>%
-#   filter(!is.na(bs_support)) %>%
-#   group_by(lost,simulation,height,missing,maf,int) %>%
-#   summarize(n_nodes = n(),
-#             mean_desc = mean(descendants,na.rm=T),
-#             mean_bs = mean(bs_support,na.rm=T)) %>%
-#   #filter(lost == TRUE) %>%
-#   group_by(height,maf,simulation,lost) %>%
-#   summarize(mean_n = mean(n_nodes),
-#             total_n = sum(n_nodes),
-#             mean_desc = mean(mean_desc),
-#             mean_bs = mean(mean_bs,na.rm=T))
-# 
-# all_bs <- tibble(height = character(),
-#                  maf = integer(),
-#                  sim = integer(),
-#                  nnode = numeric(),
-#                  lost = logical(),
-#                  mean_bs_desc = numeric(),
-#                  mean_bs_boot = numeric(),
-#                  zscore_desc = numeric(),
-#                  zscore_boot = numeric())
-# for (i in 1:nrow(lostnode_ci)) {
-#   nnode <- ceiling(lostnode_ci$mean_n[i])
-#   height <- lostnode_ci$height[i]
-#   maf <- lostnode_ci$maf[i]
-#   sim <- lostnode_ci$simulation[i]
-#   lost <- lostnode_ci$lost[i]
-#     
-#   sp.tree <- ml.tree[[which(ml.tree.info$simulation == sim &
-#                               ml.tree.info$height == height)]]
-#   sp.desc <- sapply(seq(1:sp.tree$Nnode)+length(sp.tree$tip.label), function(x) length(Descendants(root(sp.tree,"sim_0_0_0",resolve.root=TRUE),x,"tips")[[1]]))
-#   
-#   bs <- replicate(100,sample(sp.desc,nnode,replace=TRUE))
-#   bs_mean <- if (is.null(nrow(bs))) {
-#     bs 
-#   } else {
-#     colMeans(bs)
-#   }
-#   
-#   orig.tree <- raxml.trees2[[which(results.raxml$simulation == sim &
-#                               results.raxml$height == height &
-#                               results.raxml$int == int &
-#                               results.raxml$maf == 0 & results.raxml$missing ==0)]]
-#   bs_boot <- replicate(100,sample(as.numeric(orig.tree$node.label),nnode,replace=TRUE))
-#   bs_mean_boot <- if (is.null(nrow(bs_boot))) {
-#     bs_boot 
-#   } else {
-#     colMeans(bs_boot,na.rm=T)
-#   }
-#   
-#   dat_bs <- tibble(height = height,
-#                    maf = maf,
-#                    sim = sim,
-#                    lost = lost,
-#                    nnode = nnode,
-#                    mean_bs_desc = mean(bs_mean,na.rm=T),
-#                    mean_bs_boot = mean(bs_mean_boot,na.rm=T),
-#                    zscore_desc = (lostnode_ci$mean_desc[i] - mean(bs_mean)) / sd(bs_mean),
-#                    zscore_boot = (lostnode_ci$mean_bs[i] - mean(bs_mean_boot,na.rm=T)) / sd(bs_mean_boot,na.rm=T))
-#   all_bs <- all_bs %>%
-#       add_row(dat_bs)
-#   
-# }
-# 
-# all_bs %>% 
-#   ggplot() + 
-#   geom_density_ridges(aes(x=zscore_desc,y=as.factor(maf),fill=lost),alpha=0.5) + 
-#   theme_custom() + 
-#   geom_vline(xintercept=c(2,-2),linetype="dashed") +
-#   xlab("Node Descendants z-score") +
-#   ylab("Minor Allele Count")
-# 
-# lostnode_ci_miss <- null_lostnodes %>%
-#   filter(lost == TRUE) %>%
-#   group_by(height,missing,simulation) %>%
-#   summarize(mean_desc_lcl = mean(bs_desc_lcl),
-#             mean_desc_ucl = mean(bs_desc_ucl),
-#             mean_bs_lcl = mean(bs_boot_lcl),
-#             mean_bs_ucl = mean(bs_boot_ucl),
-#             mean_n = mean(n_nodes),
-#             total_n = sum(n_nodes),
-#             mean_desc = mean(mean_desc),
-#             mean_bs = mean(mean_bs,na.rm=T))
-# all_bs_miss <- tibble(height = character(),
-#                       missing = numeric(),
-#                       sim = integer(),
-#                       nnode = numeric(),
-#                       mean_bs_desc = numeric(),
-#                       mean_bs_boot = numeric())
-# for (i in 1:nrow(lostnode_ci_miss)) {
-#   nnode <- ceiling(lostnode_ci_miss$mean_n[i])
-#   height <- lostnode_ci_miss$height[i]
-#   missing <- lostnode_ci_miss$missing[i]
-#   sim <- lostnode_ci_miss$simulation[i]
-#   
-#   sp.tree <- ml.tree[[which(ml.tree.info$simulation == sim &
-#                               ml.tree.info$height == height)]]
-#   sp.desc <- sapply(seq(1:sp.tree$Nnode)+length(sp.tree$tip.label), function(x) length(Descendants(root(sp.tree,"sim_0_0_0",resolve.root=TRUE),x,"tips")[[1]]))
-#   
-#   bs <- replicate(100,sample(sp.desc,nnode,replace=FALSE))
-#   bs_mean <- if (is.null(nrow(bs))) {
-#     bs 
-#   } else {
-#     colMeans(bs)
-#   }
-#   
-#   bs_boot <- replicate(100,sample(lostnode.info2$bs_support,nnode,replace=FALSE))
-#   bs_mean_boot <- if (is.null(nrow(bs_boot))) {
-#     bs_boot 
-#   } else {
-#     colMeans(bs_boot)
-#   }
-#   
-#   dat_bs <- tibble(height = height,
-#                    missing = missing,
-#                    sim = sim,
-#                    nnode = nnode,
-#                    mean_bs_desc = bs_mean,
-#                    mean_bs_boot = bs_mean_boot)
-#   all_bs_miss <- all_bs_miss %>%
-#     add_row(dat_bs)
-# }
-
-# all_bs %>% 
-#   ggplot(aes(x=mean_bs_desc,y=as.factor(maf))) + 
-#   geom_jitter(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf)),width=0.1,height=0.05,alpha=0.2) +
-#   stat_halfeye(aes(),position=position_nudge(y=0.1),
-#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
-#                scale=0.8) + 
-#   stat_halfeye(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf),fill=as.factor(maf)),position=position_nudge(y=0.1),
-#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
-#                scale=0.8) +
-#   stat_summary(position=position_nudge(y=0.1), fun.data="mean_cl_boot",
-#                geom="errorbar", width=0.1) + 
-#   stat_summary(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf),col=as.factor(maf)), 
-#                fun.data="mean_cl_boot", size=1.2) + 
-#   theme_custom() +
-#   theme(panel.grid.major = element_line(color="gray80",linetype="dashed"),
-#         legend.position = "none") +
-#   xlab("Mean Node Descendants") +
-#   ylab("Minor Alelle Count Threshold") +
-#   facet_wrap(~height)
-# 
-# all_bs_miss %>% 
-#   ggplot(aes(x=mean_bs_boot,y=as.factor(missing))) + 
-#   geom_jitter(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing)),width=0.1,height=0.05,alpha=0.2) +
-#   stat_halfeye(aes(),position=position_nudge(y=0.1),
-#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
-#                scale=0.8) + 
-#   stat_halfeye(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing),fill=as.factor(missing)),position=position_nudge(y=0.1),
-#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
-#                scale=0.8) +
-#   stat_summary(position=position_nudge(y=0.1), fun.data="mean_cl_boot",
-#                geom="errorbar", width=0.1) + 
-#   stat_summary(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing),col=as.factor(missing)), 
-#                fun.data="mean_cl_boot", size=1.2) + 
-#   theme_custom() +
-#   theme(panel.grid.major = element_line(color="gray80",linetype="dashed"),
-#         legend.position = "none") +
-#   xlab("Mean Node Descendants") +
-#   ylab("Missing Data Threshold") +
-#   facet_wrap(~height)
-
-# null_lostnodes %>%
-#   ggplot(aes(x=bs_desc_lcl,y=as.factor(maf)),alpha=0.5) +
-#   geom_density_ridges() +
-#   geom_density_ridges(aes(x=bs_desc_ucl,y=as.factor(maf)),fill="turquoise",alpha=0.5) +
-#   facet_wrap(~height)
 
 lostnode.info2 %>%
   filter(lost == TRUE) %>%
@@ -477,7 +308,7 @@ p1 <- lostnode.info2 %>%
   geom_hline(yintercept = mean(lostnode.info2$bs_support,na.rm=T),lty=2) +
   # stat_summary(data=all_bs,aes(x=maf,y=mean_bs_boot),fun.data="mean_qi",
   #              geom="errorbar", width=0.1) + 
-  facet_grid(~int,scales="free") +
+  #facet_grid(~int,scales="free") +
   xlab("Minor Allele Count") +
   ylab("Node Bootstrap Support") +
   theme(strip.text = element_text(size=rel(1.2)),
@@ -495,7 +326,7 @@ p2 <- lostnode.info2 %>%
   #geom_density(alpha=0.5) +
   theme_custom() +
   geom_hline(yintercept = mean(lostnode.info2$descendants,na.rm=T),lty=2) +
-  facet_grid(~int) +
+  #facet_grid(~int) +
   #coord_cartesian(xlim=c(0,100)) +
   ylab("Mean Node Descendants") +
   xlab("Minor Allele Count") +
@@ -518,7 +349,7 @@ p1.miss <- lostnode.info2 %>%
   geom_hline(yintercept = mean(lostnode.info2$bs_support,na.rm=T),lty=2) +
   # stat_summary(data=all_bs_miss,aes(x=missing,y=mean_bs_boot),fun.data="mean_cl_boot",
   #              geom="errorbar", width=0.1) + 
-  facet_grid(~int,scales="free") +
+  #facet_grid(~int,scales="free") +
   xlab("Missing Data") +
   ylab("Node Bootstrap Support") +
   theme(strip.text = element_text(size=rel(1.2)),
@@ -536,7 +367,7 @@ p2.miss <- lostnode.info2 %>%
   #geom_density(alpha=0.5) +
   theme_custom() +
   geom_hline(yintercept = mean(lostnode.info2$descendants,na.rm=T),lty=2) +
-  facet_grid(~int) +
+  #facet_grid(~int) +
   #coord_cartesian(xlim=c(0,100)) +
   ylab("Mean Node Descendants") +
   xlab("Missing Data") +
@@ -597,20 +428,25 @@ p.density <- ggarrange(p1,p2,nrow=1,
           legend="none")
 
 ## saved at 1200x900px
-ggarrange(p2,null.node.plot,p1,null.bs.plot,
-          labels=c("A","","B",""), ncol=2, nrow=2, widths=c(1,1.6),
-          font.label = list(family="Open Sans",size=25))
+# ggarrange(p2,null.node.plot,p1,null.bs.plot,
+#           labels=c("A","","B",""), ncol=2, nrow=2, widths=c(1,1.6),
+#           font.label = list(family="Open Sans",size=25))
 
-## saved at 1200x900px
-ggarrange(p2.miss,null.node.plot.miss,p1.miss,null.bs.plot.miss,
-          labels=c("A","","B",""), ncol=2, nrow=2, widths=c(1,1.6),
-          font.label = list(family="Open Sans",size=25))
+## FIGURE 7
+## saved at 2000x900
+# ggarrange(p2.miss,null.node.plot.miss,p1.miss,null.bs.plot.miss,
+#           labels=c("A","","B",""), ncol=2, nrow=2, widths=c(1,1.6),
+#           font.label = list(family="Open Sans",size=25))
 ggarrange(p2,null.node.plot,p1,null.bs.plot,
           p2.miss,null.node.plot.miss,p1.miss,null.bs.plot.miss,
-          labels="AUTO", ncol=2, nrow=4, widths=c(1,1.2,1,1.2),
+          ncol=4, nrow=2, widths=c(1,1.7,1,1.7),
           font.label = list(family="Open Sans",size=25), common.legend=TRUE,
           legend="right",legend.grob=get_legend(null.node.plot))
 
+##------------------------##
+## CODE BELOW NOT USED #####
+## (OLD PLOTS) #############
+##------------------------##
 
 lostnode.info2 %>%
   filter(maf !=0 ) %>%
@@ -1123,3 +959,175 @@ lostnode.summary2 %>%
   ylab("Mean descendants of lost nodes") +
   xlab("Minor Allele Count") +
   theme(legend.position="none")
+
+
+##############
+# lostnode_ci <- lostnode.info2 %>%
+#   filter(!is.na(bs_support)) %>%
+#   group_by(lost,simulation,height,missing,maf,int) %>%
+#   summarize(n_nodes = n(),
+#             mean_desc = mean(descendants,na.rm=T),
+#             mean_bs = mean(bs_support,na.rm=T)) %>%
+#   #filter(lost == TRUE) %>%
+#   group_by(height,maf,simulation,lost) %>%
+#   summarize(mean_n = mean(n_nodes),
+#             total_n = sum(n_nodes),
+#             mean_desc = mean(mean_desc),
+#             mean_bs = mean(mean_bs,na.rm=T))
+# 
+# all_bs <- tibble(height = character(),
+#                  maf = integer(),
+#                  sim = integer(),
+#                  nnode = numeric(),
+#                  lost = logical(),
+#                  mean_bs_desc = numeric(),
+#                  mean_bs_boot = numeric(),
+#                  zscore_desc = numeric(),
+#                  zscore_boot = numeric())
+# for (i in 1:nrow(lostnode_ci)) {
+#   nnode <- ceiling(lostnode_ci$mean_n[i])
+#   height <- lostnode_ci$height[i]
+#   maf <- lostnode_ci$maf[i]
+#   sim <- lostnode_ci$simulation[i]
+#   lost <- lostnode_ci$lost[i]
+#     
+#   sp.tree <- ml.tree[[which(ml.tree.info$simulation == sim &
+#                               ml.tree.info$height == height)]]
+#   sp.desc <- sapply(seq(1:sp.tree$Nnode)+length(sp.tree$tip.label), function(x) length(Descendants(root(sp.tree,"sim_0_0_0",resolve.root=TRUE),x,"tips")[[1]]))
+#   
+#   bs <- replicate(100,sample(sp.desc,nnode,replace=TRUE))
+#   bs_mean <- if (is.null(nrow(bs))) {
+#     bs 
+#   } else {
+#     colMeans(bs)
+#   }
+#   
+#   orig.tree <- raxml.trees2[[which(results.raxml$simulation == sim &
+#                               results.raxml$height == height &
+#                               results.raxml$int == int &
+#                               results.raxml$maf == 0 & results.raxml$missing ==0)]]
+#   bs_boot <- replicate(100,sample(as.numeric(orig.tree$node.label),nnode,replace=TRUE))
+#   bs_mean_boot <- if (is.null(nrow(bs_boot))) {
+#     bs_boot 
+#   } else {
+#     colMeans(bs_boot,na.rm=T)
+#   }
+#   
+#   dat_bs <- tibble(height = height,
+#                    maf = maf,
+#                    sim = sim,
+#                    lost = lost,
+#                    nnode = nnode,
+#                    mean_bs_desc = mean(bs_mean,na.rm=T),
+#                    mean_bs_boot = mean(bs_mean_boot,na.rm=T),
+#                    zscore_desc = (lostnode_ci$mean_desc[i] - mean(bs_mean)) / sd(bs_mean),
+#                    zscore_boot = (lostnode_ci$mean_bs[i] - mean(bs_mean_boot,na.rm=T)) / sd(bs_mean_boot,na.rm=T))
+#   all_bs <- all_bs %>%
+#       add_row(dat_bs)
+#   
+# }
+# 
+# all_bs %>% 
+#   ggplot() + 
+#   geom_density_ridges(aes(x=zscore_desc,y=as.factor(maf),fill=lost),alpha=0.5) + 
+#   theme_custom() + 
+#   geom_vline(xintercept=c(2,-2),linetype="dashed") +
+#   xlab("Node Descendants z-score") +
+#   ylab("Minor Allele Count")
+# 
+# lostnode_ci_miss <- null_lostnodes %>%
+#   filter(lost == TRUE) %>%
+#   group_by(height,missing,simulation) %>%
+#   summarize(mean_desc_lcl = mean(bs_desc_lcl),
+#             mean_desc_ucl = mean(bs_desc_ucl),
+#             mean_bs_lcl = mean(bs_boot_lcl),
+#             mean_bs_ucl = mean(bs_boot_ucl),
+#             mean_n = mean(n_nodes),
+#             total_n = sum(n_nodes),
+#             mean_desc = mean(mean_desc),
+#             mean_bs = mean(mean_bs,na.rm=T))
+# all_bs_miss <- tibble(height = character(),
+#                       missing = numeric(),
+#                       sim = integer(),
+#                       nnode = numeric(),
+#                       mean_bs_desc = numeric(),
+#                       mean_bs_boot = numeric())
+# for (i in 1:nrow(lostnode_ci_miss)) {
+#   nnode <- ceiling(lostnode_ci_miss$mean_n[i])
+#   height <- lostnode_ci_miss$height[i]
+#   missing <- lostnode_ci_miss$missing[i]
+#   sim <- lostnode_ci_miss$simulation[i]
+#   
+#   sp.tree <- ml.tree[[which(ml.tree.info$simulation == sim &
+#                               ml.tree.info$height == height)]]
+#   sp.desc <- sapply(seq(1:sp.tree$Nnode)+length(sp.tree$tip.label), function(x) length(Descendants(root(sp.tree,"sim_0_0_0",resolve.root=TRUE),x,"tips")[[1]]))
+#   
+#   bs <- replicate(100,sample(sp.desc,nnode,replace=FALSE))
+#   bs_mean <- if (is.null(nrow(bs))) {
+#     bs 
+#   } else {
+#     colMeans(bs)
+#   }
+#   
+#   bs_boot <- replicate(100,sample(lostnode.info2$bs_support,nnode,replace=FALSE))
+#   bs_mean_boot <- if (is.null(nrow(bs_boot))) {
+#     bs_boot 
+#   } else {
+#     colMeans(bs_boot)
+#   }
+#   
+#   dat_bs <- tibble(height = height,
+#                    missing = missing,
+#                    sim = sim,
+#                    nnode = nnode,
+#                    mean_bs_desc = bs_mean,
+#                    mean_bs_boot = bs_mean_boot)
+#   all_bs_miss <- all_bs_miss %>%
+#     add_row(dat_bs)
+# }
+
+# all_bs %>% 
+#   ggplot(aes(x=mean_bs_desc,y=as.factor(maf))) + 
+#   geom_jitter(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf)),width=0.1,height=0.05,alpha=0.2) +
+#   stat_halfeye(aes(),position=position_nudge(y=0.1),
+#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
+#                scale=0.8) + 
+#   stat_halfeye(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf),fill=as.factor(maf)),position=position_nudge(y=0.1),
+#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
+#                scale=0.8) +
+#   stat_summary(position=position_nudge(y=0.1), fun.data="mean_cl_boot",
+#                geom="errorbar", width=0.1) + 
+#   stat_summary(data=lostnode_ci,aes(x=mean_desc,y=as.factor(maf),col=as.factor(maf)), 
+#                fun.data="mean_cl_boot", size=1.2) + 
+#   theme_custom() +
+#   theme(panel.grid.major = element_line(color="gray80",linetype="dashed"),
+#         legend.position = "none") +
+#   xlab("Mean Node Descendants") +
+#   ylab("Minor Alelle Count Threshold") +
+#   facet_wrap(~height)
+# 
+# all_bs_miss %>% 
+#   ggplot(aes(x=mean_bs_boot,y=as.factor(missing))) + 
+#   geom_jitter(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing)),width=0.1,height=0.05,alpha=0.2) +
+#   stat_halfeye(aes(),position=position_nudge(y=0.1),
+#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
+#                scale=0.8) + 
+#   stat_halfeye(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing),fill=as.factor(missing)),position=position_nudge(y=0.1),
+#                adjust=0.8,normalize="groups",interval_alpha=0,point_alpha=0,alpha=0.5,
+#                scale=0.8) +
+#   stat_summary(position=position_nudge(y=0.1), fun.data="mean_cl_boot",
+#                geom="errorbar", width=0.1) + 
+#   stat_summary(data=lostnode_ci_miss,aes(x=mean_bs,y=as.factor(missing),col=as.factor(missing)), 
+#                fun.data="mean_cl_boot", size=1.2) + 
+#   theme_custom() +
+#   theme(panel.grid.major = element_line(color="gray80",linetype="dashed"),
+#         legend.position = "none") +
+#   xlab("Mean Node Descendants") +
+#   ylab("Missing Data Threshold") +
+#   facet_wrap(~height)
+
+# null_lostnodes %>%
+#   ggplot(aes(x=bs_desc_lcl,y=as.factor(maf)),alpha=0.5) +
+#   geom_density_ridges() +
+#   geom_density_ridges(aes(x=bs_desc_ucl,y=as.factor(maf)),fill="turquoise",alpha=0.5) +
+#   facet_wrap(~height)
