@@ -2,6 +2,7 @@
 ## Script for analyzing refbias output trees from RAxML
 ## Written by J. Rick, 11 March 2019
 ## Updated 6 August 2021
+## Updated 18 Feb 2022 to use here package
 ## Made to be run on the command line
 ############################################
 
@@ -22,8 +23,10 @@ suppressMessages(
     # library(car)
     library(ggrepel),
     library(ggsci),
-    library(TreeDist)))
-source("analysis/theme_custom.R")
+    library(TreeDist),
+    library(here)))
+here::i_am("analysis/analyze_refbias_trees_raxml_080621.R")
+source(here("analysis","theme_custom.R"))
 
 ############################################
 ## Specifying file names ########
@@ -65,14 +68,14 @@ args <- mget(c("raxml.trees","raxml.tree.names","ml.trees","ml.tree.names","refd
 # args <- parse.args()
 
 ####Read in concatenated tree file and ML tree file (make sure the latter is ultrametric)
-raxml.trees<-read.tree(paste("output/new/",args$raxml.trees,sep=""))
+raxml.trees<-read.tree(here("output","new",args$raxml.trees))
 #astral.trees<-read.tree(paste("output/",args$astral.trees,sep=""))
-ml.tree<-read.tree(paste("output/new/",args$ml.trees,sep=""))
+ml.tree<-read.tree(here("output","new",args$ml.trees))
 
 ###Read in file of tree names
-raxml.tree.names<-read.table(paste("output/new/",args$raxml.tree.names,sep=""),stringsAsFactors=FALSE)[,1]
-#astral.tree.names<-read.table(paste("output/",args$astral.tree.names,sep=""),stringsAsFactors = FALSE)
-ml.tree.names <- read.table(paste("output/new/",args$ml.tree.names,sep=""),stringsAsFactors = FALSE)[,1]
+raxml.tree.names<-read.table(here("output","new",args$raxml.tree.names),stringsAsFactors=FALSE)[,1]
+#astral.tree.names<-read.table(here("output",args$astral.tree.names),stringsAsFactors = FALSE)
+ml.tree.names <- read.table(here("output","new",args$ml.tree.names),stringsAsFactors = FALSE)[,1]
 
 ###################
 ## changing tip labels on ml trees to match the sim trees
@@ -99,19 +102,19 @@ ml.tree.info <- tibble(simulation = numeric(length(ml.tree.names)),
          ingroup.colless = sapply(ml.tree,function(x) colless(as.treeshape(drop.tip(x,"sim_0_0_0"),model="pda"),norm="pda"))
   )
 
-refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("simulation","height","int","taxa_ref","avg_dxy"), skip=1) %>%
+refdist <- read_table(here("output","new",args$refdist), col_names=c("simulation","height","int","taxa_ref","avg_dxy"), skip=1) %>%
   group_by(simulation,height,int,taxa_ref) %>%
   mutate(simulation = as.integer(simulation)) %>%
   slice_tail(n=1) %>%
   ungroup()
 
-gt.rf <- read_table2("output/new/092321-LONG-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+gt.rf <- read_table(here("output","new","092321-LONG-EXT.TTR.gt_rf"),col_names=c("sim","gt_rf")) %>%
   mutate(height = "LONG",
          simulation = as.integer(gsub("sim","",sim))) %>%
-  add_row(read_table2("output/new/092321-MED-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+  add_row(read_table2(here("output","new","092321-MED-EXT.TTR.gt_rf"),col_names=c("sim","gt_rf")) %>%
             mutate(height = "MED"),
           simulation = as.integer(gsub("sim","",sim))) %>%
-  add_row(read_table2("output/new/092321-SHORT-EXT.TTR.gt_rf",col_names=c("sim","gt_rf")) %>%
+  add_row(read_table2(here("output","new","092321-SHORT-EXT.TTR.gt_rf"),col_names=c("sim","gt_rf")) %>%
             mutate(height = "SHORT"),
           simulation = as.integer(gsub("sim","",sim))) %>%
   drop_na() %>%
@@ -126,6 +129,27 @@ ml.tree.info2 <- ml.tree.info %>%
 #################
 ## plots of ml tree characteristics
 #################
+ml.tree.info2 %>%
+  pivot_longer(cols = c(ingroup.tree.height,Avg.BLs,gt_rf,ingroup.gamma,ingroup.colless),names_to="params",values_to="value") %>%
+  mutate(params = factor(params, levels=c("ingroup.tree.height","Avg.BLs","gt_rf","ingroup.colless","ingroup.gamma"))) %>%
+  ggplot(aes(x=height,y=value,col=height)) +
+  geom_boxplot(outlier.shape=NA, aes(fill=height),col="black",alpha=0.5) +
+  geom_jitter(aes(fill=height),col="black",width=0.05,height=0,pch=21,size=2)+
+  theme_custom() +
+  theme(legend.position="none",
+        axis.title = element_blank(),
+        strip.text = element_blank()) +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_y_continuous(position="right") +
+  scale_fill_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int,aesthetics = c("fill","col")) +
+  facet_grid(vars(params),scales="free_y",
+             labeller = as_labeller(c(ingroup.tree.height = "Tree Height",
+                                      ingroup.gamma = "Ingroup\ngamma", 
+                                      ingroup.colless = "Ingroup\nimbalance",
+                                      gt_rf = "Gene tree\ndiscordance",
+                                      Avg.BLs = "Average\nbranch lengths")))
+
 plot1 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=tree.height,fill=NULL)) +
   geom_boxplot(outlier.shape=NA) +
@@ -133,7 +157,10 @@ plot1 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Tree Height")
+  ylab("Tree Height") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 plot2 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=Avg.BLs,fill=NULL)) +
@@ -142,7 +169,10 @@ plot2 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Average Branch Lengths")
+  ylab("Average Branch Lengths") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 plot3 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=gt_rf,fill=NULL)) +
@@ -151,7 +181,10 @@ plot3 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Gene Tree Discordance")
+  ylab("Gene Tree Discordance") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 plot4 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=ingroup.tree.height,fill=NULL)) +
@@ -160,7 +193,10 @@ plot4 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Ingroup Tree Height")
+  ylab("Ingroup Tree Height") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 plot5 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=ingroup.colless,fill=NULL)) +
@@ -169,7 +205,10 @@ plot5 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Ingroup Colless Imbalance")
+  ylab("Ingroup Colless Imbalance") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 plot6 <- ml.tree.info2 %>%
   ggplot(aes(x=height,y=ingroup.gamma,fill=NULL)) +
@@ -178,7 +217,10 @@ plot6 <- ml.tree.info2 %>%
   theme_custom() +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
-  ylab("Ingroup gamma")
+  ylab("Ingroup gamma") +
+  scale_x_discrete(labels=c("Low ILS","Med ILS","High ILS")) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int)
 
 ggarrange(plot1,plot2,plot4,plot3,plot5,plot6,nrow=2,ncol=3)
 
@@ -222,6 +264,9 @@ results.raxml <- results.raxml %>%
     sackin = sapply(raxml.trees, function(x) sackin(as.treeshape(root(x,"sim_0_0_0",resolve.root=TRUE),model="pda"),norm="pda")),
     ingroup.sackin = sapply(raxml.trees, function(x) sackin(as.treeshape(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0"),model="pda"),norm="pda"))
   ) 
+
+new <- results.raxml %>%
+  mutate(avg.node.descendants = sapply(raxml.trees2, function(x) mean(sapply(seq(length(x$tip.label),length(x$tip.label)+x$Nnode), function(y) length(Descendants(x,y,"tips")[[1]])))))
 
 ###################
 ## statistics requiring separation by simulation number
@@ -291,7 +336,7 @@ for (i in 1:nrow(results.raxml)){
 
 summary(results.raxml)  
 write.csv(results.raxml,
-          file=paste("output/new/",args$output,"-raxml.csv",sep=""),
+          file=here("output","new",paste(args$output,"-raxml.csv",sep="")),
           quote=FALSE,row.names=TRUE,na="NA")
 
 ######################
@@ -405,8 +450,8 @@ ggarrange(plot1,plot2,plot3,plot4,plot5,plot6,plot7,nrow=1)
 
 ####################BEGIN ANALYSIS ################################
 ####Calculate Matrix of RF distances for all trees with the same species tree in multi tree object
-#results.raxml <- read.csv(file=paste("output/new/",output,"-raxml.csv",sep=""),row.names=1,na="NA",header=TRUE)
-pdf(paste("output/new/",args$output,".pdf",sep=""))
+#results.raxml <- read.csv(file=here("output","new",paste0(output,"-raxml.csv")),row.names=1,na="NA",header=TRUE)
+pdf(here("output","new",paste(args$output,".pdf",sep="")))
 # for (h in unique(as.character(results.raxml$height))){
 #   for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
 #   #for (i in seq(16,18,by=1)){
@@ -470,13 +515,16 @@ pdf(paste("output/new/",args$output,".pdf",sep=""))
 
 ## Plot trees in PCoA space by simulation
 results.raxml <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26,]
+raxml.trees2 <- raxml.trees[results.raxml$tree.num]
+param_loadings <- tibble(sim=integer(),height=character(),param=character(),x_corr=numeric(),y_corr=numeric(),
+                         x_corr_sig=numeric(),y_corr_sig=numeric())
 for (h in unique(as.character(results.raxml$height))){
   for (i in unique(as.numeric(as.character(results.raxml$simulation)))){
     #for (i in seq(16,30,by=1)){
     j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
     subset <- which(results.raxml$simulation == i & results.raxml$height == h & results.raxml$noref == "REF")
     if (length(subset) != 0) {
-      trees.subset <- c(raxml.trees[subset],ml.tree[[j]])
+      trees.subset <- c(raxml.trees2[subset],ml.tree[[j]])
     } else {
       print(paste("no trees for sim",i," for height ",h))
       next
@@ -490,12 +538,18 @@ for (h in unique(as.character(results.raxml$height))){
     rf.pcoa.plot <- rf.pcoa$vectors %>%
       as_tibble() %>%
       ggplot(aes(x=Axis.1,y=Axis.2)) +
-      geom_jitter(aes(col=factor(c(results.raxml$maf[subset],"true_tree")),
+      geom_jitter(aes(col=factor(c(results.raxml$maf[subset],"true_tree"),levels=c("0","1","2","3","4","5","10","true_tree")),
+                      fill=factor(c(results.raxml$maf[subset],"true_tree"),levels=c("0","1","2","3","4","5","10","true_tree")),
                      #text=results.raxml$missing[results.raxml$simulation == s],
-                     shape=factor(c(results.raxml$missing[subset],"true_tree")),
-                     size=factor(c(results.raxml$int[subset],"true_tree"))),
-                 alpha=0.6) +
+                     #shape=factor(c(results.raxml$missing[subset],"true_tree")),
+                     shape=factor(c(results.raxml$int[subset],"true_tree")),
+                     ),
+                  size=5,width=0.005,height=0.005) +
       theme_bw(base_size=12, base_family="Arial") +
+      #scale_size_manual(values=c(3,6,6)) +
+      scale_color_viridis_d(direction=-1) +
+      scale_fill_viridis_d(direction=-1,alpha=0.8) +
+      scale_shape_manual(values=c(21,23,25)) +
       xlab("PCoA Axis 1") +
       ylab("PCoA Axis 2") +
       theme(
@@ -516,59 +570,157 @@ for (h in unique(as.character(results.raxml$height))){
       # biplot arrows for MAF
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-        yend = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1),
+        xend = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
+        yend = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
-        size = 1, 
+        size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
-      ) + 
+      ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-               y = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
+               x = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015-0.001,
+               y = cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015-0.002,
                label = "MAF",
-               hjust=0,vjust=0
+               hjust=1,vjust=1
       ) +
       # biplot arrows for Missing
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-        yend = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1),
+        xend = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
+        yend = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
-        size = 1, 
+        size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
-      ) + 
+      ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-               y = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
+               x = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015+0.001,
+               y = cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015-0.002,
                label = "Missing",
-               hjust=1,vjust=1
+               hjust=0,vjust=0
       ) +
       # biplot arrows for INT
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-        yend = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1),
+        xend = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
+        yend = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
-        size = 1, 
+        size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
-      ) + 
+      ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
-               y = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1), 
+               x = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015+0.001,
+               y = cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)]) * 0.5 * sqrt(length(subset) - 1)*0.015+0.002,
                label = "INT",
-               hjust=0,vjust=0
+               hjust=0,vjust=1
       )
-    
     
     print(rf.pcoa.plot)
     #plotly::ggplotly(rf.pcoa.plot)
-  }
+    vectors <- tibble(sim = i, height = h,
+                      param = c("maf","missing","int"),
+                      x_corr = c(cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)]),
+                                 cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)]),
+                                 cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)])
+                      ),
+                      y_corr = c(cor(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)]),
+                                cor(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)]),
+                                cor(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)])
+                      ),
+                      x_corr_sig = c(cor.test(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,1][1:length(subset)])$p.value,
+                                     cor.test(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,1][1:length(subset)])$p.value,
+                                     cor.test(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,1][1:length(subset)])$p.value
+                      ),
+                      y_corr_sig = c(cor.test(as.numeric(as.character(results.raxml$maf[subset])), rf.pcoa$vectors[,2][1:length(subset)])$p.value,
+                                     cor.test(as.numeric(as.character(results.raxml$missing[subset])), rf.pcoa$vectors[,2][1:length(subset)])$p.value,
+                                     cor.test(as.numeric(as.factor(results.raxml$int[subset])), rf.pcoa$vectors[,2][1:length(subset)])$p.value
+                      ))
+    param_loadings <- param_loadings %>%
+      add_row(vectors)
+    }
 }
 
 dev.off()
+
+## proportion of significant correlations
+param_loadings %>%
+  filter(sim < 26) %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 & x_corr > y_corr ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 & y_corr > x_corr ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE)) %>%
+  group_by(param) %>%
+  summarize(n_PC1 = sum(sig_x),
+            n_PC2 = sum(sig_y),
+            mean_PC1 = mean(abs(x_corr)),
+            mean_PC2 = mean(abs(y_corr)))
+
+
+## plot of parameter correlations for all sims
+param_loadings %>% 
+  filter(sim < 26) %>% 
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  ggplot(aes(x=value)) +
+  geom_density(data = . %>% filter(corr == "abs_x_corr"),fill="gray80",adjust=0.75) +
+  geom_density(data = . %>% filter(corr == "abs_y_corr"),aes(y=-..density..),fill="gray30",adjust=0.75) +
+  facet_wrap(~param2) +
+  # ggscatter(x="abs_x_corr",y="abs_y_corr",
+  #           color="param",fill="param",
+  #           facet.by=c("height2","param2"),
+  #           size=3,alpha=0.75) + 
+  #xlab("PCoA 1 Parameter Correlation") + 
+  #ylab("PCoA 2 Parameter Correlation") +
+  theme_custom() +
+  theme(legend.position = "none",
+        strip.text = element_text(size=rel(1.3)),
+        axis.title = element_text(size=rel(1.5)),
+        axis.text = element_text(size=rel(1.5)))
+  
+
+param_loadings %>% 
+  filter(sim < 26) %>% 
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_cat = case_when(sig_x & sig_y ~ "both",
+                             sig_x & !sig_y ~ "PC1",
+                             sig_y & !sig_x ~ "PC2",
+                             TRUE ~ "neither")) %>%
+  ggplot(aes(x=abs_x_corr,y=abs_y_corr)) +
+  geom_point(aes(col=sig_cat,fill=sig_cat),size=6,pch=21) + 
+  facet_wrap(~param2) +
+  # ggscatter(x="abs_x_corr",y="abs_y_corr",
+  #           color="param",fill="param",
+  #           facet.by=c("height2","param2"),
+  #           size=3,alpha=0.75) + 
+  #xlab("PCoA 1 Parameter Correlation") + 
+  #ylab("PCoA 2 Parameter Correlation") +
+  scale_color_manual(values=PNWColors::pnw_palette("Sunset2",4)) +
+  scale_fill_manual(values=scales::alpha(PNWColors::pnw_palette("Sunset2",4),0.8)) +
+  theme_custom() +
+  theme(legend.position = "none",
+        strip.text = element_text(size=rel(1.3)),
+        axis.title = element_text(size=rel(1.5)),
+        axis.text = element_text(size=rel(1.5))) +
+  xlab("PCoA Axis 1 Correlation") +
+  ylab("PCoA Axis 2 Correlation")

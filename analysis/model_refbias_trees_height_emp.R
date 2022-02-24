@@ -1,3 +1,9 @@
+############################################
+## Script for analyzing gamma empirial datasets
+## Written by J. Rick
+## Updated 18 Feb 2022 to use here package
+############################################
+
 library(lme4)
 library(tidyverse)
 library(MuMIn)
@@ -7,42 +13,45 @@ library(ggsci)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "072820-output"
-results.emp <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+date <- "010822"
+results.emp.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.emp
-results.mod$simulation <- as.factor(results.mod$simulation)
-results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.numeric(as.character(results.mod$missing))
-results.mod$maf <- as.numeric(as.character(results.mod$maf))
-
-#results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
-#                          nrow=5760,ncol=2,byrow=TRUE)[,2])
+#results.mod <- results.raxml
+# results.emp.lates$simulation <- as.factor(results.emp.lates$simulation)
+# results.emp.lates$quality <- as.factor(results.emp.lates$quality)
+# results.emp.lates$missing <- as.factor(results.emp.lates$missing)
+# results.emp.lates$maf <- as.factor(results.emp.lates$maf)
+# 
+# results.emp.cichlids$simulation <- as.factor(results.emp.cichlids$simulation)
+# results.emp.cichlids$quality <- as.factor(results.emp.cichlids$quality)
+# results.emp.cichlids$missing <- as.factor(results.emp.cichlids$missing)
+# results.emp.cichlids$maf <- as.factor(results.emp.cichlids$maf)
 
 ## Height
-# all
+# lates
 
-m.height.all <- lmer(ingroup.tree.height ~ int + maf + missing +
-                      int:maf + int:missing + (1 | simulation),
-                    data = results.mod)
-sum.height.all <- summary(m.height.all)
-r.squaredGLMM(m.height.all)
+m.height.lates <- lmer(ingroup.tree.height ~ int + maf + missing +
+                         int:maf + int:missing + (1 | simulation),
+                    data = results.emp.lates)
+sum.height.lates <- summary(m.height.lates)
+r.squaredGLMM(m.height.lates)
 
-confint.height.all<-data.frame(confint(m.height.all))[-c(1:3),]
-colnames(confint.height.all) <- c("minCI","maxCI")
-confint.height.all$var <- rownames(confint.height.all)
-confint.height.all$est <- sum.height.all$coefficients[-1,1]
+confint.height.lates<-data.frame(confint(m.height.lates))[-c(1:3),]
+colnames(confint.height.lates) <- c("minCI","maxCI")
+confint.height.lates$var <- rownames(confint.height.lates)
+confint.height.lates$est <- sum.height.lates$coefficients[-1,1]
 #confint.height$cond.est <- sum.height$coefficients[2,]
-confint.height.all$sig <- sum.height.all$coefmat.full[-1,5]
-confint.height.all$sig <- case_when(confint.height.all$minCI > 0 ~ "pos",
-                                   confint.height.all$maxCI < 0 ~ "neg",
+confint.height.lates$sig <- sum.height.lates$coefmat.full[-1,5]
+confint.height.lates$sig <- case_when(confint.height.lates$minCI > 0 ~ "pos",
+                                   confint.height.lates$maxCI < 0 ~ "neg",
                                    TRUE ~ "ns")
-confint.height.all$sig <- factor(confint.height.all$sig, levels=c("pos","ns","neg"))
+confint.height.lates$sig <- factor(confint.height.lates$sig, levels=c("pos","ns","neg"))
 
 
-vars.height.all <- ggplot(confint.height.all, aes(x = var, y = est, color=sig))
-vars.height.all.bars <- vars.height.all + geom_blank() +
+vars.height.lates <- ggplot(confint.height.lates, aes(x = var, y = est, color=sig))
+vars.height.lates.bars <- vars.height.lates + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -55,7 +64,7 @@ vars.height.all.bars <- vars.height.all + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient\nall Trees (High ILS)")+
+  ylab("Coefficient\nlates Trees (High ILS)")+
   #scale_color_npg() +
   #scale_x_reverse() +
   scale_color_manual(values=cols)+
@@ -67,16 +76,64 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.height.all.bars
+vars.height.lates.bars
 
+## Height
+# cichlids
+
+m.height.cichlids <- lmer(ingroup.tree.height ~ int + maf + missing +
+                         int:maf + int:missing + (1 | simulation),
+                       data = results.emp.cichlids)
+sum.height.cichlids <- summary(m.height.cichlids)
+r.squaredGLMM(m.height.cichlids)
+
+confint.height.cichlids<-data.frame(confint(m.height.cichlids))[-c(1:3),]
+colnames(confint.height.cichlids) <- c("minCI","maxCI")
+confint.height.cichlids$var <- rownames(confint.height.cichlids)
+confint.height.cichlids$est <- sum.height.cichlids$coefficients[-1,1]
+#confint.height$cond.est <- sum.height$coefficients[2,]
+confint.height.cichlids$sig <- sum.height.cichlids$coefmat.full[-1,5]
+confint.height.cichlids$sig <- case_when(confint.height.cichlids$minCI > 0 ~ "pos",
+                                      confint.height.cichlids$maxCI < 0 ~ "neg",
+                                      TRUE ~ "ns")
+confint.height.cichlids$sig <- factor(confint.height.cichlids$sig, levels=c("pos","ns","neg"))
+
+
+vars.height.cichlids <- ggplot(confint.height.cichlids, aes(x = var, y = est, color=sig))
+vars.height.cichlids.bars <- vars.height.cichlids + geom_blank() +
+  #color = "cyl",                                # Color by groups
+  #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
+  #sorting = "descending",                       # Sort value in descending order
+  #add = "segments",                             # Add segments from y = 0 to dots
+  #add.params = list(color = "lightgray", size = 2), # Change segment color and size
+  #group = "cyl",                                # Order by groups
+  #dot.size = 4,                                 # Large dot size
+  #label = round(dfm$mpg_z,1),                        # Add mpg values as dot labels
+  #font.label = list(color = "white", size = 9, 
+  #                   vjust = 0.5),               # Adjust label parameters
+  #ggtheme = theme_pubr(),                        # ggplot2 theme
+xlab("")+
+  ylab("Coefficient\ncichlids Trees (High ILS)")+
+  #scale_color_npg() +
+  #scale_x_reverse() +
+  scale_color_manual(values=cols)+
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=15) +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.text = element_text(size=15),legend.position="none",
+        axis.title = element_text(size=18)) +
+  theme(axis.title.x=element_blank())
+vars.height.cichlids.bars
 
 ## ridgeline plots
-plot1 <- ggplot(data = results.raxml, 
+plot1 <- ggplot(data = results.emp.lates, 
                 aes(y=as.factor(maf),
                     x=ingroup.tree.height,
                     fill=int))
 
-plot2 <- ggplot(data = results.mod, 
+plot2 <- ggplot(data = results.emp.lates, 
                 aes(y=as.factor(maf),
                     x=ingroup.tree.height,
                     fill=int)) +

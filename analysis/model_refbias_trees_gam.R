@@ -5,18 +5,22 @@ library(car)
 library(LMERConvenienceFunctions)
 library(ggsci)
 
-cols <- c("#F2AD00","gray80","#00A08A")
+cols.int <- c("#005F73","gray80","#5FB89D")
+cols.sig <- c("#E6B749","gray80","#6A8D4E")
 
-output <- "072820-output"
-results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+here::i_am("analysis/model_refbias_trees_RF.R")
+
+output <- "092321-output"
+results.raxml <- read.csv(here("output","new",paste0(output,"-raxml.csv")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml
+results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26 & results.raxml$RF.Dist.ML < 0.9,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.factor(results.mod$missing)
-results.mod$maf <- as.factor(results.mod$maf)
+results.mod$missing <- as.numeric(as.character(results.mod$missing))
+results.mod$maf <- as.numeric(as.character(results.mod$maf))
+results.mod$int <- as.factor(results.mod$int)
 
 #results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
 #                          nrow=5760,ncol=2,byrow=TRUE)[,2])
@@ -25,13 +29,8 @@ results.mod$maf <- as.factor(results.mod$maf)
 # all
 
 m.gam.all <- lmer(std.ingroup.gamma ~ avg_dxy + maf + missing +
-                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
+                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                     data = results.mod)
-gam_gam <- gam(std.ingroup.gamma ~ avg_dxy + maf + missing +
-                avg_dxy:maf + avg_dxy:missing +
-                s(simulation, bs = 're'),
-              data = results.mod, method = 'REML')
-sum.gam.gam.all <- summary(gam_gam)
 
 sum.gam.all <- summary(m.gam.all)
 r.squaredGLMM(m.gam.all)
@@ -233,7 +232,7 @@ print(vars.plot.gam)
 ## ridgeline plots
 plot1 <- ggplot(data = results.raxml, 
                 aes(y=as.factor(maf),
-                    x=ingroup.gamma,
+                    x=std.ingroup.gamma,
                     fill=int))
 
 plot2 <- ggplot(data = results.mod, 

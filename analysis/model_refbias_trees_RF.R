@@ -9,12 +9,14 @@ library(ggridges)
 library(mgcv)
 
 cols <- c("#F2AD00","gray80","#00A08A")
+here::i_am("analysis/model_refbias_trees_RF.R")
 
-output <- "072221-output"
-results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+output <- "092321-subsamp-output"
+output <- "092321-output"
+results.raxml <- read.csv(here("output","new",paste0(output,"-raxml.csv")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26,]
+results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26 & results.raxml$RF.Dist.ML < 0.9,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
@@ -28,12 +30,6 @@ results.mod$int <- as.factor(results.mod$int)
 m.rf.all <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod)
-rf_gam <- gam(RF.Dist.ML ~ avg_dxy + maf + missing +
-                avg_dxy:maf + avg_dxy:missing +
-                s(simulation, bs = 're'),
-              data = results.mod, method = 'REML')
-sum.rf.gam.all <- summary(rf_gam)
-
 sum.rf.all <- summary(m.rf.all)
 r.squaredGLMM(m.rf.all)
 

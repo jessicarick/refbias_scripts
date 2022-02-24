@@ -1,49 +1,58 @@
+############################################
+## Script for analyzing gamma empirial datasets
+## Written by J. Rick
+## Updated 18 Feb 2022 to use here package
+############################################
+
 library(lme4)
 library(tidyverse)
 library(MuMIn)
 library(car)
 library(LMERConvenienceFunctions)
 library(ggsci)
+library(here)
 
 cols <- c("#F2AD00","gray80","#00A08A")
 
-output <- "072820-output"
-results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
+date <- "010822"
+results.emp.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml
-results.mod$simulation <- as.factor(results.mod$simulation)
-results.mod$height <- as.factor(results.mod$height)
-results.mod$quality <- as.factor(results.mod$quality)
-results.mod$missing <- as.factor(results.mod$missing)
-results.mod$maf <- as.factor(results.mod$maf)
-
-#results.mod$int <- as.factor(matrix(unlist(regmatches(results.mod$taxa_ref, regexec('([A-Z]+)-', results.mod$taxa_ref))),
-#                          nrow=5760,ncol=2,byrow=TRUE)[,2])
+#results.mod <- results.raxml
+# results.emp.lates$simulation <- as.factor(results.emp.lates$simulation)
+# results.emp.lates$quality <- as.factor(results.emp.lates$quality)
+# results.emp.lates$missing <- as.factor(results.emp.lates$missing)
+# results.emp.lates$maf <- as.factor(results.emp.lates$maf)
+# 
+# results.emp.cichlids$simulation <- as.factor(results.emp.cichlids$simulation)
+# results.emp.cichlids$quality <- as.factor(results.emp.cichlids$quality)
+# results.emp.cichlids$missing <- as.factor(results.emp.cichlids$missing)
+# results.emp.cichlids$maf <- as.factor(results.emp.cichlids$maf)
 
 ## gamma
-# all
+# lates
 
-m.gam.all <- lmer(ingroup.gamma ~ int + maf + missing +
+m.gam.lates <- lmer(ingroup.gamma ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
-                    data = results.mod)
-sum.gam.all <- summary(m.gam.all)
-r.squaredGLMM(m.gam.all)
+                       data = results.emp.lates)
+sum.gam.lates <- summary(m.gam.lates)
+r.squaredGLMM(m.gam.lates)
 
-confint.gam.all<-data.frame(confint(m.gam.all))[-c(1:3),]
-colnames(confint.gam.all) <- c("minCI","maxCI")
-confint.gam.all$var <- rownames(confint.gam.all)
-confint.gam.all$est <- sum.gam.all$coefficients[-1,1]
+confint.gam.lates<-data.frame(confint(m.gam.lates))[-c(1:3),]
+colnames(confint.gam.lates) <- c("minCI","maxCI")
+confint.gam.lates$var <- rownames(confint.gam.lates)
+confint.gam.lates$est <- sum.gam.lates$coefficients[-1,1]
 #confint.gam$cond.est <- sum.gam$coefficients[2,]
-confint.gam.all$sig <- sum.gam.all$coefmat.full[-1,5]
-confint.gam.all$sig <- case_when(confint.gam.all$minCI > 0 ~ "pos",
-                                   confint.gam.all$maxCI < 0 ~ "neg",
-                                   TRUE ~ "ns")
-confint.gam.all$sig <- factor(confint.gam.all$sig, levels=c("pos","ns","neg"))
+confint.gam.lates$sig <- sum.gam.lates$coefmat.full[-1,5]
+confint.gam.lates$sig <- case_when(confint.gam.lates$minCI > 0 ~ "pos",
+                                      confint.gam.lates$maxCI < 0 ~ "neg",
+                                      TRUE ~ "ns")
+confint.gam.lates$sig <- factor(confint.gam.lates$sig, levels=c("pos","ns","neg"))
 
 
-vars.gam.all <- ggplot(confint.gam.all, aes(x = var, y = est, color=sig))
-vars.gam.all.bars <- vars.gam.all + geom_blank() +
+vars.gam.lates <- ggplot(confint.gam.lates, aes(x = var, y = est, color=sig))
+vars.gam.lates.bars <- vars.gam.lates + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -56,7 +65,7 @@ vars.gam.all.bars <- vars.gam.all + geom_blank() +
   #                   vjust = 0.5),               # Adjust label parameters
   #ggtheme = theme_pubr(),                        # ggplot2 theme
 xlab("")+
-  ylab("Coefficient\nall Trees (High ILS)")+
+  ylab("Coefficient\nlates Trees (High ILS)")+
   #scale_color_npg() +
   #scale_x_reverse() +
   scale_color_manual(values=cols)+
@@ -68,16 +77,65 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.gam.all.bars
+vars.gam.lates.bars
+
+## gamma
+# cichlids
+
+m.gam.cichlids <- lmer(ingroup.gamma ~ int + maf + missing +
+                            int:maf + int:missing + (1 | simulation),
+                          data = results.emp.cichlids)
+sum.gam.cichlids <- summary(m.gam.cichlids)
+r.squaredGLMM(m.gam.cichlids)
+
+confint.gam.cichlids<-data.frame(confint(m.gam.cichlids))[-c(1:3),]
+colnames(confint.gam.cichlids) <- c("minCI","maxCI")
+confint.gam.cichlids$var <- rownames(confint.gam.cichlids)
+confint.gam.cichlids$est <- sum.gam.cichlids$coefficients[-1,1]
+#confint.gam$cond.est <- sum.gam$coefficients[2,]
+confint.gam.cichlids$sig <- sum.gam.cichlids$coefmat.full[-1,5]
+confint.gam.cichlids$sig <- case_when(confint.gam.cichlids$minCI > 0 ~ "pos",
+                                         confint.gam.cichlids$maxCI < 0 ~ "neg",
+                                         TRUE ~ "ns")
+confint.gam.cichlids$sig <- factor(confint.gam.cichlids$sig, levels=c("pos","ns","neg"))
+
+
+vars.gam.cichlids <- ggplot(confint.gam.cichlids, aes(x = var, y = est, color=sig))
+vars.gam.cichlids.bars <- vars.gam.cichlids + geom_blank() +
+  #color = "cyl",                                # Color by groups
+  #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
+  #sorting = "descending",                       # Sort value in descending order
+  #add = "segments",                             # Add segments from y = 0 to dots
+  #add.params = list(color = "lightgray", size = 2), # Change segment color and size
+  #group = "cyl",                                # Order by groups
+  #dot.size = 4,                                 # Large dot size
+  #label = round(dfm$mpg_z,1),                        # Add mpg values as dot labels
+  #font.label = list(color = "white", size = 9, 
+  #                   vjust = 0.5),               # Adjust label parameters
+  #ggtheme = theme_pubr(),                        # ggplot2 theme
+xlab("")+
+  ylab("Coefficient\nCichlids")+
+  #scale_color_npg() +
+  #scale_x_reverse() +
+  scale_color_manual(values=cols)+
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  #geom_linerange(aes(ymin = minCI, ymax = maxCI),lwd=7) +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=4,lwd=1,shape=15) +
+  coord_flip() +
+  theme_minimal() +
+  theme(axis.text = element_text(size=15),legend.position="none",
+        axis.title = element_text(size=18)) +
+  theme(axis.title.x=element_blank())
+vars.gam.cichlids.bars
 
 
 ## ridgeline plots
-plot1 <- ggplot(data = results.raxml, 
+plot1 <- ggplot(data = results.emp.lates, 
                 aes(y=as.factor(maf),
                     x=ingroup.gamma,
                     fill=int))
 
-plot2 <- ggplot(data = results.mod, 
+plot2 <- ggplot(data = results.emp.lates, 
                 aes(y=as.factor(maf),
                     x=ingroup.gamma,
                     fill=int)) +
@@ -112,7 +170,7 @@ plot2 <- ggplot(data = results.mod,
   #facet_wrap(vars(height),nrow=1,strip.position = "bottom") +
   geom_vline(xintercept=0,cex=0.8,lty=2,col="gray")
 #theme_ridges(line_size = 0.5, grid = FALSE, center_axis_labels=TRUE)
-plot3 <- ggplot(data = results.mod, 
+plot3 <- ggplot(data = results.emp.lates, 
                 aes(y=as.factor(missing),
                     x=ingroup.gamma,
                     fill=int)) +

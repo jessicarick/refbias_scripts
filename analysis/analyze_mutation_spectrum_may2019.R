@@ -1,8 +1,24 @@
+###############################
+## mutation spectrum analysis
+## fall 2021
+## j. rick
+##
+## updated feb 2022
+###############################
+
 library(tidyverse)
 library(ggdist)
+library(PNWColors)
+library(here)
+
+here::i_am("analysis/analyze_mutation_spectrum_may2019.R")
+source(here("analysis","theme_custom.R"))
+source(here("analysis","pairwise_ks_test.R"))
+pal=rev(pnw_palette("Sunset",100))
+
 
 ## Pulling info on simulated number of sites
-mut.files <- list.files(path="output/new/",pattern="092321-varSites*")
+mut.files <- list.files(path=here("output","new"),pattern="092321-varSites*")
 
 mut.all <- data.frame(gene=integer(),
                       variants=integer(),
@@ -28,7 +44,7 @@ mut.all$gene_name <- paste0("gene",sprintf("%04d",mut.all$gene))
 mut.all$sim_num <- as.integer(as.character(mut.all$sim_num))
 
 #mut.all$tree_height <- as.factor(mut.all$tree_height)
-ggpubr::ggdensity(data=mut.all[mut.all$sim_num > 15,],
+ggpubr::ggdensity(data=mut.all[mut.all$sim_num > 15 & mut.all$sim_num < 26,],
                   x="variants",
                   color="tree_height",
                   fill="tree_height",
@@ -38,12 +54,12 @@ ggpubr::ggdensity(data=mut.all[mut.all$sim_num > 15,],
 
 ## Pulling information for post-filtering SNPs
 
-var.list <- list.files(path="output/new/",pattern="092321-SNPs*")
+var.list <- list.files(path="../../results/results_092321/",pattern="092321-SNPs*")
 
 varsites.all <- data.frame()
 
 for (i in 1:length(var.list)){
-  varsites <- read_csv(paste("output/new/",var.list[i],sep=""),
+  varsites <- read_csv(paste("../../results/results_092321/",var.list[i],sep=""),
                          #row.names=NULL,
                          col_names=c("gene","iteration","nSNP"),
                          #stringsAsFactors = FALSE,
@@ -70,7 +86,7 @@ varsites.all$int <- as.factor(varsites.all$int)
 
 pre.post <- varsites.all %>%
   as_tibble() %>%
-  filter(sim > 15) %>%
+  filter(sim > 15 & sim < 26) %>%
   left_join(mut.all, by=c(
     "sim" = "sim_num",
     "gene" = "gene_name",
@@ -95,7 +111,7 @@ first_loss_df <- pre.post %>%
   summarise(first_loss = min(as.numeric(maf),na.rm=T))  %>%
   ungroup() %>%
   group_by(first_loss,int) %>%
-  mutate(mean = mean(variants/5000),
+  mutate(mean = mean(variants/5000), # each locus is 5000bp
          median = median(variants/5000))%>%
   ungroup() %>%
   group_by(first_loss) %>%
@@ -108,7 +124,7 @@ first_loss_df <- pre.post %>%
 fl_maf <- first_loss_df %>%
   mutate(first_loss = as.factor(first_loss),
          mut_rate = variants/5000) %>%
-  ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5) +
+  ggdensity(x="mut_rate",col="first_loss",alpha=0.2,lwd=1.5,adjust=0.5) +
   geom_vline(aes(xintercept=mean_fl,group=height,col=first_loss),lty=2)  +
   theme_custom() +
   theme(legend.position="right",
@@ -150,6 +166,7 @@ first_loss_miss_df <- pre.post %>%
 #   "gene" = "gene_name",
 #   "height" = "tree_height",
 #   "int" = "int_ext")) 
+
 fl_miss <- first_loss_miss_df %>%
   mutate(first_loss = as.factor(first_loss),
          mut_rate = variants/5000) %>%
@@ -238,3 +255,172 @@ pre.post %>%
 pre.post %>%
   ggplot(aes(x=variants,y=diff)) +
   stat_bin_hex(bins=100)
+
+pre.post.wm <- pre.post %>%
+  group_by(gene,height,int,sim) %>%
+  mutate(max_snp=max(nSNP),
+         lost_snp=max_snp-nSNP) %>% 
+  ungroup() %>% 
+  mutate(snps_lost = case_when(diff < 0 ~ 0,
+                               TRUE ~ diff)) %>%
+  filter(maf > 0) %>%
+  group_by(height,int,sim,miss,maf) %>%
+  summarize(mean = mean(variants),
+            weighted_mean = weighted.mean(variants,snps_lost))
+
+mutdist.maf <- pre.post.wm %>% 
+  group_by(maf) %>%
+  mutate(mean_mut = mean(weighted_mean/5000)) %>%
+  ggplot() +
+  geom_density(aes(x = weighted_mean/5000,
+                   #weight = snps_lost/sum(snps_lost),
+                   col=factor(maf,levels=c(1,2,3,4,5,10)),fill=factor(maf,levels=c(1,2,3,4,5,10))),
+               stat = "density",size=0.5,adjust=0.5,alpha=0.3) +
+  geom_vline(aes(xintercept=mean_mut, col=maf, group=maf), lty=2, alpha=1, size=1.3) +
+#  geom_rect(aes(xmin = mean_mut - 0.0001, xmax = mean_mut+0.0001,
+#                ymin = 1275 - 75, ymax = 1275 + 75), fill = "white") +
+#  geom_text(aes(x=mean_mut,label=round(mean_mut,4)),y=1275,angle=90,
+#            size=5, family="Open Sans Light", check_overlap=TRUE) +
+  theme_custom() +
+  #facet_wrap(~int) +
+  xlab("Locus Mutation Rate") +
+  ylab("Density of lost SNPs") +
+  xlim(0.035,0.045) +
+  scale_y_continuous(expand=c(0.01,100)) +
+  scale_color_viridis_d(direction=-1,aesthetics=c("color","fill"))
+
+ks.maf <- pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$maf,alternative="two.sided") %>%
+  reshape2::melt() %>%
+  mutate(Var1 = as.factor(Var1),
+         Var2 = as.factor(Var2)) %>%
+  mutate(value2 = case_when(value < 1e-6 ~ FALSE,
+                            value > 1e-6 ~ TRUE)) %>%
+  ggplot(aes(x=Var1,y=Var2)) +
+  geom_tile(data=. %>% filter(value2),aes(fill=value)) +
+  geom_tile(col="gray90",fill=NA,lwd=1.5) +
+  theme_custom()+
+  theme(panel.border = element_blank()) +
+  scale_fill_gradientn(colours = pal[100]) +
+  xlab("Minor Allele Count") +
+  ylab("Minor Allele Count") 
+
+pre.post.wm.miss <- pre.post %>%
+  group_by(gene,height,int,sim) %>%
+  mutate(max_snp=max(nSNP),
+         lost_snp=max_snp-nSNP) %>% 
+  ungroup() %>% 
+  mutate(snps_lost = case_when(diff < 0 ~ 0,
+                               TRUE ~ diff)) %>%
+  filter(miss > 0) %>%
+  group_by(height,int,sim,miss,maf) %>%
+  summarize(mean = mean(variants),
+            weighted_mean = weighted.mean(variants,snps_lost))
+
+mutdist.miss <- pre.post.wm.miss %>% 
+  group_by(miss) %>%
+  mutate(mean_mut = mean(weighted_mean/5000)) %>%
+  ggplot() +
+  geom_density(aes(x = weighted_mean/5000,
+                   #weight = snps_lost/sum(snps_lost),
+                   col=miss,fill=miss),
+               stat = "density",size=0.5,adjust=0.5,alpha=0.3) +
+  geom_vline(aes(xintercept=mean_mut, col=miss, group=miss), lty=2, alpha=1, size=1.3) +
+#  geom_rect(aes(xmin = mean_mut - 0.0001, xmax = mean_mut+0.0001,
+#                ymin = 400 - 25, ymax = 400 + 25), fill = "white") +
+#  geom_text(data = . %>% group_by(miss) %>% slice(1), 
+#            aes(x=mean_mut,label=round(mean_mut,4)),y=400,angle=90,
+#            size=5, family="Open Sans Light") +
+  theme_custom() +
+  #facet_wrap(~sim) +
+  xlab("Locus Mutation Rate") +
+  ylab("Density of lost SNPs") +
+  # xlim(0.035,0.045) +
+  scale_y_continuous(expand=c(0.01,10)) +
+  scale_color_viridis_d(direction=-1,aesthetics=c("color","fill")) +
+  xlim(0.036,0.044)
+
+ks.miss<-pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$miss,alternative="two.sided") %>%
+  reshape2::melt() %>%
+  mutate(Var1 = as.factor(Var1),
+         Var2 = as.factor(Var2)) %>%
+  mutate(value2 = case_when(value < 1e-6 ~ FALSE,
+                            value > 1e-6 ~ TRUE)) %>%
+  ggplot(aes(x=Var1,y=Var2)) +
+  geom_tile(data=. %>% filter(value2),aes(fill=value)) +
+  geom_tile(col="gray90",fill=NA,lwd=1.5) +
+  theme_custom()+
+  theme(panel.border = element_blank()) +
+  scale_fill_gradientn(colours = pal,values=seq(0,1,by=0.01)) +
+  xlab("Missing Data Threshold") +
+  ylab("Missing Data Threshold") +
+  geom_text(aes(Var2, Var1, label = round(value,5)), color = "black", size = 4)
+
+ggarrange(mutdist.maf,mutdist.miss,
+          font.label=list(family="Open Sans",size=24),
+          label.x=-0.05)
+
+pre.post.locus <- pre.post %>%
+  group_by(gene,height,int,sim) %>%
+  mutate(max_snp=max(nSNP),
+         lost_snp=max_snp-nSNP) %>% 
+  group_by(gene,iteration) %>%
+  mutate(locus_lost = case_when(lost_snp == max_snp ~ "lost",
+                                lost_snp < max_snp ~ "retained"),
+         mut_rate = variants/5000) 
+
+pre.post.locus %>%
+  filter(locus_lost == "lost" & max_snp > 0) %>%
+  group_by(maf,int) %>%
+  mutate(med_mut = median(mut_rate),
+         mean_mut = mean(mut_rate)) %>%
+  ggplot(aes(x=mut_rate)) +
+  geom_density(aes(x = mut_rate,
+                   #weight = snps_lost/sum(snps_lost),
+                   col=factor(maf,levels=c(0,1,2,3,4,5,10)),fill=factor(maf,levels=c(0,1,2,3,4,5,10))),
+               stat = "density",size=0.5,adjust=0.8,alpha=0.05) +
+  geom_vline(aes(xintercept=mean_mut, col=maf, group=maf), lty=2, alpha=1, size=1.3) +
+  # geom_rect(aes(xmin = mut_rate - 0.0001, xmax = mut_rate+0.0001,
+  #               ymin = 1275 - 75, ymax = 1275 + 75), fill = "white") +
+  # geom_text(aes(x=mut_rate,label=round(mut_rate,4)),y=1275,angle=90,
+  #           size=5, family="Open Sans Light", check_overlap=TRUE) +
+  theme_custom() +
+  facet_wrap(~int) +
+  xlab("Locus Mutation Rate") +
+  ylab("Density of lost Loci") +
+  #xlim(0.035,0.045) +
+  #scale_y_continuous(expand=c(0.01,100)) +
+  scale_color_viridis_d(direction=-1,aesthetics=c("color","fill"))
+
+pre.post.locus %>%
+  filter(locus_lost == "lost" & max_snp > 0) %>%
+  group_by(miss,int) %>%
+  mutate(med_mut = median(mut_rate),
+         mean_mut = mean(mut_rate)) %>%
+  ggplot(aes(x=mut_rate)) +
+  geom_density(aes(x = mut_rate,
+                   #weight = snps_lost/sum(snps_lost),
+                   col=miss,fill=miss),
+               stat = "density",size=0.5,adjust=0.8,alpha=0.05) +
+  geom_vline(aes(xintercept=mean_mut, col=miss, group=miss), lty=2, alpha=1, size=1.3) +
+  # geom_rect(aes(xmin = mut_rate - 0.0001, xmax = mut_rate+0.0001,
+  #               ymin = 1275 - 75, ymax = 1275 + 75), fill = "white") +
+  # geom_text(aes(x=mut_rate,label=round(mut_rate,4)),y=1275,angle=90,
+  #           size=5, family="Open Sans Light", check_overlap=TRUE) +
+  theme_custom() +
+  facet_wrap(~int) +
+  xlab("Locus Mutation Rate") +
+  ylab("Density of lost Loci") +
+  #xlim(0.035,0.045) +
+  #scale_y_continuous(expand=c(0.01,100)) +
+  scale_color_viridis_d(direction=-1,aesthetics=c("color","fill"))
+
+pairwise_ks_test(filter(pre.post.locus,locus_lost == "lost" & max_snp > 0)$mut_rate,
+                   filter(pre.post.locus,locus_lost == "lost" & max_snp > 0)$maf,
+                   alternative="less")
+
+pairwise_ks_test(filter(pre.post.locus,locus_lost == "lost" & max_snp > 0 & int == "INT")$mut_rate,
+                 filter(pre.post.locus,locus_lost == "lost" & max_snp > 0 & int == "INT")$maf,
+                 alternative="less")
+pairwise_ks_test(filter(pre.post.locus,locus_lost == "lost" & max_snp > 0 & int == "EXT")$mut_rate,
+                 filter(pre.post.locus,locus_lost == "lost" & max_snp > 0 & int == "EXT")$maf,
+                 alternative="less")
