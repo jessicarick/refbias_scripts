@@ -306,7 +306,8 @@ confint.plot.bygroup <- all.confint  %>%
         legend.position="none",
         axis.title.x = element_text(size=18),
         axis.title.y = element_blank(),
-        strip.text = element_text(size=15)) +
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
   facet_grid(cols=vars(resp),scales="free_x",
              labeller = labeller(
                resp = c("RF.Dist.ML" = "RF Dist to True Tree",
@@ -329,7 +330,8 @@ confint.plot.all <- all.confint %>%
   theme(axis.text = element_text(size=15),
         legend.position="none",
         axis.title = element_blank(),
-        strip.text = element_text(size=15)) +
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
   facet_grid(cols=vars(resp),scales="free_x",
              labeller = labeller(
                resp = c("RF.Dist.ML" = "RF Dist to True Tree",
@@ -339,7 +341,9 @@ confint.plot.all <- all.confint %>%
 
 ## saved at 1000 x 1000px
 p1 <- ggarrange(confint.plot.all,confint.plot.bygroup,ncol=1,
-          heights=c(1,1.5),labels=c("a)","b)"),font.label=list(size=24,family="Open Sans"),
+                hjust=-0.2,
+          heights=c(1,1.5),labels=c("a) Models for all trees","b) Models by tree height"),
+          font.label=list(size=24,family="Open Sans"),
           common.legend=TRUE,legend.grob=get_legend(confint.plot.bygroup),legend="none")
 
 #----------------------------------#
@@ -542,7 +546,8 @@ p3 <- ggarrange(gam.plot,ic.plot,is.plot,ncol=1,labels="AUTO",
 p4 <- ggarrange(rf.plot, ic.plot, gam.plot, ncol=1, 
                 labels=c("c)","d)","e)"), font.label=list(size=24,font.family="Open Sans"),
                 common.legend=TRUE, legend="right",
-                label.x=0.3, label.y=0.95)
+                label.x=0.2, label.y=0.95) + theme(plot.margin=margin(l=20))
+## saved at 1800 x 1200 as refbias_coeffs_maf_multipanel_120421.png and refbias_coefficients_all_multipanel_subsamp_120421.png
 p1 + p4 + 
   plot_layout(widths = c(1.2, 1))
 

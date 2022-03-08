@@ -16,7 +16,7 @@ digraph boxes_and_circles {
         style=filled,
         fillcolor='#0A9396',
         fontcolor=white]
-  a [label = 'Simulate species tree\n(50 tips)',fontsize=18]; 
+  a [label = 'Simulate species tree\n(50 tip taxa)',fontsize=18]; 
   
   node [shape = box,
         fontname = Helvetica,
@@ -28,11 +28,12 @@ digraph boxes_and_circles {
         fillcolor=white,
         fontcolor=black,
         fontsize=16]
-  b [label = 'Simulate 2000 gene\ngeneologies for 5000bp loci\nconstrained to species tree',width=3];
-  c [label = 'Simulate 150bp fastq reads\nfor each individual at\neach locus with\nrandom mutation rate',width=3]; 
+  b [label = 'Simulate gene geneologies\n for 2000 loci (5000bp each)\nconstrained to each species tree',width=4];
+  bc [label = 'Draw variable sites\nfrom N(150,30)',width=3];
+  c [label = 'Simulate 150bp fastq reads for\neach individual at each locus',width=4];
   
-  e [label = 'Align fastq reads to\nreference genome'];
-  f [label = 'Call variants\nand filter VCF for\nQUAL=40,\nbiallelic SNPs only'];
+  e [label = 'Align fastq reads to\nreference genomes'];
+  f [label = 'Call variants and filter VCF for\nQUAL=40, biallelic SNPs only', width=4];
   h [label = 'Remove invariant sites,\nconvert to phylip'];
   i [label = 'Maximum likelihood\ntree estimation (RAxML)'];
   j [label = 'Summary statistics\nand analysis']
@@ -43,16 +44,15 @@ digraph boxes_and_circles {
         style=dashed,
         color=gray]
   a1 [label = 'Speciation rate\n0.00001 (high ILS)\n0.000005 (med ILS)\n0.000001 (low ILS)'];
-  d [label = 'Choose random ingroup\nindividual as reference'];
-  d2 [label = 'Choose outgroup\nindividual as reference'];
+  d [label = 'Choose outgroup taxon and\none random ingroup individual\nas reference genomes'];
 
   g3 [label = 'Minor allele count\n0 / 1 / 2 / 3 / 4 / 5 / 10'];
   g4 [label = 'Missing data\n0 / 0.25 / 0.50 / 0.75 / 0.90'];
 
   # several 'edge' statements
   edge [color = slategrey]
-  b->c
-  c->{d,d2}->e->f->g3->g4->h->i
+  b->bc->c
+  c->d->e->f->g3->g4->h->i
   i->j
 
   edge [color = slategrey,arrowhead=none]
