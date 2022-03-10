@@ -665,34 +665,34 @@ param_loadings %>%
 
 
 ## plot of parameter correlations for all sims
-param_loadings %>% 
-  filter(sim < 26) %>% 
-  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
-         height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
-         param2 = recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
-  pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
-  ggplot(aes(x=value)) +
-  geom_density(data = . %>% filter(corr == "abs_x_corr"),fill="gray80",adjust=0.75) +
-  geom_density(data = . %>% filter(corr == "abs_y_corr"),aes(y=-..density..),fill="gray30",adjust=0.75) +
-  facet_wrap(~param2) +
-  # ggscatter(x="abs_x_corr",y="abs_y_corr",
-  #           color="param",fill="param",
-  #           facet.by=c("height2","param2"),
-  #           size=3,alpha=0.75) + 
-  #xlab("PCoA 1 Parameter Correlation") + 
-  #ylab("PCoA 2 Parameter Correlation") +
-  theme_custom() +
-  theme(legend.position = "none",
-        strip.text = element_text(size=rel(1.3)),
-        axis.title = element_text(size=rel(1.5)),
-        axis.text = element_text(size=rel(1.5)))
+# param_loadings %>% 
+#   filter(sim < 26) %>% 
+#   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+#          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+#          param2 = recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+#   pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+#   ggplot(aes(x=value)) +
+#   geom_density(data = . %>% filter(corr == "abs_x_corr"),fill="gray80",adjust=0.75) +
+#   geom_density(data = . %>% filter(corr == "abs_y_corr"),aes(y=-..density..),fill="gray30",adjust=0.75) +
+#   facet_wrap(~param2) +
+#   # ggscatter(x="abs_x_corr",y="abs_y_corr",
+#   #           color="param",fill="param",
+#   #           facet.by=c("height2","param2"),
+#   #           size=3,alpha=0.75) + 
+#   #xlab("PCoA 1 Parameter Correlation") + 
+#   #ylab("PCoA 2 Parameter Correlation") +
+#   theme_custom() +
+#   theme(legend.position = "none",
+#         strip.text = element_text(size=rel(1.3)),
+#         axis.title = element_text(size=rel(1.5)),
+#         axis.text = element_text(size=rel(1.5)))
   
 
-param_loadings %>% 
+param_loadings_sim %>% 
   filter(sim < 26) %>% 
   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
-         param2 = recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+         param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
   #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
   mutate(dom = case_when(x_corr > y_corr ~ "PC1",
                          y_corr > x_corr ~ "PC2"),
@@ -724,3 +724,102 @@ param_loadings %>%
         axis.text = element_text(size=rel(1.5))) +
   xlab("PCoA Axis 1 Correlation") +
   ylab("PCoA Axis 2 Correlation")
+
+
+# param_loadings_sim %>% 
+#   filter(sim < 26) %>% 
+#   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+#          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+#          param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+#   #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+#   mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+#                          y_corr > x_corr ~ "PC2"),
+#          sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+#                            x_corr_sig >= 0.01 ~ FALSE,
+#                            TRUE ~ FALSE),
+#          sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+#                            y_corr_sig >= 0.01 ~ FALSE,
+#                            TRUE ~ FALSE),
+#          sig_cat = case_when(sig_x & sig_y ~ "both",
+#                              sig_x & !sig_y ~ "PC1",
+#                              sig_y & !sig_x ~ "PC2",
+#                              TRUE ~ "neither")) %>%
+#   ggplot() +
+#   geom_histogram(aes(x=abs_x_corr,y=..density..),binwidth=0.05) +
+#   geom_histogram(aes(x=abs_y_corr,y=-..density..),binwidth=0.05) +
+#   facet_wrap(~param2) +
+#   theme_custom() +
+#   geom_hline(yintercept=0)
+# 
+# param_loadings_sim %>% 
+#   filter(sim < 26) %>% 
+#   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+#          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+#          param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+#   #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+#   mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+#                          y_corr > x_corr ~ "PC2"),
+#          sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+#                            x_corr_sig >= 0.01 ~ FALSE,
+#                            TRUE ~ FALSE),
+#          sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+#                            y_corr_sig >= 0.01 ~ FALSE,
+#                            TRUE ~ FALSE),
+#          sig_cat = case_when(sig_x & sig_y ~ "both",
+#                              sig_x & !sig_y ~ "PC1",
+#                              sig_y & !sig_x ~ "PC2",
+#                              TRUE ~ "neither")) %>%
+#   pivot_longer(cols=starts_with("abs"),names_to="corr_type",values_to="corr_value") %>%
+#   mutate(corr_sig = case_when(corr_type == "abs_x_corr" ~ sig_x,
+#                               corr_type == "abs_y_corr" ~ sig_y,
+#                               TRUE ~ FALSE)) %>%
+#   ggplot(aes(x=corr_value,y=param)) +
+#   ggdist::stat_dots(aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=1.1) +
+#   theme_custom() +
+#   theme(panel.grid.major=element_line(),
+#         legend.position=c(0.8,0.8)) +
+#   xlab("PCoA Correlation Coefficient") +
+#   ylab("Parameter") +
+#   scale_fill_manual(values=c("gray50","black"),aesthetics=c("fill","color")) +
+#   coord_cartesian(ylim=c(0.9,4.1),xlim=c(-0.01,1.01),expand=FALSE)
+  
+## PLOT OF ALL LOADINGS TOGETHER
+## (other dataframes come from analyze_refbias_trees_emp scripts)
+param_loadings_cich %>% 
+  add_row(param_loadings_lates) %>%
+  add_row(param_loadings_sim) %>%
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         #height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_cat = case_when(sig_x & sig_y ~ "both",
+                             sig_x & !sig_y ~ "PC1",
+                             sig_y & !sig_x ~ "PC2",
+                             TRUE ~ "neither")) %>%
+  pivot_longer(cols=starts_with("abs"),names_to="corr_type",values_to="corr_value") %>%
+  mutate(corr_sig = case_when(corr_type == "abs_x_corr" ~ sig_x,
+                              corr_type == "abs_y_corr" ~ sig_y,
+                              TRUE ~ FALSE)) %>%
+  ggplot(aes(x=corr_value,y=height)) +
+  #ggdist::stat_dots(data=. %>% filter(height != "lates" & height != "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01) +
+  #ggdist::stat_dots(data=. %>% filter(height == "lates" | height == "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01,side="bottom") +
+  ggdist::geom_dots(aes(shape=corr_sig,col=corr_type, fill=corr_type, group=param),alpha=0.8,scale=0.9,binwidth=0.04,dotsize=1,layout="bin") +
+  stat_pointinterval(position=position_nudge(y=-0.1),point_interval="median_qi") +
+  theme_custom() +
+  theme(panel.grid.major=element_line(),
+        legend.position="right",
+        strip.text = element_text(size=rel(1.5))) +
+  xlab("PCoA Correlation Coefficient") +
+  ylab("") +
+  facet_wrap(~param2) +
+  scale_shape_manual(values=c(1,19)) +
+  scale_fill_manual(values=c("gray50","black"),aesthetics=c("fill","color")) +
+  geom_hline(yintercept=2.7)
