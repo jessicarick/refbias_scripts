@@ -293,16 +293,26 @@ ks.maf <- pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$maf,alternative
   reshape2::melt() %>%
   mutate(Var1 = as.factor(Var1),
          Var2 = as.factor(Var2)) %>%
-  mutate(value2 = case_when(value < 1e-6 ~ FALSE,
-                            value > 1e-6 ~ TRUE)) %>%
+  mutate(value2 = case_when(value == 1 ~ FALSE,
+                            value != 1 ~ TRUE),
+         sig = case_when(value < 0.01 ~ TRUE,
+                         value > 0.01 ~ FALSE)) %>%
   ggplot(aes(x=Var1,y=Var2)) +
-  geom_tile(data=. %>% filter(value2),aes(fill=value)) +
+  geom_tile(aes(fill=value)) +
   geom_tile(col="gray90",fill=NA,lwd=1.5) +
   theme_custom()+
-  theme(panel.border = element_blank()) +
-  scale_fill_gradientn(colours = pal[100]) +
+  theme(panel.border = element_blank(),
+        axis.text = element_text(size=rel(1.5)),
+        axis.title = element_text(size=rel(2))) +
+  #scale_fill_gradientn(colours = pal,values=seq(1,0,by=-0.01)) +
+  scale_fill_distiller(type = "seq",
+                        direction = -1,
+                        palette = "Greys") +
+  scale_x_discrete(position = "top") +
   xlab("Minor Allele Count") +
-  ylab("Minor Allele Count") 
+  ylab("Minor Allele Count") +
+  geom_text(data = . %>% filter(sig), aes(Var2, Var1), color = "white", size = 12, label = "*") +
+  geom_segment(aes(x=0.5,y=0.5,xend=6.5,yend=6.5),color="gray90",size=1.5)
 
 pre.post.wm.miss <- pre.post %>%
   group_by(gene,height,int,sim) %>%
@@ -311,7 +321,7 @@ pre.post.wm.miss <- pre.post %>%
   ungroup() %>% 
   mutate(snps_lost = case_when(diff < 0 ~ 0,
                                TRUE ~ diff)) %>%
-  filter(miss > 0) %>%
+  #filter(miss > 0) %>%
   group_by(height,int,sim,miss,maf) %>%
   summarize(mean = mean(variants),
             weighted_mean = weighted.mean(variants,snps_lost))
@@ -322,7 +332,7 @@ mutdist.miss <- pre.post.wm.miss %>%
   ggplot() +
   geom_density(aes(x = weighted_mean/5000,
                    #weight = snps_lost/sum(snps_lost),
-                   col=miss,fill=miss),
+                   col=factor(miss,levels=c(0,0.25,0.5,0.75,0.9)),fill=factor(miss,levels=c(0,0.25,0.5,0.75,0.9))),
                stat = "density",size=0.5,adjust=0.5,alpha=0.3) +
   geom_vline(aes(xintercept=mean_mut, col=miss, group=miss), lty=2, alpha=1, size=1.3) +
 #  geom_rect(aes(xmin = mean_mut - 0.0001, xmax = mean_mut+0.0001,
@@ -343,17 +353,26 @@ ks.miss<-pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$miss,alternative
   reshape2::melt() %>%
   mutate(Var1 = as.factor(Var1),
          Var2 = as.factor(Var2)) %>%
-  mutate(value2 = case_when(value < 1e-6 ~ FALSE,
-                            value > 1e-6 ~ TRUE)) %>%
+  mutate(value2 = case_when(value == 1 ~ FALSE,
+                            value != 1 ~ TRUE),
+         sig = case_when(value < 0.01 ~ TRUE,
+                         value > 0.01 ~ FALSE)) %>%
   ggplot(aes(x=Var1,y=Var2)) +
-  geom_tile(data=. %>% filter(value2),aes(fill=value)) +
+  geom_tile(data = . %>% filter(value2),aes(fill=value)) +
   geom_tile(col="gray90",fill=NA,lwd=1.5) +
   theme_custom()+
-  theme(panel.border = element_blank()) +
-  scale_fill_gradientn(colours = pal,values=seq(0,1,by=0.01)) +
+  theme(panel.border = element_blank(),
+        axis.text = element_text(size=rel(1.5)),
+        axis.title = element_text(size=rel(2))) +
+  #scale_fill_gradientn(colours = pal,values=seq(1,0,by=-0.01)) +
+  scale_fill_distiller(type = "seq",
+                       direction = -1,
+                       palette = "Greys") +
+  scale_x_discrete(position = "top") +
   xlab("Missing Data Threshold") +
   ylab("Missing Data Threshold") +
-  geom_text(aes(Var2, Var1, label = round(value,5)), color = "black", size = 4)
+  geom_text(data = . %>% filter(sig), aes(Var2, Var1), color = "white", size = 12, label = "*") +
+  geom_segment(aes(x=0.5,y=0.5,xend=5.5,yend=5.5),color="gray90",size=1.5)
 
 ggarrange(mutdist.maf,mutdist.miss,
           font.label=list(family="Open Sans",size=24),
