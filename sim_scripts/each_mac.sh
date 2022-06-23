@@ -48,18 +48,24 @@ done
 
 python ../sim_scripts/make_supermat.py ../OUTFILE_s${sim}_q${QUAL}_${int}_miss${miss}_mac${mac}.REF.all.noInv.phy
 
-## RUN ASTRAL ON GENE TREES AND CALCUALTE GT DISCORDANCE
-if false; then # skip astral
-seq -w $genes | parallel --jobs 2 --env miss --env mac --delay 1 "echo {} && raxmlHPC-PTHREADS-AVX -T 2 -s gene{}_miss${miss}_mac${mac}.REF.noInv.phy -n gene{}.out -m ASC_GTRCAT -V --asc-corr=lewis -x 123 -p 123"
+###########################################################
+## RUN ASTRAL ON GENE TREES AND CALCUALTE GT DISCORDANCE ##
+###########################################################
 
-cat RAxML_bestTree*.out >> genetrees.tre
+#if false; then # skip astral
+
+seq -w $genes | parallel --jobs 2 --env miss --env mac --delay 1 "echo {} && raxmlHPC-PTHREADS-AVX -T 2 -s gene{}_miss${miss}_mac${mac}.REF.noInv.phy -n gene{}_miss${miss}_mac${mac}.out -m ASC_GTRCAT -V --asc-corr=lewis -x 123 -p 123"
+
+cat RAxML_bestTree*gene*miss${miss}_mac${mac}.out >> genetrees_miss${miss}_mac${mac}.tre
+rm -f RAxML_*gene*miss${miss}_mac${mac}*
+
 java -jar ${PROGRAM_DIR}/ASTRAL/astral.5.6.1.jar -i genetrees.tre -o astral_sim${sim}_miss${miss}_mac${mac}
 cat astral_sim${sim}_miss${miss}_mac${mac} >> ${output_dir}/${day}-${tree_height}-ASTRAL-batch.trees
 echo "sim${sim}_miss${miss}_mac${mac}_${INT}" >> ${output_dir}/${day}-${tree_height}-ASTRAL-tree.names
 
 Rscript ../sim_scripts/calc_genetree_rf.R genetrees.tre $sim >> ${output_dir}/${day}-${tree_height}-${int}-post.gt_rf
 
-fi # skip astral
+#fi # skip astral
 ###########
 
 cd ../
@@ -70,7 +76,7 @@ rm -rf gene*/
 #######################################
 #### Running RaxML w/ Ref #############
 #######################################
-
+#if false; then # skip RAxML
 sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_${int}_miss${miss}_mac${mac}.REF.all.noInv.phy | head -n 1 | awk '{print $2}'`
 
 echo "running raxml on concatenated SNPs"
@@ -97,3 +103,4 @@ mv RAxML*OUTFILE_s${sim}_q${QUAL}_${int}_miss${miss}_mac${mac}_sites${sites_ref}
 cat s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files/RAxML*bipartitions.*OUTFILE_s${sim}_q${QUAL}_${int}_miss${miss}_mac${mac}_sites${sites_ref}.REF.${int}.filtered.out >> ${output_dir}/${day}-${tree_height}-batch.trees
 ls s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files/*bipartitions.OUTFILE_s${sim}_q${QUAL}_${int}_miss${miss}_mac${mac}_sites${sites_ref}.REF.${int}.filtered.out >> ${output_dir}/${day}-${tree_height}-tree.names
 
+#fi # skip RAxML
