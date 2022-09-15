@@ -38,17 +38,22 @@ else
 fi
 
 # concatenating astral trees
-#if [ ! -f output/${day}-all-astral.trees ]; then
-#	echo "concatenating astral trees..."
-#	for height in `cat refbias_config.txt | grep 'tree_height_list' | sed 's/tree_height_list=\'//' | sed 's/\'//'`;
-#		do trees=output/${day}-${height}-astral.trees;
-#		names=output/${day}-${height}-astral.names;
-#		cat $trees >> output/${day}-all-astral.trees;
-#		cat $names >> output/${day}-all-astral.names;
-#	done 
-#else
-#	echo "astral trees already concatenated; moving on"
-#fi
+if [ ! -f output/new/${day}-all-astral.trees ]; then
+	echo "concatenating astral trees..."
+	for height in SHORT MED LONG;
+	#for height in `cat refbias_config.txt | grep 'tree_height_list' | sed 's/tree_height_list=\'//' | sed 's/\'//'`;
+		do trees=output/new/${day}-${height}-ASTRAL-batch.trees;
+		names=output/new/${day}-${height}-ASTRAL-tree.names;
+
+		cat $trees >> output/new/${day}-all-astral.trees;
+
+		for name in `cat $names`;
+                        do echo "${height}-${name}" >> output/new/${day}-all-astral.names;
+                done
+	done 
+else
+	echo "astral trees already concatenated; moving on"
+fi
 
 #if false
 

@@ -22,6 +22,8 @@ subsample=true
 ###############################################
 echo "starting analysis for $tree_height, sim $sim, $int"
 
+if [ ! -f ${output_dir}/092321-${tree_height}-OUTFILE_s${sim}_q${QUAL}_rawvar.${int}.vcf.gz ]; then
+
 nloci=$(($genes + 1))
 var_sites=(`Rscript sim_scripts/var_sites.R $nloci $varsites`)
 echo ${var_sites[*]} > ${output_dir}/${day}-varSites-${tree_height}-sim${sim}-${int}
@@ -142,16 +144,18 @@ echo "done calculating Dxy"
 rm -f OUTFILE_q${QUAL}.bcf
 rm -f OUTFILE_q${QUAL}_RN.bcf
  
+fi
+
 ###############################################
 ## STARTING SUBSAMPLING SCRIPT WITH THIS VCF ##
 ###############################################
 ## note: not tested yet!!
-#if false; then #debugging
+if false; then #debugging
 if [ "$subsample" = true ]; then
         echo "spawning subsampling script for $sim $tree_height $int for the $day data"
         sbatch sim_scripts/subsample_script.sh $sim $tree_height $int $taxa_ref $day
 fi
-#fi # debugging
+fi # debugging
 
 #cp ${output_dir}/${day}-${tree_height}-OUTFILE_s${sim}_q${QUAL}.${int}.vcf OUTFILE_s${sim}_q${QUAL}.vcf 
 
@@ -165,9 +169,10 @@ echo "beginning parallel jobs per mac and miss"
 export sim
 export int
 export taxa_ref
+export tree_height
 
 # the "each_mac.sh" script uses 4 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env taxa_ref --env sim --env int "bash sim_scripts/each_mac.sh {}" ::: $mac_list ::: $miss_list
+parallel --delay 2 --jobs 4  --line-buffer --env tree_height --env taxa_ref --env sim --env int "bash sim_scripts/each_mac_jun2022.sh {}" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files
