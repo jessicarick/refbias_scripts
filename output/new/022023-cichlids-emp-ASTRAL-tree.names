@@ -177,3 +177,10 @@ sim6_miss0.90_mac1_INT
 sim8_miss0.75_mac1_INT
 sim8_miss0.75_mac1_EXT
 sim2_miss0.25_mac1_INT
+sim5_miss0.75_mac1_INT
+sim3_miss0_mac2_EXT
+sim2_miss0.90_mac1_EXT
+sim5_miss0.90_mac1_INT
+sim3_miss0.25_mac1_INT
+sim5_miss0.50_mac1_EXT
+sim3_miss0_mac1_INT
