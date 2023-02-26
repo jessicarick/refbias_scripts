@@ -695,3 +695,6 @@ sim2_miss0.75_mac10_EXT
 sim2_miss0.50_mac10_EXT
 sim5_miss0.25_mac10_EXT
 sim2_miss0.90_mac10_EXT
+sim5_miss0.50_mac10_EXT
+sim5_miss0.75_mac10_EXT
+sim5_miss0.90_mac10_EXT
