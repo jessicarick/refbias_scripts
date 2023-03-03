@@ -1,10 +1,10 @@
 # library(extrafont)
 # font_import()
-# loadfonts(device = "win")
+# loadfonts(device = "all")
 library(tidyverse)
 
 theme_custom <- function () { 
-  theme_bw(base_size=12, base_family="Open Sans Light") %+replace% 
+  theme_bw(base_size=12, base_family="Open Sans") %+replace% 
     theme(
       panel.background  = element_blank(),
       plot.background = element_rect(fill="white", color=NA), 
@@ -19,3 +19,5 @@ theme_custom <- function () {
     )
 }
 
+cols.int <- c("#e2d200","#2A9D8F","#e76f51") # colors for tree heights
+cols.sig <- c("black","gray80","black")

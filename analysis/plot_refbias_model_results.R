@@ -19,20 +19,29 @@ source(here("analysis","theme_custom.R"))
 output <- "092321-output"
 output <- "092321-subsamp-output"
 results.raxml <- read.csv(here("output","new",paste0(output,"-raxml.csv")),header=TRUE,row.names=1,sep=",")
+results.astral <- read_csv(here(here("output","new",paste0(output,"-astral.csv"))))
 figdir <- "~/Dropbox/Apps/Overleaf/Reference Bias in SNP-based Phylogenetics/figures/"
 
 #cols.int <- c("#005F73","gray80","#5FB89D")
 cols.int <- c("#e2d200","#2A9D8F","#e76f51") # colors for tree heights
 cols.sig <- c("black","gray80","black")
 
-## preparing data object
-results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26 & results.raxml$RF.Dist.ML < 0.9,]
+## preparing data objects
+results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
 results.mod$missing <- as.numeric(as.character(results.mod$missing))
 results.mod$maf <- as.numeric(as.character(results.mod$maf))
 results.mod$int <- as.factor(results.mod$int)
+
+results.mod.astr <- results.astral[results.astral$simulation > 15 & results.astral$simulation < 26,]
+results.mod.astr$simulation <- as.factor(results.mod.astr$simulation)
+results.mod.astr$height <- as.factor(results.mod.astr$height)
+results.mod.astr$quality <- as.factor(results.mod.astr$quality)
+results.mod.astr$missing <- as.factor(as.character(results.mod.astr$missing))
+results.mod.astr$maf <- as.numeric(as.character(results.mod.astr$maf))
+results.mod.astr$int <- as.factor(results.mod.astr$int)
 
 #----------------------------------------------#
 ### plot for maf & miss : sites correlation ####
@@ -223,8 +232,8 @@ for (h in unique(results.mod$height)) {
     heatmap <- ggarrange(contour_rf, contour_qdist, contour_ci,
                          contour_gam, contour_imb, contour_height, nrow=2, ncol=3,
                          labels="AUTO",font.label=list(size=24))
-    heatmap %>%
-      ggexport(filename = paste0(figdir,"full_sims/refbias_heatmap_",h,"_byINT.png"), width=2000,height=1400)
+    #heatmap %>%
+    #  ggexport(filename = paste0(figdir,"full_sims/refbias_heatmap_",h,"_byINT.png"), width=2000,height=1400)
   }
   print(heatmap)
 }
@@ -346,6 +355,7 @@ p1 <- ggarrange(confint.plot.all,confint.plot.bygroup,ncol=1,
           font.label=list(size=24,family="Open Sans"),
           common.legend=TRUE,legend.grob=get_legend(confint.plot.bygroup),legend="none")
 
+
 #----------------------------------#
 ### table with param estimates #####
 #----------------------------------#
@@ -445,7 +455,7 @@ rf.plot <- results.mod %>%
   xlab("Minor Allele Count") +
   ylab("Robinson-Foulds\nDistance") +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 25, b = 0, l = 0)),
-        legend.text = element_text(size=rel(1.5)))
+        legend.text = element_text(size=rel(1.5))) 
 q.plot <- results.mod %>%
   ggplot(aes(x=maf,y=Q.Dist.ML,col=height,shape=int))  +
   stat_summary(alpha=0.8,size=4,geom="point") +
@@ -469,13 +479,63 @@ ci.plot <- results.mod %>%
   scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
   xlab("Minor Allele Count") +
   ylab("Clustering Information\nDistance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) 
+
+results.mod.astr$maf <- as.numeric(as.character(results.mod.astr$maf))
+rf.plot.astr <- results.mod.astr %>%
+  ggplot(aes(x=maf,y=RF.Dist.ML,col=height,shape=int)) +
+  stat_summary(alpha=0.8,size=4,geom="point") +
+  stat_summary(geom="line",lty=2) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int) +
+  scale_shape_manual(values=c(17,15)) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Robinson-Foulds\nDistance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 25, b = 0, l = 0)),
+        legend.text = element_text(size=rel(1.5)))  
+q.plot.astr <- results.mod.astr %>%
+  ggplot(aes(x=maf,y=Q.Dist.ML,col=height,shape=int))  +
+  stat_summary(alpha=0.8,size=4,geom="point") +
+  stat_summary(geom="line",lty=2) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int) +
+  scale_shape_manual(values=c(17,15))  +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Quartet\nDistance") +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
+ci.plot.astr <- results.mod.astr %>%
+  ggplot(aes(x=maf,y=CI.Dist.ML,col=height,shape=int))  +
+  stat_summary(alpha=0.8,size=4,geom="point") +
+  stat_summary(geom="line",lty=2) +
+  scale_color_manual(labels=c("Low ILS","Med ILS","High ILS"),
+                     values=cols.int) +
+  scale_shape_manual(values=c(17,15)) +
+  theme_custom() +
+  scale_x_continuous(limits=c(0,10),breaks=seq(0,10,1),labels=seq(0,10,1)) +
+  xlab("Minor Allele Count") +
+  ylab("Clustering Information\nDistance") +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)))
 
 ## saved at 800px x 1000px
-p2 <- ggarrange(rf.plot,q.plot,ci.plot,ncol=1,labels="AUTO",
+p2 <- ggarrange(rf.plot,
+                q.plot,
+                ci.plot,
+                ncol=2,nrow=3,labels="AUTO",
           font.label=list(size=24,font.family="Open Sans"),
           common.legend=TRUE,legend="right",
           label.x=0.17,label.y=0.95)
+p2.both <- ggarrange(rf.plot,rf.plot.astr,
+                q.plot,q.plot.astr,
+                ci.plot,ci.plot.astr,
+                
+                ncol=2,nrow=3,labels=c("A","D","B","E","C","F"),
+                font.label=list(size=24,font.family="Open Sans"),
+                common.legend=TRUE,legend="right",
+                label.x=0.3,label.y=0.95)
 
 gam.plot <- results.mod %>%
   ggplot(aes(x=maf,y=std.ingroup.gamma,col=height,shape=int)) +
@@ -536,6 +596,7 @@ ggarrange(rf.plot,ic.plot,
           font.label=list(size=24,font.family="Open Sans"),
           common.legend=TRUE,legend="right",
           label.x=0.1,label.y=0.95)
+
 ## saved at 800px x 1000px
 p3 <- ggarrange(gam.plot,ic.plot,is.plot,ncol=1,labels="AUTO",
           font.label=list(size=24,font.family="Open Sans"),
@@ -543,13 +604,15 @@ p3 <- ggarrange(gam.plot,ic.plot,is.plot,ncol=1,labels="AUTO",
           label.x=0.17,label.y=0.95)
 
 #library(patchwork)
-p4 <- ggarrange(rf.plot, ic.plot, gam.plot, ncol=1, 
-                labels=c("c)","d)","e)"), font.label=list(size=24,font.family="Open Sans"),
+p4 <- ggarrange(rf.plot, rf.plot.astr, ic.plot, gam.plot, ncol=1, 
+                labels=c("c)","d)","e)","f)"), font.label=list(size=24,font.family="Open Sans"),
                 common.legend=TRUE, legend="right",
                 label.x=0.2, label.y=0.95) + theme(plot.margin=margin(l=20))
 ## saved at 1800 x 1200 as refbias_coeffs_maf_multipanel_120421.png and refbias_coefficients_all_multipanel_subsamp_120421.png
-p1 + p4 + 
+p5 <- p1 + p4 + 
   plot_layout(widths = c(1.2, 1))
+p5
+#ggexport(p5,filename=paste0(figdir,"full_sims/refbias_coeffs_maf_multipanel_101322.png"),width=1300,height=1000)
 
 #-------------------------------------------------------#
 ### plot of distances to true tree by missing & int #####
@@ -844,3 +907,184 @@ p3.emp <- ggarrange(th.plot.maf,th.plot.miss,
 
 ggarrange(confint.plot.all, labels=c("a)"),
           font.label=list(size=24,font.family="Open Sans")) + p3.emp
+
+##------------------------------------##
+## PLOTS FOR ASTRAL TREES ##############
+##------------------------------------##
+
+all.confint.astr <- confint.rf.long.astr %>% 
+            as_tibble() %>% 
+            mutate(resp = "RF.Dist.ML") %>%
+  mutate(height = "long") %>%
+  add_row(confint.rf.med.astr %>%
+            as_tibble() %>%
+            mutate(resp = "RF.Dist.ML") %>%
+            mutate(height = "med")) %>%
+  add_row(confint.rf.short.astr %>% 
+            as_tibble() %>%
+            mutate(resp = "RF.Dist.ML") %>%
+            mutate(height = "short")) %>%
+  add_row(confint.rf.all.astr %>% 
+            as_tibble() %>%
+            mutate(resp = "RF.Dist.ML") %>%
+            mutate(height = "all")) %>%
+  mutate(categ = case_when(height == "all" ~ "all",
+                           TRUE ~ "by.height"),
+         nudge = case_when(height == "short" ~ -0.2,
+                           height == "long" ~ 0.2,
+                           height == "med" ~ 0,
+                           height == "all" ~ 0)) %>%
+  mutate(col_sig = case_when(sig == "ns" ~ "ns",
+                             TRUE ~ height))
+cols.int.sig <- c("#e2d200","#2A9D8F","gray","#e76f51")
+confint.plot.bygroup.astr <- all.confint.astr  %>%
+  filter(categ == "by.height") %>%
+  ggplot(aes(x=var,y=est,col=height)) +
+  xlab("")+
+  ylab("Coefficient")+
+  scale_color_manual(values=cols.int,guide="none")+
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI, shape=col_sig, alpha=col_sig),
+                  fill="white",fatten=5,lwd=1, 
+                  position=position_nudge(x=all.confint.astr$nudge[all.confint.astr$categ == "by.height"])) +
+  # geom_point(data=. %>% filter(col_sig == "ns"), aes(x=var,y=est,group=height),
+  #            color="black",shape=16, fill="black",size=4,
+  #            position=position_nudge(x=all.confint$nudge[all.confint$categ == "by.height"])) +
+  scale_shape_manual(values=c(16,16,21,16,16)) +
+  scale_alpha_manual(values=c(1,1,0.4,1,1)) +
+  coord_flip() +
+  theme_custom() +
+  scale_x_discrete(labels=rev(c("miss","mac","ref:miss","ref:mac","ref"))) +
+  theme(axis.text = element_text(size=15),
+        legend.position="none",
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_blank(),
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
+  facet_grid(cols=vars(resp),scales="free_x",
+             labeller = labeller(
+               resp = c("RF.Dist.ML" = "RF Dist to True Tree",
+                        "std.ingroup.colless" = "Ingroup Imbalance",
+                        "std.ingroup.gamma" = "Ingroup Gamma")
+             ))
+#facet_wrap(vars(resp,height),scales="free",as.table=TRUE)
+
+confint.plot.all.astr <- all.confint.astr %>%
+  filter(height == "all") %>%
+  ggplot(aes(x=var,y=est,col=sig)) +
+  #scale_color_manual(values=cols.sig[c(2,3)]) +
+  scale_color_manual(values=cols.sig) +
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=5,lwd=1, 
+                  position=position_nudge(x=all.confint.astr$nudge), alpha=1, shape=4) +
+  coord_flip() +
+  theme_custom() +
+  scale_x_discrete(labels=rev(c("miss","mac","ref:miss","ref:mac","ref"))) +
+  theme(axis.text = element_text(size=15),
+        legend.position="none",
+        axis.title = element_blank(),
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
+  facet_grid(cols=vars(resp),scales="free_x",
+             labeller = labeller(
+               resp = c("RF.Dist.ML" = "RF Dist to True Tree",
+                        "std.ingroup.colless" = "Ingroup Imbalance",
+                        "std.ingroup.gamma" = "Ingroup Gamma")
+             ))
+
+## subset raxml plots to only rfdist
+confint.plot.bygroup.rf <- all.confint  %>%
+  filter(categ == "by.height") %>%
+  filter(resp == "RF.Dist.ML") %>%
+  ggplot(aes(x=var,y=est,col=height)) +
+  xlab("")+
+  ylab("Coefficient")+
+  scale_color_manual(values=cols.int,guide="none")+
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI, shape=col_sig, alpha=col_sig),
+                  fill="white",fatten=5,lwd=1, 
+                  position=position_nudge(x=all.confint$nudge[all.confint$categ == "by.height" & all.confint$resp == "RF.Dist.ML"])) +
+  # geom_point(data=. %>% filter(col_sig == "ns"), aes(x=var,y=est,group=height),
+  #            color="black",shape=16, fill="black",size=4,
+  #            position=position_nudge(x=all.confint$nudge[all.confint$categ == "by.height"])) +
+  scale_shape_manual(values=c(16,16,21,16,16)) +
+  scale_alpha_manual(values=c(1,1,0.4,1,1)) +
+  coord_flip() +
+  theme_custom() +
+  scale_x_discrete(labels=rev(c("miss","mac","ref:miss","ref:mac","ref"))) +
+  theme(axis.text = element_text(size=15),
+        legend.position="none",
+        axis.title.x = element_text(size=18),
+        axis.title.y = element_blank(),
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
+  facet_grid(cols=vars(resp),scales="free_x",
+             labeller = labeller(
+               resp = c("RF.Dist.ML" = "RF Dist to True Tree",
+                        "std.ingroup.colless" = "Ingroup Imbalance",
+                        "std.ingroup.gamma" = "Ingroup Gamma")
+             ))
+
+confint.plot.all.rf <- all.confint %>%
+  filter(height == "all") %>%
+  filter(resp == "RF.Dist.ML") %>%
+  ggplot(aes(x=var,y=est,col=sig)) +
+  #scale_color_manual(values=cols.sig[c(2,3)]) +
+  scale_color_manual(values=cols.sig[c(2,3)]) +
+  geom_hline(yintercept = 0, linetype = 2, color = "lightgray") +
+  geom_pointrange(aes(ymin = minCI, ymax = maxCI),fatten=5,lwd=1, 
+                  position=position_nudge(x=all.confint$nudge[all.confint$resp == "RF.Dist.ML"]), alpha=1, shape=4) +
+  coord_flip() +
+  theme_custom() +
+  scale_x_discrete(labels=rev(c("miss","mac","ref:miss","ref:mac","ref"))) +
+  theme(axis.text = element_text(size=15),
+        legend.position="none",
+        axis.title = element_blank(),
+        strip.text = element_text(size=15),
+        plot.margin=margin(t=45)) +
+  facet_grid(cols=vars(resp),scales="free_x",
+             labeller = labeller(
+               resp = c("RF.Dist.ML" = "RF Dist to True Tree",
+                        "std.ingroup.colless" = "Ingroup Imbalance",
+                        "std.ingroup.gamma" = "Ingroup Gamma")
+             ))
+
+## saved at 1000 x 1000px
+p1.astr <- ggarrange(confint.plot.all.astr,confint.plot.bygroup.astr,ncol=1,
+                hjust=-0.2,
+                heights=c(1,1.5),labels=c("a) Models for all trees","b) Models by tree height"),
+                font.label=list(size=24,family="Open Sans"),
+                common.legend=TRUE,legend.grob=get_legend(confint.plot.bygroup),legend="none")
+p1.top <- ggarrange(confint.plot.all.rf,confint.plot.all.astr)
+p1.bottom <- ggarrange(confint.plot.bygroup.rf,confint.plot.bygroup.astr)
+
+p1.raxml.astr.comp <- ggarrange(p1.top,p1.bottom,ncol=1,
+                                hjust=-0.2,
+                                heights=c(1,1.5),labels=c("a) Models for all trees","b) Models by tree height"),
+                                font.label=list(size=24,family="Open Sans"),
+                                common.legend=TRUE,legend.grob=get_legend(confint.plot.bygroup),legend="none")
+
+#----------------------------------#
+### table with param estimates #####
+#----------------------------------#
+confint.table.astr <- all.confint.astr %>%
+  relocate(resp,height,var,est,minCI,maxCI) %>%
+  select(resp:sig) %>%
+  mutate(sig2 = case_when(sig == "pos" ~ "*",
+                          sig == "neg" ~ "*",
+                          sig == "ns" ~ "")) %>%
+  pivot_wider(id_cols=c(resp,var),names_from=height,values_from=c(est:maxCI,sig2),names_glue="{height}_{.value}",
+              names_sort=TRUE) %>%
+  relocate(resp,var,starts_with("all"),starts_with("long"),starts_with("med"),starts_with("short")) %>%
+  select(!resp) %>%
+  kbl(booktabs = T,digits=3,
+      format="latex",
+      col.names=c("Variable","Est","Min CI","Max CI","Sig",
+                  "Est","Min CI","Max CI","Sig",
+                  "Est","Min CI","Max CI","Sig",
+                  "Est","Min CI","Max CI","Sig")) %>%
+  add_header_above(c(" ","All Trees" = 4, "Low ILS" = 4, "Medium ILS" = 4,  "High ILS" = 4)) %>%
+  kable_styling(latex_options = c("repeat_header")) %>%
+  pack_rows("Robinson-Foulds distance to true tree", 1, 5)
+#writeLines(confint.table, '~/Dropbox/Apps/Overleaf/Reference Bias in SNP-based Phylogenetics/confint_table_fullsims_astral.tex')
+#writeLines(confint.table, '~/Dropbox/Apps/Overleaf/Reference Bias in SNP-based Phylogenetics/confint_table_subsamp.tex')

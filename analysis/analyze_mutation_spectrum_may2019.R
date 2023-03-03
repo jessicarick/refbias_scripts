@@ -289,6 +289,28 @@ mutdist.maf <- pre.post.wm %>%
   scale_y_continuous(expand=c(0.01,100)) +
   scale_color_viridis_d(direction=-1,aesthetics=c("color","fill"))
 
+mutdist.int <- pre.post.wm %>% 
+  group_by(int,maf) %>%
+  mutate(mean_mut = mean(weighted_mean/5000),
+         med_mut = median(weighted_mean/5000)) %>%
+  ggplot() +
+  geom_density(aes(x = weighted_mean/5000,
+                   #weight = snps_lost/sum(snps_lost),
+                   col=factor(int),fill=factor(int)),
+               stat = "density",size=0.5,adjust=0.5,alpha=0.3) +
+  geom_vline(aes(xintercept=mean_mut, col=int, group=int), lty=2, alpha=1, size=1.3) +
+  #  geom_rect(aes(xmin = mean_mut - 0.0001, xmax = mean_mut+0.0001,
+  #                ymin = 1275 - 75, ymax = 1275 + 75), fill = "white") +
+  #  geom_text(aes(x=mean_mut,label=round(mean_mut,4)),y=1275,angle=90,
+  #            size=5, family="Open Sans Light", check_overlap=TRUE) +
+  theme_custom() +
+  facet_wrap(~factor(maf,levels=c(1,2,3,4,5,10))) +
+  xlab("Locus Mutation Rate") +
+  ylab("Density of lost SNPs") +
+  #xlim(0.035,0.045) +
+  #scale_y_continuous(expand=c(0.01,100)) +
+  scale_color_viridis_d(direction=1,aesthetics=c("color","fill"),option="plasma")
+
 ks.maf <- pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$maf,alternative="two.sided") %>%
   reshape2::melt() %>%
   mutate(Var1 = as.factor(Var1),

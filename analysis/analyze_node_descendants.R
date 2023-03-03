@@ -102,7 +102,7 @@ lostnode.summary <- lostnode.info %>%
   left_join(results.raxml, by=c("tree_num" = "tree.num")) %>%
   #filter(maf !=0) %>%
  # mutate(missing=as.factor(missing)) %>%
-  group_by(lost,maf,height) %>%
+  group_by(lost,maf,height,int) %>%
   summarize(mean_supp = mean(bs_support,na.rm=T),
             med_supp = median(bs_support,na.rm=T),
             mean_desc = mean(descendants,na.rm=T),
@@ -319,10 +319,10 @@ lostnode.summary2 %>%
   filter(lost == TRUE) %>%
   ggplot(aes(x=as.integer(maf),y=mean_desc,col=height)) +
   geom_jitter(width=0.001) +
-  stat_summary(aes(x=maf,y=mean_desc),col="black",geom="line",lty=2) +
-  stat_summary(aes(x=maf,y=mean_desc),col="black",geom="point",size=5,pch=4) +
+  stat_summary(aes(x=maf,y=mean_desc,group=int),col="black",geom="line",lty=2) +
+  stat_summary(aes(x=maf,y=mean_desc,group=int),col="black",geom="point",size=5,pch=4) +
   #geom_point(aes(x=maf,y=mean_retained_bs),col="black")+
-  facet_grid(vars(int)) +
+  #facet_grid(vars(int)) +
   theme_custom() +
   ylab("Mean descendants of lost nodes") +
   xlab("Minor Allele Count") +

@@ -18,7 +18,7 @@ output <- "092321-output"
 results.raxml <- read.csv(here("output","new",paste0(output,"-raxml.csv")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
-results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26 & results.raxml$RF.Dist.ML < 0.9,]
+results.mod <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26,]
 results.mod$simulation <- as.factor(results.mod$simulation)
 results.mod$height <- as.factor(results.mod$height)
 results.mod$quality <- as.factor(results.mod$quality)
@@ -236,6 +236,7 @@ vars.plots.imb <- ggarrange(vars.imb.short.bars,
           vars.imb.long.bars,
           #labels=c("A","B","C"),
           ncol=3)
+vars.plots.imb
 
 ## ridgeline plots
 plot1 <- ggplot(data = results.mod, 
