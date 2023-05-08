@@ -20,7 +20,7 @@ use strict;
 ### all variables that typically need to be modified are in the
 ### following block
 my $arccproject='phylogenref';
-my $runtime = '2-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
+my $runtime = '1-00:00:00'; ## 14-00 is 14 days (days-hours notation), 1:00:00 is 1 hour
 #my $runtime = '12:00:00';
 # specify a reasonable value here.  If the job does not finish by the
 # time reached, the job is terminated.  Your job should get greater
@@ -46,9 +46,11 @@ my $tree_height = $ARGV[1];
 #	exit;
 #}
 
+#push @jobarray, "/project/phylogenref/scripts/sim_scripts/test_simphy_ExtREFs_090421.sh $sim $tree_height \n";
+#push @jobarray, "/project/phylogenref/scripts/sim_scripts/test_simphy_IntREFs_090421.sh $sim $tree_height \n";
+
 push @jobarray, "/project/phylogenref/scripts/sim_scripts/test_simphy_ExtREFs_090622.sh $sim $tree_height \n";
 push @jobarray, "/project/phylogenref/scripts/sim_scripts/test_simphy_IntREFs_090622.sh $sim $tree_height \n";
-
 
 ### -------------------------END JOB CONFIGURATION---------------------------------------------------------
 ### UNLIKELY you need to change anything beyond here (except maybe module loading)
@@ -63,9 +65,9 @@ push @modules, 'module load miniconda3';
 push @modules, 'module load perl';
 push @modules, 'module load vcftools';
 push @modules, 'module load bwa';
-push @modules, 'module load samtools/1.6';
-push @modules, 'module load htslib';
+push @modules, 'module load samtools';
 push @modules, 'module load bcftools';
+push @modules, 'module load openmpi';
 push @modules, 'module load raxml';
 push @modules, 'module load r';
 push @modules, 'module load parallel';

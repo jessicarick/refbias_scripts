@@ -6,6 +6,8 @@ source sim_scripts/refbias_config.txt
 source activate $conda_env
 module load jdk
 
+module list
+
 #####################################
 ########Simulate (START)#############
 ####################################

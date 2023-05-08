@@ -63,7 +63,7 @@ sed -i 's/\t/ /g' OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.phy
 	echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_mac${mac}_${int}_rep${rep},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
 
 	echo "running raxml on subsampled phylip for rep $rep"
-    	raxmlHPC-PTHREADS-AVX -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+    	raxmlHPC-PTHREADS -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
 	ls RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-${tree_height}-subsamp-tree.names
         cat RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-${tree_height}-subsamp-tree.trees
@@ -75,7 +75,7 @@ sed -i 's/\t/ /g' OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.phy
         echo "OUTFILE_${tree_height}_s${sim}_q${QUAL}_miss${miss}_mac${mac}_${int}_rep${rep},${sites_noref},${sites_samp}" >> /project/phylogenref/scripts/output/new/${day}-subsampSNPs-all
 
         echo "running raxml on subsampled phylip for rep $rep"
-        raxmlHPC-PTHREADS-AVX -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
+        raxmlHPC-PTHREADS -T 4 -s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.subsamp.phy -n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out -j -m ASC_GTRGAMMA --asc-corr=lewis -f a -x 223 -N 100 -p 466
 
 	ls RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-subsamp-tree.names
 	cat RAxML*bipartitions.OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_sites${sites_samp}.REF.${int}.rep${rep}.subsamp.out >> ${REF_PATH}/output/new/${day}-subsamp-tree.trees

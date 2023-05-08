@@ -13,9 +13,10 @@ module load miniconda3
 module load perl
 module load vcftools
 module load bwa
-module load samtools/1.6
+module load samtools
 module load htslib
 module load bcftools
+module load openmpi
 module load raxml
 module load r
 module load parallel

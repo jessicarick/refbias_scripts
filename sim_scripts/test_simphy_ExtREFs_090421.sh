@@ -6,6 +6,8 @@ source sim_scripts/refbias_config.txt
 source activate $conda_env
 module load jdk
 
+module list
+
 #####################################
 ########Simulate (START)#############
 ####################################
@@ -22,7 +24,7 @@ subsample=true
 ###############################################
 echo "starting analysis for $tree_height, sim $sim, $int"
 
-if [ ! -f ${output_dir}/092321-${tree_height}-OUTFILE_s${sim}_q${QUAL}_rawvar.${int}.vcf.gz ]; then
+#if [ ! -f ${output_dir}/${day}-${tree_height}-OUTFILE_s${sim}_q${QUAL}_rawvar.${int}.vcf.gz ]; then
 
 nloci=$(($genes + 1))
 var_sites=(`Rscript sim_scripts/var_sites.R $nloci $varsites`)
@@ -143,8 +145,8 @@ echo "done calculating Dxy"
 
 rm -f OUTFILE_q${QUAL}.bcf
 rm -f OUTFILE_q${QUAL}_RN.bcf
- 
-fi
+
+#fi
 
 ###############################################
 ## STARTING SUBSAMPLING SCRIPT WITH THIS VCF ##
@@ -172,7 +174,7 @@ export taxa_ref
 export tree_height
 
 # the "each_mac.sh" script uses 4 threads for each job
-parallel --delay 2 --jobs 4  --line-buffer --env tree_height --env taxa_ref --env sim --env int "bash sim_scripts/each_mac_jun2022.sh {}" ::: $mac_list ::: $miss_list
+parallel --delay 2 --jobs 4  --line-buffer --env tree_height --env taxa_ref --env sim --env int "bash sim_scripts/each_mac.sh {}" ::: $mac_list ::: $miss_list
 
 # compile phylogenies
 #mkdir s${sim}_q${QUAL}_miss${miss}_mac${mac}.${int}-${taxa_ref}.phylip_tree_files

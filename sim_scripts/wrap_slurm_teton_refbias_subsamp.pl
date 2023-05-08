@@ -66,6 +66,7 @@ push @modules, 'module load bwa';
 push @modules, 'module load samtools/1.6';
 push @modules, 'module load htslib';
 push @modules, 'module load bcftools';
+push @modules, 'module load openmpi';
 push @modules, 'module load raxml';
 push @modules, 'module load r';
 push @modules, 'module load parallel';

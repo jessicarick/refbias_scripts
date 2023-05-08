@@ -52,7 +52,7 @@ echo "s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.${tree_height}.${int}.noInv,${n
 #sites_ref=`cat OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.noInv.phy | head -n 1 | awk '{print $2}'`
 
 echo "running raxml on concatenated SNPs"
-raxmlHPC-PTHREADS-AVX -T 8 \
+raxmlHPC-PTHREADS -T 8 \
 	-s OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}_${int}.noInv.phy \
 	-n OUTFILE_s${sim}_q${QUAL}_miss${miss}_mac${mac}.REF.${int}.emp.filtered.out \
 	-m ASC_GTRCAT -V \

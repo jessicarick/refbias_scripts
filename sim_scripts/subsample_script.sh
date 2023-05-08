@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=16
 #SBATCH --no-requeue
 
-module load gcc miniconda3 raxml parallel vcftools r
+module load gcc miniconda3 openmpi raxml parallel vcftools r
 
 mkdir /lscratch/SLURM_$SLURM_JOB_ID
 cd /lscratch/SLURM_$SLURM_JOB_ID
