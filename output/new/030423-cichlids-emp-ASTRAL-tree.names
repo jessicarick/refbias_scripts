@@ -399,3 +399,12 @@ sim10_miss0_mac0_INT
 sim3_miss0_mac0_INT
 sim9_miss0.90_mac0_INT
 sim9_miss0_mac0_INT
+sim1_miss0_mac0_EXT
+sim2_miss0_mac0_EXT
+sim5_miss0_mac0_EXT
+sim6_miss0_mac0_EXT
+sim9_miss0_mac0_EXT
+sim4_miss0_mac0_EXT
+sim10_miss0_mac0_EXT
+sim3_miss0_mac0_EXT
+sim8_miss0_mac0_EXT
