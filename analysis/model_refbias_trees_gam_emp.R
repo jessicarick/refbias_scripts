@@ -15,8 +15,8 @@ library(here)
 cols <- c("#F2AD00","gray80","#00A08A")
 
 date <- "010822"
-results.emp.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
-results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.raxml.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.raxml.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
 #results.mod <- results.raxml
@@ -35,7 +35,7 @@ results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-o
 
 m.gam.lates <- lmer(ingroup.gamma ~ int + maf + missing +
                       int:maf + int:missing + (1 | simulation),
-                       data = results.emp.lates)
+                       data = results.raxml.lates)
 sum.gam.lates <- summary(m.gam.lates)
 r.squaredGLMM(m.gam.lates)
 
@@ -84,7 +84,7 @@ vars.gam.lates.bars
 
 m.gam.cichlids <- lmer(ingroup.gamma ~ int + maf + missing +
                             int:maf + int:missing + (1 | simulation),
-                          data = results.emp.cichlids)
+                          data = results.raxml.cichlids)
 sum.gam.cichlids <- summary(m.gam.cichlids)
 r.squaredGLMM(m.gam.cichlids)
 

@@ -697,7 +697,9 @@ pdf(here("output","new",paste(args$output,".pdf",sep="")))
 ## Plot trees in PCoA space by simulation
 results.raxml <- results.raxml[results.raxml$simulation > 15 & results.raxml$simulation < 26 & results.raxml$RF.Dist.ML < 0.9,]
 raxml.trees2 <- raxml.trees[results.raxml$tree.num]
-param_loadings <- tibble(sim=integer(),height=character(),method=character(),param=character(),x_corr=numeric(),y_corr=numeric(),
+param_loadings <- tibble(sim=integer(),height=character(),method=character(),param=character(),
+                         pct_var_exp=numeric(),
+                         x_corr=numeric(),y_corr=numeric(),
                          x_corr_sig=numeric(),y_corr_sig=numeric())
 for (m in c("raxml","astral")){
   for (h in unique(as.character(results.raxml$height))){
@@ -710,7 +712,7 @@ for (m in c("raxml","astral")){
       subset_a <- NULL
       
       if (length(subset_r) !=0) {
-        trees.subset <- c(raxml.trees[subset_r])
+        trees.subset <- c(raxml.trees[subset_r],ml.tree[[j]])
       } else {
         print(paste("no raxml trees for sim",i," for height ",h))
         next
@@ -720,7 +722,7 @@ for (m in c("raxml","astral")){
       subset_a <- results.astral$tree.num[results.astral$simulation == i & results.astral$height == h]
       subset_r <- NULL
       if (length(subset_a) !=0) {
-        trees.subset <- c(astral.trees[subset_a])
+        trees.subset <- c(astral.trees[subset_a],ml.tree[[j]])
       } else {
         print(paste("no astral trees for sim",i," for height ",h))
         next
@@ -737,14 +739,14 @@ for (m in c("raxml","astral")){
     rf.pcoa.plot <- rf.pcoa$vectors %>%
       as_tibble() %>%
       ggplot(aes(x=Axis.1,y=Axis.2)) +
-      geom_jitter(aes(col=factor(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10")),
-                      fill=factor(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10")),
+      geom_jitter(aes(col=factor(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a],"true"),levels=c("0","1","2","3","4","5","10","true")),
+                      fill=factor(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a],"true"),levels=c("0","1","2","3","4","5","10","true")),
                      #text=results.raxml$missing[results.raxml$simulation == s],
                      #shape=factor(c(results.raxml$missing[subset])),
                      #size=factor(c(results.raxml$method[subset_r],results.astral$method[results.astral$tree.num %in% subset_a])),
-                     shape=factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a])),
+                     shape=factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a],"true")),
                      ),
-                  width=0.005,height=0.005) +
+                  width=0.03,height=0.03,cex=5) +
       theme_bw(base_size=12, base_family="Arial") +
       #scale_size_manual(values=c(3,6,6)) +
       scale_color_viridis_d(direction=-1) +
@@ -770,74 +772,76 @@ for (m in c("raxml","astral")){
       # biplot arrows for MAF
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
-        yend = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+        xend = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
+        yend = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
       ) +
-      annotate(geom = "text",
-               x = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015-0.001,
-               y = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015-0.002,
-               label = "MAF",
-               hjust=1,vjust=1
-      ) +
+      # annotate(geom = "text",
+      #          x = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15-0.001,
+      #          y = cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15-0.002,
+      #          label = "MAF",
+      #          hjust=1,vjust=1
+      # ) +
       # biplot arrows for Missing
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
-        yend = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+        xend = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
+        yend = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
       ) +
-      annotate(geom = "text",
-               x = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015+0.001,
-               y = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015-0.002,
-               label = "Missing",
-               hjust=0,vjust=0
-      ) +
+      # annotate(geom = "text",
+      #          x = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15+0.001,
+      #          y = cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15-0.002,
+      #          label = "Missing",
+      #          hjust=0,vjust=0
+      # ) +
       # biplot arrows for INT
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
-        yend = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+        xend = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
+        yend = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.2,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
         arrow = arrow(length = unit(0.2, "inches")),
         colour = "black" # Also accepts "red", "blue' etc
-      ) +
-      annotate(geom = "text",
-               x = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015+0.001,
-               y = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015+0.002,
-               label = "INT",
-               hjust=0,vjust=1
-      )
+      ) #+
+      # annotate(geom = "text",
+      #          x = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15+0.001,
+      #          y = cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]) * 0.5 * sqrt(length(trees.subset) - 2)*0.15+0.002,
+      #          label = "INT",
+      #          hjust=0,vjust=1
+      # )
     
-    print(rf.pcoa.plot)
+    #print(rf.pcoa.plot)
+    
     #plotly::ggplotly(rf.pcoa.plot)
     vectors <- tibble(sim = i, height = h,method=m,
                       param = c("maf","missing","int"),
-                      x_corr = c(cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                                 cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                                 cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])
+                      pct_var_exp = sum(rf.pcoa$values$Relative_eig[1:2]),
+                      x_corr = c(cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]),
+                                 cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1]),
+                                 cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1])
                       ),
-                      y_corr = c(cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                                cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                                cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])
+                      y_corr = c(cor(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]),
+                                cor(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1]),
+                                cor(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1])
                       ),
-                      x_corr_sig = c(cor.test(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value
+                      x_corr_sig = c(cor.test(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1])$p.value,
+                                     cor.test(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1])$p.value,
+                                     cor.test(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)-1])$p.value
                       ),
-                      y_corr_sig = c(cor.test(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value
+                      y_corr_sig = c(cor.test(as.numeric(as.character(c(results.raxml$maf[results.raxml$tree.num %in% subset_r],results.astral$maf[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1])$p.value,
+                                     cor.test(as.numeric(as.character(c(results.raxml$missing[results.raxml$tree.num %in% subset_r],results.astral$missing[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1])$p.value,
+                                     cor.test(as.numeric(as.factor(c(results.raxml$int[results.raxml$tree.num %in% subset_r],results.astral$int[results.astral$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)-1])$p.value
                       ))
     param_loadings <- param_loadings %>%
       add_row(vectors)
@@ -928,7 +932,7 @@ param_loadings %>%
   theme(legend.position = "none",
         strip.text = element_text(size=rel(1.3)),
         axis.title = element_text(size=rel(1.5)),
-        axis.text = element_text(size=rel(1.5))) +
+        axis.text = element_text(size=rel(1.2))) +
   xlab("PCoA Axis 1 Correlation") +
   ylab("PCoA Axis 2 Correlation")
 
@@ -992,13 +996,17 @@ param_loadings %>%
   
 ## PLOT OF ALL LOADINGS TOGETHER
 ## (other dataframes come from analyze_refbias_trees_emp scripts)
-param_loadings_cich %>% 
-  add_row(param_loadings_lates) %>%
-  add_row(param_loadings_sim) 
+param_loadings.all <- param_loadings.cichlids %>% 
+  add_row(param_loadings.lates) %>%
+  add_row(param_loadings) 
+
+write.csv()
   
 #param_loadings_raxml %>%
-param_loadings_astral %>%
+## ORIGINAL FIG. 4B ################
+param_loadings.all %>%
   #add_row(param_loadings_raxml) %>%
+  filter(method == "raxml") %>%
   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
          #height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
          param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
@@ -1022,7 +1030,7 @@ param_loadings_astral %>%
   ggplot(aes(x=corr_value,y=height)) +
   #ggdist::stat_dots(data=. %>% filter(height != "lates" & height != "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01) +
   #ggdist::stat_dots(data=. %>% filter(height == "lates" | height == "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01,side="bottom") +
-  ggdist::geom_dots(aes(shape=corr_sig,col=corr_type, fill=corr_type, group=param),alpha=0.8,scale=0.9,binwidth=0.04,dotsize=1,layout="bin") +
+  ggdist::geom_dots(aes(shape=corr_sig,col=corr_type, fill=corr_type, group=param),alpha=0.8,scale=1.1,binwidth=0.04,dotsize=1.2,layout="bin") +
   stat_pointinterval(position=position_nudge(y=-0.1),point_interval="median_qi") +
   scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1.0),labels=c("0","0.25","0.50","0.75","1.0")) +
   theme_custom() +
@@ -1032,6 +1040,133 @@ param_loadings_astral %>%
   xlab("PCoA Correlation Coefficient") +
   ylab("") +
   facet_wrap(~param2) +
-  scale_shape_manual(values=c(1,19)) +
-  scale_fill_manual(values=c("gray50","black"),aesthetics=c("fill","color")) +
-  geom_hline(yintercept=2.7)
+  scale_shape_manual(values=c(4,19)) +
+  scale_fill_manual(values=c("gray60","#000000"),aesthetics=c("fill","color")) +
+  geom_hline(yintercept=2.8)
+
+## NEW FIG. 4B ################
+plot4b <- param_loadings.all %>%
+  #add_row(param_loadings_raxml) %>%
+  filter(method == "raxml") %>%
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         #height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_cat = case_when(sig_x & sig_y ~ "both",
+                             sig_x & !sig_y ~ "PC1",
+                             sig_y & !sig_x ~ "PC2",
+                             TRUE ~ "neither")) %>%
+  pivot_longer(cols=starts_with("abs"),names_to="corr_type",values_to="corr_value") %>%
+  mutate(corr_sig = case_when(corr_type == "abs_x_corr" ~ sig_x,
+                              corr_type == "abs_y_corr" ~ sig_y,
+                              TRUE ~ FALSE)) %>%
+  ggplot(aes(x=corr_value,y=height)) +
+  #ggdist::stat_dots(data=. %>% filter(height != "lates" & height != "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01) +
+  #ggdist::stat_dots(data=. %>% filter(height == "lates" | height == "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01,side="bottom") +
+  ggdist::stat_slab(alpha=0.5,
+                    normalize="all",trim=FALSE,
+                    adjust=1.2) +
+  stat_pointinterval(data = . %>% filter(corr_type=="abs_x_corr"), 
+                     aes(col=corr_type, fill=corr_type), position=position_nudge(y=-0.1),
+                     point_interval="median_qi") +
+  stat_pointinterval(data = . %>% filter(corr_type=="abs_y_corr"), 
+                     aes(col=corr_type, fill=corr_type), position=position_nudge(y=-0.2),
+                     point_interval="median_qi") +
+  scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1.0),labels=c("0","0.25","0.50","0.75","1.0")) +
+  coord_cartesian(xlim=c(0,1),expand=FALSE) +
+  theme_custom() +
+  theme(panel.grid.major=element_line(),
+        legend.position="right",
+        strip.text = element_text(size=rel(1.5))) +
+  xlab("PCoA Correlation Coefficient") +
+  ylab("") +
+  facet_grid(cols=vars(param2)) +
+  scale_shape_manual(values=c(4,19)) +
+  scale_fill_manual(values=c("gray60","#000000","gray80"),aesthetics=c("fill","color")) +
+  geom_hline(yintercept=2.6)
+
+param_loadings.all %>%
+  #add_row(param_loadings_raxml) %>%
+  filter(method == "astral") %>%
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         #height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_cat = case_when(sig_x & sig_y ~ "both",
+                             sig_x & !sig_y ~ "PC1",
+                             sig_y & !sig_x ~ "PC2",
+                             TRUE ~ "neither")) %>%
+  pivot_longer(cols=starts_with("abs"),names_to="corr_type",values_to="corr_value") %>%
+  mutate(corr_sig = case_when(corr_type == "abs_x_corr" ~ sig_x,
+                              corr_type == "abs_y_corr" ~ sig_y,
+                              TRUE ~ FALSE)) %>%
+  ggplot(aes(x=corr_value,y=height)) +
+  #ggdist::stat_dots(data=. %>% filter(height != "lates" & height != "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01) +
+  #ggdist::stat_dots(data=. %>% filter(height == "lates" | height == "cichlids"),aes(fill=corr_sig,col=corr_sig),alpha=0.8,scale=0.6,binwidth=0.01,side="bottom") +
+  ggdist::geom_dots(aes(shape=corr_sig,col=corr_type, fill=corr_type, group=param),alpha=0.8,scale=1.1,binwidth=0.04,dotsize=1.2,layout="bin") +
+  stat_pointinterval(position=position_nudge(y=-0.1),point_interval="median_qi") +
+  scale_x_continuous(breaks=c(0,0.25,0.5,0.75,1.0),labels=c("0","0.25","0.50","0.75","1.0")) +
+  theme_custom() +
+  theme(panel.grid.major=element_line(),
+        legend.position="right",
+        strip.text = element_text(size=rel(1.5))) +
+  xlab("PCoA Correlation Coefficient") +
+  ylab("") +
+  facet_wrap(~param2) +
+  scale_shape_manual(values=c(4,19)) +
+  scale_fill_manual(values=c("gray60","#000000"),aesthetics=c("fill","color")) +
+  geom_hline(yintercept=2.8)
+
+## another try at Fig 4b #######
+param_loadings.all %>%
+  #add_row(param_loadings_raxml) %>%
+  filter(method == "raxml") %>%
+  mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
+         #height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
+         param2 = dplyr::recode(.$param,int="Reference Genome",maf="Minor Allele Count",missing="Missing Data")) %>%
+  #pivot_longer(cols=starts_with("abs"),names_to="corr") %>%
+  mutate(dom = case_when(x_corr > y_corr ~ "PC1",
+                         y_corr > x_corr ~ "PC2"),
+         sig_x = case_when(x_corr_sig < 0.01 ~ TRUE,
+                           x_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_y = case_when(y_corr_sig < 0.01 ~ TRUE,
+                           y_corr_sig >= 0.01 ~ FALSE,
+                           TRUE ~ FALSE),
+         sig_cat = factor(case_when(sig_x & sig_y ~ "both",
+                             sig_x & !sig_y ~ "PC1",
+                             sig_y & !sig_x ~ "PC2",
+                             TRUE ~ "neither"),
+                          levels=c("neither","PC2","PC1","both"))) %>%
+  pivot_longer(cols=starts_with("abs"),names_to="corr_type",values_to="corr_value") %>%
+  mutate(corr_sig = case_when(corr_type == "abs_x_corr" ~ sig_x,
+                              corr_type == "abs_y_corr" ~ sig_y,
+                              TRUE ~ FALSE)) %>%
+  #group_by(height,method,param,sig_cat) %>%
+  #summarize(n=n()) %>%
+  ggplot(aes(x=height,fill=sig_cat)) +
+  geom_bar(position="fill") +
+  facet_grid(rows=vars(param2)) +
+  theme_custom() +
+  ylab("Proportion") +
+  theme(axis.title.x = element_blank(),
+        strip.text = element_text(size=rel(1.5))) +
+  #coord_flip() +
+  scale_fill_manual(values=c("gray80",viridis(5,option="mako")[2:5]))
+  

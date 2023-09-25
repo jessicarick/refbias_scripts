@@ -41,11 +41,19 @@ sites <- "010822-SNPs-emp-lates"
 outgroup <- "SRR3140997.Lcal"
 args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
 
+# emp.trees <- "031623-lates-emp-batch.trees"
+# emp.tree.names <- "031623-lates-emp-tree.names"
+# output <- "031623-lates-emp-output"
+# refdist <- "031623-emp-refdist.txt"
+# sites <- "031623-SNPs-emp-lates"
+# outgroup <- "SRR3140997.Lcal"
+# args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
+
 ####Read in concatenated tree file 
 emp.trees<-read.tree(here("output","new",args$emp.trees))
 
 ###Read in file of tree names
-emp.tree.names<-read.table(here("output","new",args$emp.tree.names),stringsAsFactors=FALSE)[,1]
+emp.tree.names<-read.table(here("output","new",args$emp.tree.names),stringsAsFactors=FALSE)[,1][1:length(emp.trees)]
 
 ###Import reference distance data
 # refdist <- read_table2(paste("output/new/",args$refdist,sep=""), col_names=c("simulation","height","int","taxa_ref","avg_dxy")) %>%
@@ -56,8 +64,8 @@ emp.tree.names<-read.table(here("output","new",args$emp.tree.names),stringsAsFac
 sites <- read_csv(here("output","new",args$sites),col_names=c("tree","snps")) %>% 
   mutate(simulation=as.integer(gsub(".*s([0-9]+)_q40.*","\\1",tree)),
          missing=as.numeric(gsub(".*miss([0-9]\\.?[0-9]*)\\_.*","\\1",tree)),
-         maf=as.numeric(gsub(".*_mac([0-9]+)_.*","\\1",tree)),
-         int=gsub(".*_([A-Z]+)\\.noInv.*","\\1",tree))
+         maf=as.numeric(gsub(".*_mac([0-9]+).*","\\1",tree)),
+         int=gsub(".*\\_([A-Z]+)\\.noInv.*","\\1",tree))
 dxy <- read_csv(here("output","new","010822-emp-dxy.csv")) %>%
   filter(height == "Lates")
 
@@ -109,12 +117,16 @@ results.emp <- results.emp %>%
   ) 
 
 results.emp <- results.emp %>%
-  left_join(sites,by=c("simulation","missing","maf","int")) %>%
-  left_join(dxy,by=c("simulation"="sim","int"="int"))
+  left_join(sites %>% group_by(tree) %>% slice_head(n=1),by=c("simulation","missing","maf","int")) %>%
+  left_join(dxy,by=c("simulation"="sim","int"="int","height"="height"))
 
-results.emp.lates <- results.emp
-#write.csv(results.emp.lates,file=here("output","new",paste(args$output,"-raxml.csv",sep="")),quote=FALSE,row.names=TRUE,na="NA")
+results.raxml.lates <- results.emp %>%
+  group_by(simulation,method,missing,maf,int) %>%
+  slice_head(n=1) %>%
+  ungroup()
+#write.csv(results.raxml.lates,file=here("output","new",paste(args$output,"-raxml-031623.csv",sep="")),quote=FALSE,row.names=TRUE,na="NA")
 results.emp <- read_csv(here("output","new",paste(args$output,"-raxml.csv",sep="")))[,-1]
+#results.emp <- results.emp.lates
 
 ######################
 ## univariate plots
@@ -196,8 +208,35 @@ results.emp %>%
 ###################################
 
 ####################
-astral.trees.emp<-read.tree(here("output","new","022023-lates-emp-ASTRAL-batch.trees"))
-astral.tree.names.emp<-read.table(here("output","new","022023-lates-emp-ASTRAL-tree.names"))[,1]
+# astral.orig.trees.emp<-read.tree(here("output","new","030123-lates-emp-ASTRAL-batch.trees"))
+# astral.orig.tree.names.emp<-read.table(here("output","new","030123-lates-emp-ASTRAL-tree.names"))[,1][1:length(astral.trees.emp)]
+# astral.extra.trees.emp <- read.tree(here("output","new","030423-lates-emp-ASTRAL-batch.trees"))
+# astral.extra.tree.names.emp <- read.table(here("output","new","030423-lates-emp-ASTRAL-tree.names"))[,1]
+# 
+# astral.all.tree.names <- tibble(name = astral.orig.tree.names.emp) %>%
+#   add_column(tree_num = seq(1:length(astral.orig.tree.names.emp))) %>%
+#   add_column(set = "orig") %>%
+#   add_row(tibble(name=astral.extra.tree.names.emp) %>% 
+#             add_column(tree_num = seq(1:length(astral.extra.tree.names.emp))) %>%
+#             add_column(set = "extra")) %>%
+#   group_by(name) %>%
+#   slice_tail(n = 1) %>%
+#   ungroup() 
+# orig_trees <- astral.all.tree.names %>%
+#   filter(set == "orig")
+# astral.trees.emp <- c(astral.orig.trees.emp[orig_trees$tree_num],astral.extra.trees.emp)
+# astral.tree.names.emp <- c(astral.orig.tree.names.emp[orig_trees$tree_num],astral.extra.tree.names.emp)
+
+astral.trees.emp <- read.tree(here("output","new","031623-lates-emp-ASTRAL-batch.trees"))
+astral.tree.names.emp <- read.table(here("output","new","031623-lates-emp-ASTRAL-tree.names"))[,1]
+
+sites.astral <- read_csv(here("output","new","031623-SNPs-emp-lates"),col_names=c("tree","snps")) %>% 
+  mutate(simulation=as.integer(gsub(".*s([0-9]+)_q40.*","\\1",tree)),
+         missing=as.numeric(gsub(".*miss([0-9]\\.?[0-9]*)\\_.*","\\1",tree)),
+         maf=as.numeric(gsub(".*_mac([0-9]+).*","\\1",tree)),
+         int=gsub(".*\\.([A-Z]+)\\.noInv.*","\\1",tree)) %>%
+  group_by(simulation,missing,maf,int) %>%
+  slice(1) # keep only one entry per combination, in case of duplicates
 
 # fix taxon names
 astral.trees.emp <- lapply(astral.trees.emp, function(x) fix_labels(x))
@@ -222,7 +261,7 @@ results.astral.emp <- results.astral.emp %>%
   ) %>% 
   left_join(select(results.emp,c(simulation,quality:noref)),by=c("simulation","missing","maf","int","quality","noref")) %>%
   left_join(dxy,by=c("simulation"="sim","height"="height","int"="int"),copy=TRUE) %>%
-  #left_join(select(gt.rf,gt_rf:simulation),by=c("simulation","height")) %>%
+  left_join(sites.astral %>% select(-tree),by=c("simulation","missing","maf","int")) %>%
   mutate(
     #tree.height = sapply(astral.trees, function(x) max(branching.times(root(x,"sim_0_0_0",resolve.root=TRUE)),na.rm=T)),
     #ingroup.tree.height = sapply(astral.trees, function(x) max(branching.times(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0")),na.rm=T)),
@@ -245,9 +284,12 @@ astral.node.desc.emp <- results.astral.emp %>%
 
 
 summary(results.astral.emp)  
-# write.csv(results.astral.emp,
-#           file=here("output","new",paste(args$output,"-astral.csv",sep="")),
-#           quote=FALSE,row.names=TRUE,na="NA")
+results.astral.emp.uniq <- results.astral.emp %>%
+  group_by(simulation,height,method,quality,missing,maf,int,noref) %>%
+  slice_tail(n=1)
+write.csv(results.astral.emp.uniq,
+           file=here("output","new",paste(args$output,"-astral.csv",sep="")),
+           quote=FALSE,row.names=TRUE,na="NA")
 
 ######################
 ## univariate plots
@@ -468,20 +510,30 @@ ggarrange(plot1,plot2,plot3,plot4,plot5,plot6,plot7,nrow=1)
 #   xlab("PCoA Axis 1 Correlation") +
 #   ylab("PCoA Axis 2 Correlation")
 
-
-param_loadings.emp <- tibble(sim=integer(),height=character(),param=character(),x_corr=numeric(),y_corr=numeric(),
+results.emp <- results.raxml.lates
+# results.astral.emp <- results.astral.lates
+# results.astral.emp.uniq <- results.astral.emp %>%
+#   group_by(simulation,height,method,quality,missing,maf,int,noref) %>%
+#   slice_tail(n=1)
+param_loadings.emp <- tibble(sim=integer(),height=character(),method=character(),param=character(),
+                             pct_var_exp=numeric(),x_corr=numeric(),y_corr=numeric(),
                          x_corr_sig=numeric(),y_corr_sig=numeric())
 h <- "Lates"
-m <- "astral"
+for (m in c("astral","raxml")) {
   for (i in unique(as.numeric(as.character(results.emp$simulation)))){
     #for (i in seq(16,30,by=1)){
     #j <- which(ml.tree.info$simulation == i & ml.tree.info$height == h)
+    
+    # subset_r <- results.emp$tree.num[results.emp$simulation == i & results.emp$height == h & results.emp$noref == "REF"]
+    # subset_a <- results.astral.emp$tree.num[results.astral.emp$simulation == i & results.astral.emp$height == h]
+    # trees.subset <- c(emp.trees[subset_r],astral.trees.emp[subset_a])
+    
     if (m == "raxml"){
       subset_r <- results.emp$tree.num[results.emp$simulation == i & results.emp$height == h & results.emp$noref == "REF"]
       subset_a <- NULL
       
       if (length(subset_r) !=0) {
-        trees.subset <- c(emp.trees[subset_r])
+        trees.subset <- c(emp.trees[results.emp$tree.num %in% subset_r])
       } else {
         print(paste("no trees for sim",i," for height ",h))
         next
@@ -489,11 +541,11 @@ m <- "astral"
     } 
     
     if (m == "astral"){
-      subset_a <- results.astral.emp$tree.num[results.astral.emp$simulation == i & results.astral.emp$height == h]
+      subset_a <- results.astral.emp.uniq$tree.num[results.astral.emp.uniq$simulation == i & results.astral.emp.uniq$height == h]
       subset_r <- NULL
       
       if (length(subset_a) !=0) {
-        trees.subset <- c(astral.trees.emp[subset_a])
+        trees.subset <- astral.trees.emp[results.astral.emp$tree.num %in% subset_a]
       } else {
         print(paste("no trees for sim",i," for height ",h))
         next
@@ -510,12 +562,12 @@ m <- "astral"
     rf.pcoa.plot <- rf.pcoa$vectors %>%
       as_tibble() %>%
       ggplot(aes(x=Axis.1,y=Axis.2)) +
-      geom_jitter(aes(col=factor(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
-                      fill=factor(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
+      geom_jitter(aes(col=factor(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10")),
+                      fill=factor(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10")),
                       #text=results.emp$missing[results.emp$simulation == s],
                       #shape=factor(c(results.emp$missing[subset])),
-                      #size=factor(c(results.emp$method[subset_r],results.astral.emp$method[results.astral.emp$tree.num %in% subset_a])),
-                      shape=factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a])),
+                      size=factor(c(results.emp$method[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$method[results.astral.emp.uniq$tree.num %in% subset_a])),
+                      shape=factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a])),
       ),
       width=0.005,height=0.005) +
       theme_bw(base_size=12, base_family="Arial") +
@@ -543,8 +595,8 @@ m <- "astral"
       # biplot arrows for MAF
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
-        yend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+        xend = cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+        yend = cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
@@ -552,16 +604,16 @@ m <- "astral"
         colour = "black" # Also accepts "red", "blue' etc
       ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.001,
-               y = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
+               x = cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.001,
+               y = cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
                label = "MAF",
                hjust=1,vjust=1
       ) +
       # biplot arrows for Missing
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
-        yend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+        xend = cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+        yend = cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
@@ -569,16 +621,16 @@ m <- "astral"
         colour = "black" # Also accepts "red", "blue' etc
       ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
-               y = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
+               x = cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
+               y = cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
                label = "Missing",
                hjust=0,vjust=0
       ) +
       # biplot arrows for INT
       geom_segment(
         x = 0, y = 0,
-        xend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
-        yend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+        xend = cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+        yend = cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
         lineend = "round", # See available arrow types in example above
         linejoin = "round",
         size = 1,
@@ -586,44 +638,47 @@ m <- "astral"
         colour = "black" # Also accepts "red", "blue' etc
       ) +
       annotate(geom = "text",
-               x = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
-               y = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.002,
+               x = cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
+               y = cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.002,
                label = "INT",
                hjust=0,vjust=1
       )
     
-    print(rf.pcoa.plot)
+    #print(rf.pcoa.plot)
     #plotly::ggplotly(rf.pcoa.plot)
-    vectors <- tibble(sim = i, height = h,
+    vectors <- tibble(sim = i, height = h, method = m,
                       param = c("maf","missing","int"),
-                      x_corr = c(cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                                 cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                                 cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])
+                      pct_var_exp = sum(rf.pcoa$values$Relative_eig[1:2]),
+                      x_corr = c(cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
+                                 cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
+                                 cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])
                       ),
-                      y_corr = c(cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                                 cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                                 cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])
+                      y_corr = c(cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
+                                 cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
+                                 cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])
                       ),
-                      x_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value
+                      x_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
+                                     cor.test(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
+                                     cor.test(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value
                       ),
-                      y_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                     cor.test(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value
+                      y_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
+                                     cor.test(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
+                                     cor.test(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value
                       ))
     param_loadings.emp <- param_loadings.emp %>%
       add_row(vectors)
   }
-
+}
 
 dev.off()
 param_loadings_astral.lates <- param_loadings.emp %>% mutate(method="astral")
 param_loadings_raxml.lates <- param_loadings.emp %>% mutate(method="raxml")
+param_loadings.lates <- param_loadings_astral.lates %>%
+  add_row(param_loadings_raxml.lates)
 
 ## proportion of significant correlations
-param_loadings_astral.lates %>%
-  add_row(param_loadings_raxml.lates) %>%
+param_loadings.emp %>%
+  #add_row(param_loadings_raxml.lates) %>%
   mutate(dom = case_when(x_corr > y_corr ~ "PC1",
                          y_corr > x_corr ~ "PC2"),
          sig_x = case_when(x_corr_sig < 0.01 & x_corr > y_corr ~ TRUE,
@@ -639,9 +694,9 @@ param_loadings_astral.lates %>%
             mean_PC2 = mean(abs(y_corr)))
 
 
-p_pcoa_param_lates <- param_loadings_astral.lates %>% 
+p_pcoa_param_lates <- param_loadings.emp %>% 
   #add_row(param_loadings_raxml2.lates) %>%
-  add_row(param_loadings_raxml.lates) %>%
+  #add_row(param_loadings_raxml.lates) %>%
   #add_row(param_loadings_astral2.lates) %>%
   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
@@ -677,3 +732,68 @@ p_pcoa_param_lates <- param_loadings_astral.lates %>%
         axis.text = element_text(size=rel(1.1))) +
   xlab("PCoA Axis 1 Correlation") +
   ylab("PCoA Axis 2 Correlation")
+
+
+#################
+## Plot extreme trees for imbalance
+#################
+
+# most imbalanced = tree 204,206,207, sim 5
+results.emp.lates[results.emp.lates$ingroup.colless == max(results.emp.lates$ingroup.colless),]
+
+# least imbalanced = tree 132, sim 3
+results.emp.lates[results.emp.lates$ingroup.colless == min(results.emp.lates$ingroup.colless),]
+
+# sim 5 trees -- min = 202, max = 204,206,207
+sim5_info <- results.emp.lates[results.emp.lates$simulation == 5,]
+emp.trees[[202]]$tip.label %in% emp.trees[[204]]$tip.label
+
+t1.lates <- chronos(drop.tip(root(emp.trees[[202]],outgroup,resolve.root = TRUE),outgroup))
+t2.lates <- chronos(drop.tip(root(emp.trees[[204]],outgroup,resolve.root = TRUE),outgroup))
+lates_metadat <- read_csv("~/Dropbox/i/projects/lates_popgen/scripts/lates_popgen_github_copy/data/lates_all_metadata.csv")
+t1.lates.spp <- t1.lates$tip.label %>%
+  as_tibble() %>%
+  left_join(lates_metadat %>% select(ind,sampling_loc,ent_ID),
+            by=c("value" = "ind"))
+
+lates.imb.cophylo <- cophylo(t1.lates,
+             t2.lates,
+             rotate=TRUE,
+             assoc=cbind(t1.lates$tip.label,t1.lates$tip.label))
+cols <- PNWColors::pnw_palette("Sunset2",4,type="continuous")
+plot(lates.imb.cophylo, type="phylogram", use.edge.length=FALSE,
+     length.line=0.5, link.type="curved",link.lwd=3, link.lty="solid",
+     link.col=cols[as.factor(t1.lates.spp$ent_ID)],
+     assoc=cbind(t1.lates$tip.label,t1.lates$tip.label))             
+
+#################
+## Plot extreme trees for gamma
+#################
+# most imbalanced = tree 99,101,102, sim 2
+results.emp.lates[results.emp.lates$ingroup.gamma == max(results.emp.lates$ingroup.gamma),]
+
+# least imbalanced = tree 625, sim 7
+results.emp.lates[results.emp.lates$ingroup.gamma == min(results.emp.lates$ingroup.gamma),]
+
+# sim 2 trees -- min = 100, max = 99,101,102
+sim2_info <- results.emp.lates[results.emp.lates$simulation == 2,]
+
+
+t1.lates <- chronos(drop.tip(root(emp.trees[[102]],outgroup,resolve.root = TRUE),outgroup),lambda=1)
+t2.lates <- chronos(drop.tip(root(emp.trees[[100]],outgroup,resolve.root = TRUE),outgroup),lambda=1)
+lates_metadat <- read_csv("~/Dropbox/i/projects/lates_popgen/scripts/lates_popgen_github_copy/data/lates_all_metadata.csv")
+t1.lates.spp <- t1.lates$tip.label %>%
+  as_tibble() %>%
+  left_join(lates_metadat %>% select(ind,sampling_loc,ent_ID),
+            by=c("value" = "ind"))
+
+lates.imb.cophylo <- cophylo(t1.lates,
+                             t2.lates,
+                             rotate=TRUE,
+                             assoc=cbind(t1.lates$tip.label,t1.lates$tip.label))
+cols <- PNWColors::pnw_palette("Sunset2",4,type="continuous")
+plot(lates.imb.cophylo, type="phylogram", use.edge.length=FALSE,
+     length.line=0.5, link.type="curved",link.lwd=3, link.lty="solid",
+     link.col=cols[as.factor(t1.lates.spp$ent_ID)],
+     assoc=cbind(t1.lates$tip.label,t1.lates$tip.label))   
+

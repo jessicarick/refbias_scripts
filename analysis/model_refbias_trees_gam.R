@@ -11,6 +11,8 @@ cols.sig <- c("#E6B749","gray80","#6A8D4E")
 here::i_am("analysis/model_refbias_trees_RF.R")
 
 output <- "092321-output"
+output <- "092321-subsamp-output"
+
 results.raxml <- read.csv(here("output","new",paste0(output,"-raxml.csv")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object

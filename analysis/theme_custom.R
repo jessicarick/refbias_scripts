@@ -21,3 +21,5 @@ theme_custom <- function () {
 
 cols.int <- c("#e2d200","#2A9D8F","#e76f51") # colors for tree heights
 cols.sig <- c("black","gray80","black")
+
+loadfonts(device = "postscript")

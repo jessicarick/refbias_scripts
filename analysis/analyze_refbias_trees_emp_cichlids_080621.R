@@ -26,7 +26,7 @@ suppressMessages(
     library(TreeDist),
     library(Quartet),
     library(here)))
-here::i_am("analysis/analyze_refbias_trees_emp_cichlids_080521.R")
+here::i_am("analysis/analyze_refbias_trees_emp_cichlids_080621.R")
 source(here("analysis","theme_custom.R"))
 
 ############################################
@@ -40,6 +40,14 @@ refdist <- "010822-emp-refdist.txt"
 sites <- "010822-cichlids-emp-SNPs"
 outgroup <- "SRR14041074.Onil"
 args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
+
+# emp.trees <- "031623-cichlids-emp-batch.trees"
+# emp.tree.names <- "031623-cichlids-emp-tree.names"
+# output <- "031623-cichlids-emp-output"
+# refdist <- "031623-emp-refdist.txt"
+# sites <- "031623-SNPs-emp-cichlids"
+# outgroup <- "SRR14041074.Onil"
+# args <- mget(c("emp.trees","emp.tree.names","refdist","sites","outgroup","output"))
 
 ####Read in concatenated tree file 
 emp.trees<-read.tree(here("output","new",args$emp.trees))
@@ -66,10 +74,11 @@ emp.tree.names<-read.table(here("output","new",args$emp.tree.names),stringsAsFac
 sites <- read_csv(here("output","new",args$sites),col_names=c("tree","snps")) %>% 
   mutate(simulation=as.integer(gsub(".*s([0-9]+)_q40.*","\\1",tree)),
          missing=as.numeric(gsub(".*miss([0-9]\\.?[0-9]*)\\_.*","\\1",tree)),
-         maf=as.numeric(gsub(".*_mac([0-9]+)_.*","\\1",tree)),
-         int=gsub(".*_([A-Z]+)\\.noInv.*","\\1",tree))
-dxy <- read_csv(here("output","new","010822-emp-dxy.csv")) %>%
-  filter(height == "Cichlids")
+         maf=as.numeric(gsub(".*_mac([0-9]+).*","\\1",tree)),
+         int=gsub(".*\\_([A-Z]+)\\.noInv.*","\\1",tree))
+dxy <- read_csv(here("output","new","010822-emp-dxy.csv")) %>% 
+  filter(height == "Cichlid") %>%
+  mutate(height = "Cichlids")
 
 #####################
 ## Start of analysis!
@@ -117,14 +126,16 @@ results.emp <- results.emp %>%
     sackin = sapply(emp.trees, function(x) sackin(as.treeshape(root(x,outgroup,resolve.root=TRUE),model="pda"),norm="pda")),
     ingroup.sackin = sapply(emp.trees, function(x) sackin(as.treeshape(drop.tip(root(x,outgroup,resolve.root=TRUE),outgroup),model="pda"),norm="pda"))
   ) 
-
 results.emp <- results.emp %>%
-  left_join(sites)  %>%
-  left_join(dxy,by=c("simulation"="sim","int"="int"))
+  left_join(sites %>% group_by(tree) %>% slice_head(n=1), by=c("simulation","missing","maf","int"))  %>%
+  left_join(dxy,by=c("simulation"="sim","int"="int","height"="height"))
 
-#write.csv(results.emp.cichlids,file=here("output","new",paste0(args$output,"-raxml.csv")),quote=FALSE,row.names=TRUE,na="NA")
+#write.csv(results.raxml.cichlids,file=here("output","new",paste0(args$output,"-raxml.csv")),quote=FALSE,row.names=TRUE,na="NA")
 results.emp.cichlids <- read_csv(here("output","new",paste0(args$output,"-raxml.csv")))[,-1]
-results.emp <- results.emp.cichlids
+results.emp.cichlids <- results.emp %>%
+  mutate(height="Cichlids") %>%
+  group_by(simulation, height, missing, maf, int) %>%
+  slice_tail(n=1)
 
 ######################
 ## univariate plots
@@ -219,9 +230,37 @@ results.emp %>%
 ###################################
 
 ####################
-astral.trees.emp<-read.tree(here("output","new","022023-cichlids-emp-ASTRAL-batch.trees"))
-astral.tree.names.emp<-read.table(here("output","new","022023-cichlids-emp-ASTRAL-tree.names"))[,1]
+# astral.orig.trees.emp<-read.tree(here("output","new","030123-cichlids-emp-ASTRAL-batch.trees"))
+# astral.orig.tree.names.emp<-read.table(here("output","new","030123-cichlids-emp-ASTRAL-tree.names"))[,1][1:length(astral.orig.trees.emp)]
+# astral.extra.trees.emp <- read.tree(here("output","new","030423-cichlids-emp-ASTRAL-batch.trees"))
+# astral.extra.tree.names.emp <- read.table(here("output","new","030423-cichlids-emp-ASTRAL-tree.names"))[,1][1:length(astral.extra.trees.emp)]
+# 
+# astral.all.tree.names <- tibble(name = astral.orig.tree.names.emp) %>%
+#   add_column(tree_num = seq(1:length(astral.orig.tree.names.emp))) %>%
+#   add_column(set = "orig") %>%
+#   add_row(tibble(name=astral.extra.tree.names.emp) %>% 
+#             add_column(tree_num = seq(1:length(astral.extra.tree.names.emp))) %>%
+#             add_column(set = "extra")) %>%
+#   group_by(name) %>%
+#   slice_tail(n = 1) %>%
+#   ungroup() 
+# orig_trees <- astral.all.tree.names %>%
+#   filter(set == "orig")
+# astral.trees.emp <- c(astral.orig.trees.emp[orig_trees$tree_num],astral.extra.trees.emp)
+# astral.tree.names.emp <- c(astral.orig.tree.names.emp[orig_trees$tree_num],astral.extra.tree.names.emp)
 
+astral.trees.emp <- read.tree(here("output","new","031623-cichlids-emp-ASTRAL-batch.trees"))
+astral.tree.names.emp <- read.table(here("output","new","031623-cichlids-emp-ASTRAL-tree.names"))[,1]
+
+sites.astral <- read_csv(here("output","new","031623-SNPs-emp-cichlids"),col_names=c("tree","snps")) %>% 
+  mutate(simulation=as.integer(gsub(".*s([0-9]+)_q40.*","\\1",tree)),
+         missing=as.numeric(gsub(".*miss([0-9]\\.?[0-9]*)\\_.*","\\1",tree)),
+         maf=as.numeric(gsub(".*_mac([0-9]+).*","\\1",tree)),
+         int=gsub(".*\\.([A-Z]+)\\.noInv.*","\\1",tree)) %>%
+  group_by(simulation,missing,maf,int) %>%
+  slice(1) # keep only one entry per combination, in case of duplicates
+
+  
 # fix taxon names
 astral.trees.emp <- lapply(astral.trees.emp, function(x) fix_labels(x))
 
@@ -243,9 +282,9 @@ results.astral.emp <- results.astral.emp %>%
     int = sapply(astral.tree.names.emp, function(x) as.character(regmatches(x, regexec('[0-9]_([A-Z]+)', x))[[1]][2])),
     noref = "REF"
   ) %>% 
-  left_join(select(results.emp,c(simulation,quality:noref)),by=c("simulation","missing","maf","int","quality","noref")) %>%
-  left_join(dxy,by=c("simulation"="sim","height"="height","int"="int"),copy=TRUE) %>%
-  #left_join(select(gt.rf,gt_rf:simulation),by=c("simulation","height")) %>%
+  left_join(select(results.emp,c(simulation,height,quality:noref)),by=c("simulation","height","missing","maf","int","quality","noref")) %>%
+  left_join(dxy,by=c("simulation"="sim","int"="int","height"="height"),copy=TRUE) %>%
+  left_join(sites.astral %>% select(-tree),by=c("simulation","missing","maf","int")) %>%
   mutate(
     #tree.height = sapply(astral.trees, function(x) max(branching.times(root(x,"sim_0_0_0",resolve.root=TRUE)),na.rm=T)),
     #ingroup.tree.height = sapply(astral.trees, function(x) max(branching.times(drop.tip(root(x,"sim_0_0_0",resolve.root=TRUE),"sim_0_0_0")),na.rm=T)),
@@ -268,9 +307,13 @@ astral.node.desc.emp <- results.astral.emp %>%
 
 
 summary(results.astral.emp)  
-# write.csv(results.astral.emp,
-#           file=here("output","new",paste(args$output,"-astral.csv",sep="")),
-#           quote=FALSE,row.names=TRUE,na="NA")
+results.astral.emp.uniq <- results.astral.emp %>%
+  group_by(simulation,height,method,quality,missing,maf,int,noref) %>%
+  slice_head(n=1)
+write.csv(results.astral.cichlids,
+           file=here("output","new",paste(args$output,"-astral.csv",sep="")),
+           quote=FALSE,row.names=TRUE,na="NA")
+
 
 ######################
 ## univariate plots
@@ -301,11 +344,12 @@ plot2 <- ggplot(data = results.all,
   facet_wrap(~method)
 
 plot3 <- ggplot(data = results.all, 
-                aes(x=int,
+                aes(x=as.factor(maf),
                     y=ingroup.sackin,
+                    color=int,
                     fill=NULL)) +
   geom_boxplot(alpha=0.9,outlier.shape=NA) +
-  geom_jitter(aes(col=maf),width=0.1,height=0.01,alpha=0.4) +  
+  geom_jitter(aes(col=as.factor(maf)),width=0.1,height=0.01,alpha=0.4) +  
   theme_custom()  +
   theme(legend.position="none",
         axis.title.x = element_blank()) +
@@ -492,13 +536,14 @@ ggarrange(plot1,plot2,plot3,plot4,plot5,plot6,plot7,nrow=1)
 #   ylab("PCoA Axis 2 Correlation")
 
 
-param_loadings.emp <- tibble(sim=integer(),height=character(),param=character(),x_corr=numeric(),y_corr=numeric(),
+param_loadings.emp <- tibble(sim=integer(),height=character(),method=character(),param=character(),
+                             pct_var_exp=numeric(),x_corr=numeric(),y_corr=numeric(),
                              x_corr_sig=numeric(),y_corr_sig=numeric())
 h <- "Cichlids"
-m <- "astral"
+for (m in c("astral","raxml")){
 for (i in unique(as.numeric(as.character(results.emp$simulation)))){
   if (m == "raxml"){
-    subset_r <- results.emp$tree.num[results.emp$simulation == i & results.emp$height == h & results.emp$noref == "REF"]
+    subset_r <- results.emp$tree.num[results.emp$simulation == i & results.emp$height == h]
     subset_a <- NULL
     
     if (length(subset_r) !=0) {
@@ -510,7 +555,7 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
   } 
   
   if (m == "astral"){
-    subset_a <- results.astral.emp$tree.num[results.astral.emp$simulation == i & results.astral.emp$height == h]
+    subset_a <- results.astral.emp.uniq$tree.num[results.astral.emp.uniq$simulation == i & results.astral.emp.uniq$height == h]
     subset_r <- NULL
     
     if (length(subset_a) !=0) {
@@ -532,12 +577,12 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
   rf.pcoa.plot <- rf.pcoa$vectors %>%
     as_tibble() %>%
     ggplot(aes(x=Axis.1,y=Axis.2)) +
-    geom_jitter(aes(col=factor(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
-                    fill=factor(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
+    geom_jitter(aes(col=factor(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
+                    fill=factor(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]),levels=c("0","1","2","3","4","5","10","true_tree")),
                     #text=results.emp$missing[results.emp$simulation == s],
                     #shape=factor(c(results.emp$missing[subset])),
                     #size=factor(c(results.emp$method[subset_r],results.astral.emp$method[results.astral.emp$tree.num %in% subset_a])),
-                    shape=factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a])),
+                    shape=factor(c(results.emp$int[subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a])),
     ),
     width=0.005,height=0.005) +
     theme_bw(base_size=12, base_family="Arial") +
@@ -565,8 +610,8 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
     # biplot arrows for MAF
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
-      yend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+      xend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
+      yend = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 1)*0.015,
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1,
@@ -574,16 +619,16 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
       colour = "black" # Also accepts "red", "blue' etc
     ) +
     annotate(geom = "text",
-             x = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.001,
-             y = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
+             x = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.001,
+             y = cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
              label = "MAF",
              hjust=1,vjust=1
     ) +
     # biplot arrows for Missing
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
-      yend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+      xend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+      yend = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1,
@@ -591,16 +636,16 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
       colour = "black" # Also accepts "red", "blue' etc
     ) +
     annotate(geom = "text",
-             x = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
-             y = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
+             x = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
+             y = cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015-0.002,
              label = "Missing",
              hjust=0,vjust=0
     ) +
     # biplot arrows for INT
     geom_segment(
       x = 0, y = 0,
-      xend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
-      yend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+      xend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
+      yend = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015,
       lineend = "round", # See available arrow types in example above
       linejoin = "round",
       size = 1,
@@ -608,44 +653,48 @@ for (i in unique(as.numeric(as.character(results.emp$simulation)))){
       colour = "black" # Also accepts "red", "blue' etc
     ) +
     annotate(geom = "text",
-             x = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
-             y = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.002,
+             x = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.001,
+             y = cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]) * 0.5 * sqrt(length(trees.subset) - 2)*0.015+0.002,
              label = "INT",
              hjust=0,vjust=1
     )
   
-  print(rf.pcoa.plot)
+  #print(rf.pcoa.plot)
   #plotly::ggplotly(rf.pcoa.plot)
-  vectors <- tibble(sim = i, height = h,
+  vectors <- tibble(sim = i, height = h, method=m,
                     param = c("maf","missing","int"),
-                    x_corr = c(cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                               cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
-                               cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])
+                    pct_var_exp = sum(rf.pcoa$values$Relative_eig[1:2]),
+                    x_corr = c(cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
+                               cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)]),
+                               cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])
                     ),
-                    y_corr = c(cor(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                               cor(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
-                               cor(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])
+                    y_corr = c(cor(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
+                               cor(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)]),
+                               cor(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])
                     ),
-                    x_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                   cor.test(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
-                                   cor.test(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value
+                    x_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
+                                   cor.test(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value,
+                                   cor.test(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,1][1:length(trees.subset)])$p.value
                     ),
-                    y_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[subset_r],results.astral.emp$maf[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                   cor.test(as.numeric(as.character(c(results.emp$missing[subset_r],results.astral.emp$missing[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
-                                   cor.test(as.numeric(as.factor(c(results.emp$int[subset_r],results.astral.emp$int[results.astral.emp$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value
+                    y_corr_sig = c(cor.test(as.numeric(as.character(c(results.emp$maf[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$maf[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
+                                   cor.test(as.numeric(as.character(c(results.emp$missing[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$missing[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value,
+                                   cor.test(as.numeric(as.factor(c(results.emp$int[results.emp$tree.num %in% subset_r],results.astral.emp.uniq$int[results.astral.emp.uniq$tree.num %in% subset_a]))), rf.pcoa$vectors[,2][1:length(trees.subset)])$p.value
                     ))
   param_loadings.emp <- param_loadings.emp %>%
     add_row(vectors)
 }
-
+}
 
 dev.off()
 param_loadings_astral.cichlids <- param_loadings.emp %>% mutate(method="astral")
 param_loadings_raxml.cichlids <- param_loadings.emp %>% mutate(method="raxml")
+param_loadings.cichlids <- param_loadings_astral.cichlids %>%
+  add_row(param_loadings_raxml.cichlids)
 
 ## proportion of significant correlations
-param_loadings_astral.cichlids %>%
-  add_row(param_loadings_raxml.cichlids) %>%
+param_loadings.emp %>%
+  drop_na() %>%
+  #add_row(param_loadings_raxml.cichlids) %>%
   mutate(dom = case_when(x_corr > y_corr ~ "PC1",
                          y_corr > x_corr ~ "PC2"),
          sig_x = case_when(x_corr_sig < 0.01 & x_corr > y_corr ~ TRUE,
@@ -661,9 +710,9 @@ param_loadings_astral.cichlids %>%
             mean_PC2 = mean(abs(y_corr)))
 
 
-p_pcoa_param_cich <- param_loadings_astral.cichlids %>% 
+p_pcoa_param_cich <- param_loadings.emp %>% 
   #add_row(param_loadings_raxml2.cichlids) %>%
-  add_row(param_loadings_raxml.cichlids) %>%
+  #add_row(param_loadings_raxml.cichlids) %>%
   #add_row(param_loadings_astral2.cichlids) %>%
   mutate(abs_x_corr = abs(x_corr),abs_y_corr = abs(y_corr),
          height2 = recode_factor(.$height,LONG="Low ILS",MED="Medium ILS",SHORT="High ILS",.ordered=TRUE),
@@ -700,7 +749,8 @@ p_pcoa_param_cich <- param_loadings_astral.cichlids %>%
   xlab("PCoA Axis 1 Correlation") +
   ylab("PCoA Axis 2 Correlation")
 
-ggarrange(p_pcoa_param_lates,p_pcoa_param_cich,ncol=1,labels=c("a) Lates","b) Cichlids"),
+# saved as refbias_emp_pcoa_corr_astral_raxml
+ggarrange(p_pcoa_param_cich,p_pcoa_param_lates,ncol=1,labels=c("a) Tropheines","b) Lates"),
           label.x=0, label.y=1, font.label = list(size=14,family="Open Sans"))
 
 p1 <- p_pcoa_param_lates +
@@ -708,4 +758,68 @@ p1 <- p_pcoa_param_lates +
 p2 <- p_pcoa_param_cich +
   ggtitle('a) Tropheines')
 
+# saved as refbias_emp_pcoa_corr_astral_raxml
+# 1200 x 1200 px
 p2/p1 
+
+
+#################
+## Plot extreme trees for imbalance
+#################
+
+# most imbalanced = tree 539,541,542,574,576,577, sim 8
+results.emp.cichlids[results.emp.cichlids$ingroup.colless == max(results.emp.cichlids$ingroup.colless),]
+
+# least imbalanced = tree 291, sim 4
+results.emp.cichlids[results.emp.cichlids$ingroup.colless == min(results.emp.cichlids$ingroup.colless),]
+
+# sim 8 trees -- min = 202, max = 204,206,207
+sim8_info <- results.emp.cichlids[results.emp.cichlids$simulation == 8,]
+
+t1.cichlids <- chronos(drop.tip(root(emp.trees[[497]],outgroup,resolve.root = TRUE),outgroup))
+t2.cichlids <- chronos(drop.tip(root(emp.trees[[507]],outgroup,resolve.root = TRUE),outgroup))
+cichlids_metadat <- read_csv("~/Downloads/monster_23jul20.csv")
+t1.cichlids.spp <- t1.cichlids$tip.label %>%
+  as_tibble() %>%
+  left_join(cichlids_metadat %>% select(sample_code,location,abbreviation2),
+            by=c("value" = "sample_code"))
+
+cichlids.imb.cophylo <- cophylo(t1.cichlids,
+                             t2.cichlids,
+                             rotate=TRUE,
+                             assoc=cbind(t1.cichlids$tip.label,t1.cichlids$tip.label))
+cols <- MetBrewer::met.brewer("Signac",20,type="continuous")
+plot(cichlids.imb.cophylo, type="phylogram", use.edge.length=FALSE,
+     length.line=0.5, link.type="curved",link.lwd=3, link.lty="solid",
+     link.col=cols[as.factor(t1.cichlids.spp$abbreviation2)],
+     assoc=cbind(t1.cichlids$tip.label,t1.cichlids$tip.label))             
+
+#################
+## Plot extreme trees for gamma
+#################
+# most imbalanced = tree 504,506,507, sim 7
+results.emp.cichlids[results.emp.cichlids$ingroup.gamma == max(results.emp.cichlids$ingroup.gamma),]
+
+# least imbalanced = tree 92,94,95, sim 1
+results.emp.cichlids[results.emp.cichlids$ingroup.gamma == min(results.emp.cichlids$ingroup.gamma),]
+
+# sim 7 trees -- min = 497,499,500, max = 504,506,507
+sim7_info <- results.emp.cichlids[results.emp.cichlids$simulation == 7,]
+
+t1.cichlids <- chronos(drop.tip(root(emp.trees[[497]],outgroup,resolve.root = TRUE),outgroup),lambda=1)
+t2.cichlids <- chronos(drop.tip(root(emp.trees[[507]],outgroup,resolve.root = TRUE),outgroup),lambda=1)
+cichlids_metadat <- read_csv("~/Downloads/monster_23jul20.csv")
+t1.cichlids.spp <- t1.cichlids$tip.label %>%
+  as_tibble() %>%
+  left_join(cichlids_metadat %>% select(sample_code,location,sciname2),
+            by=c("value" = "sample_code"))
+
+cichlids.gam.cophylo <- cophylo(t1.cichlids,
+                                t2.cichlids,
+                                rotate=TRUE,
+                                assoc=cbind(t1.cichlids$tip.label,t1.cichlids$tip.label))
+cols <- MetBrewer::met.brewer("Signac",21,type="continuous")
+plot(cichlids.gam.cophylo, type="phylogram", use.edge.length=FALSE,
+     length.line=0.5, link.type="curved",link.lwd=3, link.lty="solid",
+     link.col=cols[as.factor(t1.cichlids.spp$abbreviation2)],
+     assoc=cbind(t1.cichlids$tip.label,t1.cichlids$tip.label))             

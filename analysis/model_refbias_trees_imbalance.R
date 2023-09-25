@@ -47,7 +47,7 @@ confint.imb.all$sig <- sum.imb.all$coefmat.full[-1,5]
 confint.imb.all$sig <- case_when(confint.imb.all$minCI > 0 ~ "pos",
                                    confint.imb.all$maxCI < 0 ~ "neg",
                                    TRUE ~ "ns")
-confint.rf.all$sig <- factor(confint.rf.all$sig, levels=c("pos","ns","neg"))
+confint.imb.all$sig <- factor(confint.imb.all$sig, levels=c("pos","ns","neg"))
 
 #confint.imb[6,c(1:2,4:5)] <- confint.imb[6,c(1:2,4:5)] - 65
 
@@ -97,7 +97,7 @@ confint.imb.short$sig <- sum.imb.short$coefmat.full[-1,5]
 confint.imb.short$sig <- case_when(confint.imb.short$minCI > 0 ~ "pos",
                              confint.imb.short$maxCI < 0 ~ "neg",
                              TRUE ~ "ns")
-confint.rf.short$sig <- factor(confint.rf.short$sig, levels=c("pos","ns","neg"))
+confint.imb.short$sig <- factor(confint.imb.short$sig, levels=c("pos","ns","neg"))
 
 #confint.imb[6,c(1:2,4:5)] <- confint.imb[6,c(1:2,4:5)] - 65
 
@@ -147,7 +147,7 @@ confint.imb.med$sig <- sum.imb.med$coefmat.full[-1,5]
 confint.imb.med$sig <- case_when(confint.imb.med$minCI > 0 ~ "pos",
                              confint.imb.med$maxCI < 0 ~ "neg",
                              TRUE ~ "ns")
-confint.rf.med$sig <- factor(confint.rf.med$sig, levels=c("pos","ns","neg"))
+confint.imb.med$sig <- factor(confint.imb.med$sig, levels=c("pos","ns","neg"))
 
 #confint.imb[6,c(1:2,4:5)] <- confint.imb[6,c(1:2,4:5)] - 65
 
@@ -197,7 +197,7 @@ confint.imb.long$sig <- sum.imb.long$coefmat.full[-1,5]
 confint.imb.long$sig <- case_when(confint.imb.long$minCI > 0 ~ "pos",
                              confint.imb.long$maxCI < 0 ~ "neg",
                              TRUE ~ "ns")
-confint.rf.long$sig <- factor(confint.rf.long$sig, levels=c("pos","ns","neg"))
+confint.imb.long$sig <- factor(confint.imb.long$sig, levels=c("pos","ns","neg"))
 
 #confint.imb[6,c(1:2,4:5)] <- confint.imb[6,c(1:2,4:5)] - 65
 

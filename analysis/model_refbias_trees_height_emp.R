@@ -14,8 +14,8 @@ library(ggsci)
 cols <- c("#F2AD00","gray80","#00A08A")
 
 date <- "010822"
-results.emp.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
-results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.raxml.lates <- read.csv(here("output","new",paste(date,"-lates-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
+results.raxml.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-output-raxml.csv",sep="")),header=TRUE,row.names=1,sep=",")
 
 ## preparing data object
 #results.mod <- results.raxml
@@ -34,7 +34,7 @@ results.emp.cichlids <- read.csv(here("output","new",paste(date,"-cichlids-emp-o
 
 m.height.lates <- lmer(ingroup.tree.height ~ int + maf + missing +
                          int:maf + int:missing + (1 | simulation),
-                    data = results.emp.lates)
+                    data = results.raxml.lates)
 sum.height.lates <- summary(m.height.lates)
 r.squaredGLMM(m.height.lates)
 
@@ -83,7 +83,7 @@ vars.height.lates.bars
 
 m.height.cichlids <- lmer(ingroup.tree.height ~ int + maf + missing +
                          int:maf + int:missing + (1 | simulation),
-                       data = results.emp.cichlids)
+                       data = results.raxml.cichlids)
 sum.height.cichlids <- summary(m.height.cichlids)
 r.squaredGLMM(m.height.cichlids)
 

@@ -1,6 +1,6 @@
 ## node descendants analysis
-rf.test <- InfoRobinsonFoulds(trees.subset[[1]],trees.subset[[71]],normalize=TRUE,reportMatching=TRUE)
-VisualizeMatching(Func=RobinsonFouldsMatching,root(raxml.trees[[7]],"sim_0_0_0",resolve.root=TRUE),root(raxml.trees[[210]],"sim_0_0_0",resolve.root=TRUE))
+#rf.test <- InfoRobinsonFoulds(trees.subset[[1]],trees.subset[[71]],normalize=TRUE,reportMatching=TRUE)
+#VisualizeMatching(Func=RobinsonFouldsMatching,root(raxml.trees[[7]],"sim_0_0_0",resolve.root=TRUE),root(raxml.trees[[210]],"sim_0_0_0",resolve.root=TRUE))
 
 output <- "092321-output"
 results.raxml <- read.csv(paste("output/new/",output,"-raxml.csv",sep=""),header=TRUE,row.names=1,sep=",")
@@ -85,8 +85,8 @@ lostnodes.emp <- function(i) {
 #   select(tree.num) %>%
 #   map_df(~lostnodes(.$tree.num))
 
-lostnode.info <- tibble(tree_num=integer(), desc_category=character(),lost = logical(), mean_desc=numeric(), mean_supp=numeric(),
-                        num=integer(), mean_nodedepth=numeric(), median_nodedepth=numeric())
+# lostnode.info <- tibble(tree_num=integer(), desc_category=character(),lost = logical(), mean_desc=numeric(), mean_supp=numeric(),
+#                         num=integer(), mean_nodedepth=numeric(), median_nodedepth=numeric())
 lostnode.info <- tibble(tree_num=integer(), tr1=integer(), tr2=integer(),
                         lost=logical(), descendants=integer(), bs_support=numeric(),
                         desc_category=character())
@@ -96,7 +96,7 @@ for (i in 1:nrow(results.raxml)){
     add_row(sum)
 }
 
-## simulation trees
+ ## simulation trees
 lostnode.summary <- lostnode.info %>%
   drop_na() %>%
   left_join(results.raxml, by=c("tree_num" = "tree.num")) %>%
@@ -118,7 +118,7 @@ lostnode.info2 <- lostnode.info %>%
   left_join(results.raxml, by=c("tree_num" = "tree.num"))
 
 p1 <- lostnode.info2 %>% 
-  #filter(bs_support < 100) %>%
+  filter(bs_support < 100) %>%
   #group_by(tree_num,maf,lost) %>%
   #mutate(missing=as.factor(missing)) %>%
   #filter(lost == TRUE) %>% 
@@ -127,7 +127,7 @@ p1 <- lostnode.info2 %>%
   # geom_vline(data=lostnode.summary %>% filter(lost == TRUE),
   #            aes(xintercept=mean_supp,col=as.factor(maf),group=height),lty=2) +
   theme_custom() +
-  facet_grid(~int,scales="free") +
+  #facet_grid(~int,scales="free") +
   #coord_cartesian(ylim=c(99,100)) +
   xlab("Minor Allele Count") +
   ylab("Node Bootstrap Support") +
@@ -142,7 +142,7 @@ p2 <- lostnode.info2 %>%
   stat_summary(aes(color=lost),alpha=0.8,size=2) +
   #geom_density(alpha=0.5) +
   theme_custom() +
-  facet_grid(~int) +
+  #facet_grid(~int) +
   #coord_cartesian(xlim=c(0,100)) +
   ylab("Mean Node Descendants") +
   xlab("Minor Allele Count") +
@@ -159,7 +159,24 @@ p2.2 <- lostnode.info2 %>%
   stat_summary(aes(color=lost),alpha=0.8,size=2) +
   #geom_density(alpha=0.5) +
   theme_custom() +
-  facet_grid(~int) +
+  #facet_grid(~int) +
+  #coord_cartesian(xlim=c(0,100)) +
+  xlab("Minor Allele Count") +
+  ylab("Mean Node Depth") +
+  # geom_vline(data=lostnode.summary %>% filter(lost == TRUE),
+  #            aes(xintercept=med_mean_desc,col=as.factor(maf),group=height),lty=2) +
+  theme(strip.text = element_text(size=rel(1.2)))+
+  scale_color_manual(labels=c("Retained","Lost"),
+                     values=c("#0A9396","#9B2226"))
+p2.2.int <- lostnode.info2 %>%  
+  #mutate(missing=as.factor(missing)) %>%
+  #filter(lost == TRUE) %>% 
+  ggplot(aes(x=int,y=tr1)) +
+  #geom_jitter(width=0,alpha=0.2,aes(color=lost)) +
+  stat_summary(aes(color=lost),alpha=0.8,size=2) +
+  #geom_density(alpha=0.5) +
+  theme_custom() +
+  #facet_grid(~int) +
   #coord_cartesian(xlim=c(0,100)) +
   xlab("Minor Allele Count") +
   ylab("Mean Node Depth") +
@@ -260,7 +277,7 @@ p.bars.lab <- p.bars +
   )
   
 
-#library(patchwork)
+library(patchwork)
 p.density / p.bars.lab +
   plot_layout(heights=c(1,1.5))
   

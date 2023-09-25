@@ -32,9 +32,9 @@ results.mod$method <- as.factor(results.mod$method)
 m.rf.all.astr <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod)
-m.rf.all.astr <- lmer(RF.Dist.ML ~ int + maf + missing +
-                        int:maf + int:missing + (1 | simulation),
-                      data = results.mod)
+# m.rf.all.astr <- lmer(RF.Dist.ML ~ int + maf + missing +
+#                         int:maf + int:missing + (1 | simulation),
+#                       data = results.mod)
 sum.rf.all.astr <- summary(m.rf.all.astr)
 r.squaredGLMM(m.rf.all.astr)
 
@@ -235,4 +235,5 @@ vars.plots.rf.astr <- ggarrange(vars.rf.long.bars.astr,
           vars.rf.short.bars.astr,
           #labels=c("A","B","C"),
           ncol=3)
+
 print(vars.plots.rf.astr)

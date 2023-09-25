@@ -26,31 +26,31 @@ results.mod$maf <- as.numeric(as.character(results.mod$maf))
 results.mod$int <- as.factor(results.mod$int)
 results.mod$method <- as.factor(results.mod$method)
 
-## rf distance
+## imbalance
 # all
 
-m.rf.all.astr <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+m.imb.all.astr <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod)
-m.rf.all.astr <- lmer(RF.Dist.ML ~ int + maf + missing +
-                        int:maf + int:missing + (1 | simulation),
-                      data = results.mod)
-sum.rf.all.astr <- summary(m.rf.all.astr)
-r.squaredGLMM(m.rf.all.astr)
+# m.imb.all.astr <- lmer(std.ingroup.colless ~ int + maf + missing +
+#                         int:maf + int:missing + (1 | simulation),
+#                       data = results.mod)
+sum.imb.all.astr <- summary(m.imb.all.astr)
+r.squaredGLMM(m.imb.all.astr)
 
-confint.rf.all.astr<-data.frame(confint(m.rf.all.astr)[-c(1:3),])
-colnames(confint.rf.all.astr) <- c("minCI","maxCI")
-confint.rf.all.astr$var <- rownames(confint.rf.all.astr)
-confint.rf.all.astr$est <- sum.rf.all.astr$coefficients[-1,1]
-confint.rf.all.astr$sig <- sum.rf.all.astr$coefmat.full[-1,5]
-confint.rf.all.astr$sig <- case_when(confint.rf.all.astr$minCI > 0 ~ "pos",
-                                  confint.rf.all.astr$maxCI < 0 ~ "neg",
+confint.imb.all.astr<-data.frame(confint(m.imb.all.astr)[-c(1:3),])
+colnames(confint.imb.all.astr) <- c("minCI","maxCI")
+confint.imb.all.astr$var <- rownames(confint.imb.all.astr)
+confint.imb.all.astr$est <- sum.imb.all.astr$coefficients[-1,1]
+confint.imb.all.astr$sig <- sum.imb.all.astr$coefmat.full[-1,5]
+confint.imb.all.astr$sig <- case_when(confint.imb.all.astr$minCI > 0 ~ "pos",
+                                  confint.imb.all.astr$maxCI < 0 ~ "neg",
                                   TRUE ~ "ns")
-confint.rf.all.astr$sig <- factor(confint.rf.all.astr$sig, levels=c("pos","ns","neg"))
+confint.imb.all.astr$sig <- factor(confint.imb.all.astr$sig, levels=c("pos","ns","neg"))
 
 
-vars.rf.all.astr <- ggplot(confint.rf.all.astr, aes(x = var, y = est, color=sig))
-vars.rf.all.bars.astr <- vars.rf.all.astr + geom_blank() +
+vars.imb.all.astr <- ggplot(confint.imb.all.astr, aes(x = var, y = est, color=sig))
+vars.imb.all.bars.astr <- vars.imb.all.astr + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -76,31 +76,31 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.rf.all.bars.astr
+vars.imb.all.bars.astr
 
 # short
 
-m.rf.short.astr <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+m.imb.short.astr <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
                      avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                    data = results.mod[results.mod$height == "SHORT",])
-sum.rf.short.astr <- summary(m.rf.short.astr)
-r.squaredGLMM(m.rf.short.astr)
+sum.imb.short.astr <- summary(m.imb.short.astr)
+r.squaredGLMM(m.imb.short.astr)
 
-confint.rf.short.astr<-data.frame(confint(m.rf.short.astr)[-c(1:3),])
-colnames(confint.rf.short.astr) <- c("minCI","maxCI")
-confint.rf.short.astr$var <- rownames(confint.rf.short.astr)
-confint.rf.short.astr$est <- sum.rf.short.astr$coefficients[-1,1]
-#confint.rf.astr$cond.est <- sum.rf.astr$coefficients[2,]
-confint.rf.short.astr$sig <- sum.rf.short.astr$coefmat.full[-1,5]
-confint.rf.short.astr$sig <- case_when(confint.rf.short.astr$minCI > 0 ~ "pos",
-                            confint.rf.short.astr$maxCI < 0 ~ "neg",
+confint.imb.short.astr<-data.frame(confint(m.imb.short.astr)[-c(1:3),])
+colnames(confint.imb.short.astr) <- c("minCI","maxCI")
+confint.imb.short.astr$var <- rownames(confint.imb.short.astr)
+confint.imb.short.astr$est <- sum.imb.short.astr$coefficients[-1,1]
+#confint.imb.astr$cond.est <- sum.imb.astr$coefficients[2,]
+confint.imb.short.astr$sig <- sum.imb.short.astr$coefmat.full[-1,5]
+confint.imb.short.astr$sig <- case_when(confint.imb.short.astr$minCI > 0 ~ "pos",
+                            confint.imb.short.astr$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
-confint.rf.short.astr$sig <- factor(confint.rf.short.astr$sig, levels=c("pos","ns","neg"))
+confint.imb.short.astr$sig <- factor(confint.imb.short.astr$sig, levels=c("pos","ns","neg"))
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.short.astr <- ggplot(confint.rf.short.astr, aes(x = var, y = est, color=sig))
-vars.rf.short.bars.astr <- vars.rf.short.astr + geom_blank() +
+vars.imb.short.astr <- ggplot(confint.imb.short.astr, aes(x = var, y = est, color=sig))
+vars.imb.short.bars.astr <- vars.imb.short.astr + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -126,32 +126,32 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.rf.short.bars.astr
+vars.imb.short.bars.astr
 
 # med
 
-m.rf.med.astr <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+m.imb.med.astr <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
                    avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                  data = results.mod[results.mod$height == "MED",])
-sum.rf.med.astr <- summary(m.rf.med.astr)
-r.squaredGLMM(m.rf.med.astr)
+sum.imb.med.astr <- summary(m.imb.med.astr)
+r.squaredGLMM(m.imb.med.astr)
 
-confint.rf.med.astr<-data.frame(confint(m.rf.med.astr)[-c(1:3),])
-colnames(confint.rf.med.astr) <- c("minCI","maxCI")
-confint.rf.med.astr$var <- rownames(confint.rf.med.astr)
-confint.rf.med.astr$est <- sum.rf.med.astr$coefficients[-1,1]
+confint.imb.med.astr<-data.frame(confint(m.imb.med.astr)[-c(1:3),])
+colnames(confint.imb.med.astr) <- c("minCI","maxCI")
+confint.imb.med.astr$var <- rownames(confint.imb.med.astr)
+confint.imb.med.astr$est <- sum.imb.med.astr$coefficients[-1,1]
 #confint.rf$cond.est <- sum.rf$coefficients[2,]
-confint.rf.med.astr$sig <- sum.rf.med.astr$coefmat.full[-1,5]
-confint.rf.med.astr$sig <- case_when(confint.rf.med.astr$minCI > 0 ~ "pos",
-                            confint.rf.med.astr$maxCI < 0 ~ "neg",
+confint.imb.med.astr$sig <- sum.imb.med.astr$coefmat.full[-1,5]
+confint.imb.med.astr$sig <- case_when(confint.imb.med.astr$minCI > 0 ~ "pos",
+                            confint.imb.med.astr$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
-confint.rf.med.astr$sig <- factor(confint.rf.med.astr$sig, levels=c("pos","ns","neg"))
+confint.imb.med.astr$sig <- factor(confint.imb.med.astr$sig, levels=c("pos","ns","neg"))
 
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.med.astr <- ggplot(confint.rf.med.astr, aes(x = var, y = est, color=sig))
-vars.rf.med.bars.astr <- vars.rf.med.astr + geom_blank() +
+vars.imb.med.astr <- ggplot(confint.imb.med.astr, aes(x = var, y = est, color=sig))
+vars.imb.med.bars.astr <- vars.imb.med.astr + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -177,31 +177,31 @@ xlab("")+
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.rf.med.bars.astr
+vars.imb.med.bars.astr
 
 # long
-m.rf.long.astr <- lmer(RF.Dist.ML ~ avg_dxy + maf + missing +
+m.imb.long.astr <- lmer(std.ingroup.colless ~ avg_dxy + maf + missing +
                     avg_dxy:maf + avg_dxy:missing + (1 | simulation),
                   data = results.mod[results.mod$height == "LONG",])
-sum.rf.long.astr <- summary(m.rf.long.astr)
-r.squaredGLMM(m.rf.long.astr)
+sum.imb.long.astr <- summary(m.imb.long.astr)
+r.squaredGLMM(m.imb.long.astr)
 
-confint.rf.long.astr<-data.frame(confint(m.rf.long.astr)[-c(1:3),])
-colnames(confint.rf.long.astr) <- c("minCI","maxCI")
-confint.rf.long.astr$var <- rownames(confint.rf.long.astr)
-confint.rf.long.astr$est <- sum.rf.long.astr$coefficients[-1,1]
+confint.imb.long.astr<-data.frame(confint(m.imb.long.astr)[-c(1:3),])
+colnames(confint.imb.long.astr) <- c("minCI","maxCI")
+confint.imb.long.astr$var <- rownames(confint.imb.long.astr)
+confint.imb.long.astr$est <- sum.imb.long.astr$coefficients[-1,1]
 #confint.rf$cond.est <- sum.rf$coefficients[2,]
-confint.rf.long.astr$sig <- sum.rf.long.astr$coefmat.full[-1,5]
-confint.rf.long.astr$sig <- case_when(confint.rf.long.astr$minCI > 0 ~ "pos",
-                            confint.rf.long.astr$maxCI < 0 ~ "neg",
+confint.imb.long.astr$sig <- sum.imb.long.astr$coefmat.full[-1,5]
+confint.imb.long.astr$sig <- case_when(confint.imb.long.astr$minCI > 0 ~ "pos",
+                            confint.imb.long.astr$maxCI < 0 ~ "neg",
                             TRUE ~ "ns")
-confint.rf.long$sig <- factor(confint.rf.long.astr$sig, levels=c("pos","ns","neg"))
+confint.imb.long$sig <- factor(confint.imb.long.astr$sig, levels=c("pos","ns","neg"))
 
 #confint.rf[6,c(1:2,4:5)] <- confint.rf[6,c(1:2,4:5)] - 65
 
 
-vars.rf.long.astr <- ggplot(confint.rf.long.astr, aes(x = var, y = est, color=sig))
-vars.rf.long.bars.astr <- vars.rf.long.astr + geom_blank() +
+vars.imb.long.astr <- ggplot(confint.imb.long.astr, aes(x = var, y = est, color=sig))
+vars.imb.long.bars.astr <- vars.imb.long.astr + geom_blank() +
   #color = "cyl",                                # Color by groups
   #palette = c("#00AFBB", "#E7B800", "#FC4E07"), # Custom color palette
   #sorting = "descending",                       # Sort value in descending order
@@ -227,12 +227,12 @@ vars.rf.long.bars.astr <- vars.rf.long.astr + geom_blank() +
   theme(axis.text = element_text(size=15),legend.position="none",
         axis.title = element_text(size=18)) +
   theme(axis.title.x=element_blank())
-vars.rf.long.bars.astr
+vars.imb.long.bars.astr
 
 # put them all together
-vars.plots.rf.astr <- ggarrange(vars.rf.long.bars.astr,
-          vars.rf.med.bars.astr,
-          vars.rf.short.bars.astr,
+vars.plots.imb.astr <- ggarrange(vars.imb.long.bars.astr,
+          vars.imb.med.bars.astr,
+          vars.imb.short.bars.astr,
           #labels=c("A","B","C"),
           ncol=3)
-print(vars.plots.rf.astr)
+print(vars.plots.imb.astr)

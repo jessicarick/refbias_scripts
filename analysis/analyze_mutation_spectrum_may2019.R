@@ -81,6 +81,46 @@ for (i in 1:length(var.list)){
 
 summary(varsites.all)
 
+varsites.all %>%
+  mutate(maf = factor(maf,levels=c("0","1","2","3","4","5","10"))) %>% 
+  ggplot() +
+  stat_halfeye(aes(x=nSNP,y=maf,fill=height,color=height), alpha=0.5,
+               normalize="groups", adjust=1.2, p_limits=c(0.025,0.975),
+               trim=TRUE,expand=FALSE,point_interval="mean_qi",n=500) +
+  ylab("Minor Allele Count Threshold") +
+  xlab("SNPs per Locus") +
+  theme_custom() 
+
+varsites.all %>%
+  mutate(maf = factor(maf,levels=c("0","1","2","3","4","5","10"))) %>%
+  group_by(height,maf,int) %>%
+  summarize(mean_snps = mean(nSNP,na.rm=TRUE)) %>% view()
+
+varsites.all %>%
+  mutate(maf = factor(maf,levels=c("0","1","2","3","4","5","10"))) %>%
+  #group_by(height,maf,int) %>%
+  #summarize(mean_snps = mean(nSNP,na.rm=TRUE)) %>%
+  ggplot(aes(x=maf,y=nSNP,color=height,shape=int)) +
+  stat_summary(fun=mean, 
+               fun.min=function(z) { quantile(z,0.25) },
+               fun.max=function(z) { quantile(z,0.75)},
+               position = position_dodge(width = 0.75),
+               size=1) +
+  theme_custom() +
+  xlab("Minor Allele Count Threshold") +
+  ylab("SNPs per Locus")
+
+varsites.all %>%
+  pivot_wider(names_from=int, values_from=nSNP,names_prefix = "nSNP_") %>% 
+  mutate(diff_nSNP_INT_EXT = nSNP_INT - nSNP_EXT) %>%
+  ggplot() +
+  geom_density_ridges(aes(y=height,fill=maf,x=diff_nSNP_INT_EXT), alpha=0.1) +
+  #geom_point(aes(x=nSNP_INT/2000,y=nSNP_EXT/2000,color=maf),alpha=0.1) +
+  #facet_grid(cols=vars(height),rows=vars(maf)) +
+  theme_custom() +
+  geom_abline(slope=1,intercept=0, lty=3)
+  
+
 ## Putting the data together
 varsites.all$int <- as.factor(varsites.all$int)
 
@@ -304,7 +344,7 @@ mutdist.int <- pre.post.wm %>%
   #  geom_text(aes(x=mean_mut,label=round(mean_mut,4)),y=1275,angle=90,
   #            size=5, family="Open Sans Light", check_overlap=TRUE) +
   theme_custom() +
-  facet_wrap(~factor(maf,levels=c(1,2,3,4,5,10))) +
+  facet_wrap(~factor(maf,levels=c(1,2,3,4,5,10)), ncol=1) +
   xlab("Locus Mutation Rate") +
   ylab("Density of lost SNPs") +
   #xlim(0.035,0.045) +
@@ -336,6 +376,31 @@ ks.maf <- pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$maf,alternative
   geom_text(data = . %>% filter(sig), aes(Var2, Var1), color = "white", size = 12, label = "*") +
   geom_segment(aes(x=0.5,y=0.5,xend=6.5,yend=6.5),color="gray90",size=1.5)
 
+ks.int <- pairwise_ks_test(pre.post.wm$weighted_mean,pre.post.wm$int,alternative="two.sided") %>%
+  reshape2::melt() %>%
+  mutate(Var1 = as.factor(Var1),
+         Var2 = as.factor(Var2)) %>%
+  mutate(value2 = case_when(value == 1 ~ FALSE,
+                            value != 1 ~ TRUE),
+         sig = case_when(value < 0.01 ~ TRUE,
+                         value > 0.01 ~ FALSE)) %>%
+  ggplot(aes(x=Var1,y=Var2)) +
+  geom_tile(aes(fill=value)) +
+  geom_tile(col="gray90",fill=NA,lwd=1.5) +
+  theme_custom()+
+  theme(panel.border = element_blank(),
+        axis.text = element_text(size=rel(1.5)),
+        axis.title = element_text(size=rel(2))) +
+  #scale_fill_gradientn(colours = pal,values=seq(1,0,by=-0.01)) +
+  scale_fill_distiller(type = "seq",
+                       direction = -1,
+                       palette = "Greys") +
+  scale_x_discrete(position = "top") +
+  xlab("Int") +
+  ylab("Int") +
+  geom_text(data = . %>% filter(sig), aes(Var2, Var1), color = "white", size = 12, label = "*") +
+  geom_segment(aes(x=0.5,y=0.5,xend=6.5,yend=6.5),color="gray90",size=1.5)
+
 pre.post.wm.miss <- pre.post %>%
   group_by(gene,height,int,sim) %>%
   mutate(max_snp=max(nSNP),
@@ -346,7 +411,7 @@ pre.post.wm.miss <- pre.post %>%
   #filter(miss > 0) %>%
   group_by(height,int,sim,miss,maf) %>%
   summarize(mean = mean(variants),
-            weighted_mean = weighted.mean(variants,snps_lost))
+            weighted_mean = weighted.mean(variants,snps_lost)) 
 
 mutdist.miss <- pre.post.wm.miss %>% 
   group_by(miss) %>%
